@@ -1,6 +1,8 @@
 
 import base64
 import ctypes, ctypes.util
+import os
+
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32
 
 
@@ -96,8 +98,12 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     return out.raw
 
 
-def scrypt_mcf(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
-    """Derives a Modular Crypt Format hash using the scrypt KDF"""
+def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
+    """Derives a Modular Crypt Format hash using the scrypt KDF.
+
+    If no salt is given, 32 random bytes are generated using os.urandom."""
+    if salt is None:
+        salt = os.urandom(32)
     hash = scrypt(password, salt, N, r, p)
 
     h64 = base64.b64encode(hash)
