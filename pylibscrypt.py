@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import base64
 import ctypes, ctypes.util
@@ -131,4 +132,45 @@ def scrypt_mcf_check(mcf, password):
 
     return bool(r)
 
+
+if __name__ == "__main__":
+    test_vectors = (
+        ('password', 'NaCl', 1024, 8, 16,
+          'fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b373162'
+          '2eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640',
+          '$s1$0e0801$TmFDbA==$qEMNflgfnKA8lS31Bqxmx1eJnWeiHXHA8ZAL13isHRTK'
+          'DtWIP2jrleFuZRPU1OraoUTE8l1tDKpPhxz1HG6c7w=='),
+        ('pleaseletmein', 'SodiumChloride', 16384, 8, 1,
+          '7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2'
+          'd5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887',
+          '$s1$0e0801$U29kaXVtQ2hsb3JpZGU=$cCO9yzr9c0hGHAbNgf046/2o+7qQT44+'
+          'qbVD9lRdofLVQylVYT8Pz2LUlwUkKpr55h6F3A1lHkDfzwF7RVdYhw=='),
+    )
+    print('Testing scrypt...')
+    i = fails = 0
+    for pw, s, n, r, p, h, m in test_vectors:
+        i += 1
+        h2 = scrypt(pw, s, n, r, p)
+        if h2 != base64.b16decode(h, True):
+            print("Test %d.1 failed!" % i)
+            print("  scrypt('%s', '%s', %d, %d, %d)" % (pw, s, n, r, p))
+            print("  Expected: %s" % h)
+            print("  Got:      %s" % base64.b16encode(h2))
+            fails += 1
+        m2 = scrypt_mcf(pw, s)
+        if not (scrypt_mcf_check(m, pw) and scrypt_mcf_check(m2, pw)):
+            print("Test %d.2 failed!" % i)
+            print("  scrypt_mcf('%s', '%s', %d, %d, %d)" % (pw, s, n, r, p))
+            print("  Expected: %s" % m)
+            print("  Got:      %s" % m2)
+            print("  scrypt_mcf_check failed!")
+            fails += 1
+        if scrypt_mcf_check(m, 'not' + pw) or scrypt_mcf_check(m2, 'not' + pw):
+            print("Test %d.3 failed!" % i)
+            print("  scrypt_mcf_check succeeded with wrong password!")
+            fails += 1
+    if fails:
+        print("%d tests failed!" % fails)
+    else:
+        print("All tests successful!")
 
