@@ -69,7 +69,7 @@ SCRYPT_r = 8
 SCRYPT_p = 1 # Note: Value differs from libscrypt, see below.
 
 
-def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
+def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     """Derives a 64-byte hash using the scrypt key-derivarion function.
 
     Memory usage is proportional to N*r. Defaults require about 16 MiB.
@@ -90,7 +90,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     if not isinstance(salt, bytes):
         raise TypeError
 
-    out = ctypes.create_string_buffer(64)
+    out = ctypes.create_string_buffer(olen)
     ret = _libscrypt_scrypt(password, len(password), salt, len(salt),
                           N, r, p, out, len(out))
     if ret:
