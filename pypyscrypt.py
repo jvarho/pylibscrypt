@@ -103,10 +103,10 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         return ''.join(blocks)[:olen]
 
 
-    def integerify(B, Bi, r):
+    def integerify(B, r):
         '''"A bijective function from ({0, 1} ** k) to {0, ..., (2 ** k) - 1".'''
 
-        Bi += (2 * r - 1) * 64
+        Bi = (2 * r - 1) * 64
         n  = ord(B[Bi]) | (ord(B[Bi + 1]) << 8) | (ord(B[Bi + 2]) << 16) | (ord(B[Bi + 3]) << 24)
         return n
 
@@ -171,7 +171,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
             blockmix_salsa8(X, 0, 128 * r, r)                 # ROMix - 4
 
         for i in xrange(0, N):                              # ROMix - 6
-            j = integerify(X, 0, r) & (N - 1)                 # ROMix - 7
+            j = integerify(X, r) & (N - 1)                    # ROMix - 7
             blockxor(V, j * (128 * r), X, 0, 128 * r)         # ROMix - 8(inner)
             blockmix_salsa8(X, 0, 128 * r, r)                 # ROMix - 9(outer)
 
