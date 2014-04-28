@@ -91,9 +91,9 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
         raise TypeError
 
     out = ctypes.create_string_buffer(64)
-    r = _libscrypt_scrypt(password, len(password), salt, len(salt),
+    ret = _libscrypt_scrypt(password, len(password), salt, len(salt),
                           N, r, p, out, len(out))
-    if r:
+    if ret:
         raise ValueError
 
     return out.raw
@@ -111,8 +111,9 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     s64 = base64.b64encode(salt)
 
     out = ctypes.create_string_buffer(SCRYPT_MCF_LEN)
-    r = _libscrypt_mcf(N, r, p, s64, h64, out)
-    if not r:
+    ret = _libscrypt_mcf(N, r, p, s64, h64, out)
+    if not ret:
+        print((N, r, p, s64, h64, out))
         raise ValueError
 
     return out.raw.strip('\0')
@@ -126,11 +127,11 @@ def scrypt_mcf_check(mcf, password):
         raise TypeError
 
     mcfbuf = ctypes.create_string_buffer(mcf)
-    r = _libscrypt_check(mcfbuf, password)
-    if r < 0:
+    ret = _libscrypt_check(mcfbuf, password)
+    if ret < 0:
         raise ValueError
 
-    return bool(r)
+    return bool(ret)
 
 
 if __name__ == "__main__":
