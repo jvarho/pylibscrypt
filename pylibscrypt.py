@@ -192,6 +192,16 @@ if __name__ == "__main__":
         fails += 1
 
     i += 1
+    try:
+        scrypt('password', 'salt', N=-1)
+    except ValueError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Invalid N value accepted")
+        fails += 1
+
+    i += 1
     if scrypt_mcf('password', 'salt') != scrypt_mcf('password', 'salt'):
         print("Test %d.1 failed!" % i)
         print("  Inconsistent MCF!")
@@ -199,6 +209,47 @@ if __name__ == "__main__":
     if scrypt_mcf('password') == scrypt_mcf('password'):
         print("Test %d.2 failed!" % i)
         print("  Random salts match!")
+        fails += 1
+
+    i += 1
+    try:
+        mcf = scrypt_mcf('password', 's'*100)
+    except ValueError:
+        pass
+    else:
+        if len(mcf) < 150:
+            print("Test %d failed!" % i)
+            print("  Long salt truncated by scrypt_mcf")
+            fails += 1
+
+    i += 1
+    try:
+        scrypt_mcf_check(42, 'password')
+    except TypeError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Non-string MCF accepted")
+        fails += 1
+
+    i += 1
+    try:
+        scrypt_mcf_check('mcf', 42)
+    except TypeError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Non-string password accepted")
+        fails += 1
+
+    i += 1
+    try:
+        scrypt_mcf_check('mcf', 'password')
+    except ValueError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Invalid MCF not reported")
         fails += 1
 
     if fails:
