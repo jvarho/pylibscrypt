@@ -102,9 +102,9 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
 def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     """Derives a Modular Crypt Format hash using the scrypt KDF.
 
-    If no salt is given, 32 random bytes are generated using os.urandom."""
+    If no salt is given, 16 random bytes are generated using os.urandom."""
     if salt is None:
-        salt = os.urandom(32)
+        salt = os.urandom(16)
     hash = scrypt(password, salt, N, r, p)
 
     h64 = base64.b64encode(hash)
@@ -113,7 +113,6 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     out = ctypes.create_string_buffer(SCRYPT_MCF_LEN)
     ret = _libscrypt_mcf(N, r, p, s64, h64, out)
     if not ret:
-        print((N, r, p, s64, h64, out))
         raise ValueError
 
     return out.raw.strip('\0')
@@ -190,6 +189,16 @@ if __name__ == "__main__":
     else:
         print("Test %d failed!" % i)
         print("  Unicode salt accepted")
+        fails += 1
+
+    i += 1
+    if scrypt_mcf('password', 'salt') != scrypt_mcf('password', 'salt'):
+        print("Test %d.1 failed!" % i)
+        print("  Inconsistent MCF!")
+        fails += 1
+    if scrypt_mcf('password') == scrypt_mcf('password'):
+        print("Test %d.2 failed!" % i)
+        print("  Random salts match!")
         fails += 1
 
     if fails:
