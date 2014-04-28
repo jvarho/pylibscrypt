@@ -60,11 +60,11 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         dest[d_start:d_start + length] = source[s_start:s_start + length]
 
 
-    def blockxor(source, source_start, dest, dest_start, length):
+    def blockxor(source, s_start, dest, d_start, length):
         '''Performs xor on arrays source and dest, storing the result back in dest.'''
 
         for i in xrange(0, length):
-            dest[dest_start + i] = chr(ord(dest[dest_start + i]) ^ ord(source[source_start + i]))
+            dest[d_start + i] ^= source[s_start + i]
 
 
     def pbkdf2(passphrase, salt, count, olen, prf):
@@ -79,10 +79,10 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
             U = prf(passphrase, salt + struct.pack('>L', block_number))
 
             if count > 1:
-                U = [ c for c in U ]
+                U = bytearray(U)
                 for i in xrange(2, 1 + count):
-                    blockxor(prf(passphrase, ''.join(U)), 0, U, 0, len(U))
-                U = ''.join(U)
+                    p = bytearray(prf(passphrase, U))
+                    blockxor(p, 0, U, 0, len(U))
 
             return U
 
@@ -90,25 +90,24 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         size = 0
 
         block_number = 0
-        blocks = [ ]
+        blocks = bytearray()
 
         # The iterations
         while size < olen:
             block_number += 1
             block = f(block_number)
 
-            blocks.append(block)
+            blocks.extend(block)
             size += len(block)
 
-        return ''.join(blocks)[:olen]
+        return blocks[:olen]
 
 
     def integerify(B, r):
         '''"A bijective function from ({0, 1} ** k) to {0, ..., (2 ** k) - 1".'''
 
         Bi = (2 * r - 1) * 64
-        n  = ord(B[Bi]) | (ord(B[Bi + 1]) << 8) | (ord(B[Bi + 2]) << 16) | (ord(B[Bi + 3]) << 24)
-        return n
+        return struct.unpack('<I', B[Bi:Bi+4])[0]
 
 
     def R(X, destination, a1, a2, b):
@@ -121,8 +120,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     def salsa20_8(B):
         '''Salsa 20/8 stream cypher; Used by BlockMix. See http://en.wikipedia.org/wiki/Salsa20'''
 
-        # Convert the character array into an int32 array
-        B32 = struct.unpack('<16I', ''.join(B))
+        # Convert the bytearray into an int32 array
+        B32 = struct.unpack('<16I', B)
         x = [ i for i in B32 ]
 
         # Salsa... Time to dance.
@@ -147,7 +146,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         '''Blockmix; Used by SMix.'''
 
         start = Bi + (2 * r - 1) * 64
-        X = [ BY[i] for i in xrange(start, start + 64) ]                   # BlockMix - 1
+        X = BY[start:start+64]                   # BlockMix - 1
 
         for i in xrange(0, 2 * r):                                         # BlockMix - 2
             blockxor(BY, i * 64, X, 0, 64)                                   # BlockMix - 3(inner)
@@ -183,16 +182,17 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
     prf = lambda k, m: hmac.new(key = k, msg = m, digestmod = hashlib.sha256).digest()
 
-    DK = [ chr(0) ] * olen
+    # Use bytearrays to avoid chr/ord on python2
+    DK = bytearray(olen)
 
-    B  = [ c for c in pbkdf2(password, salt, 1, p * 128 * r, prf) ]
-    XY = [ chr(0) ] * (256 * r)
-    V  = [ chr(0) ] * (128 * r * N)
+    B  = pbkdf2(password, salt, 1, p * 128 * r, prf)
+    XY = bytearray(256 * r)
+    V  = bytearray(128 * r * N)
 
     for i in xrange(0, p):
         smix(B, i * 128 * r, r, N, V, XY)
 
-    return pbkdf2(password, ''.join(B), 1, olen, prf)
+    return bytes(pbkdf2(password, B, 1, olen, prf))
 
 
 # Simple test harness
