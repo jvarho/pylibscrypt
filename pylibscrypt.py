@@ -134,6 +134,8 @@ def scrypt_mcf_check(mcf, password):
 
 
 if __name__ == "__main__":
+    print('Testing scrypt...')
+
     test_vectors = (
         ('password', 'NaCl', 1024, 8, 16,
           'fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b373162'
@@ -146,7 +148,6 @@ if __name__ == "__main__":
           '$s1$0e0801$U29kaXVtQ2hsb3JpZGU=$cCO9yzr9c0hGHAbNgf046/2o+7qQT44+'
           'qbVD9lRdofLVQylVYT8Pz2LUlwUkKpr55h6F3A1lHkDfzwF7RVdYhw=='),
     )
-    print('Testing scrypt...')
     i = fails = 0
     for pw, s, n, r, p, h, m in test_vectors:
         i += 1
@@ -169,6 +170,27 @@ if __name__ == "__main__":
             print("Test %d.3 failed!" % i)
             print("  scrypt_mcf_check succeeded with wrong password!")
             fails += 1
+
+    i += 1
+    try:
+        scrypt(u'password', 'salt')
+    except TypeError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Unicode password accepted")
+        fails += 1
+
+    i += 1
+    try:
+        scrypt('password', u'salt')
+    except TypeError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Unicode salt accepted")
+        fails += 1
+
     if fails:
         print("%d tests failed!" % fails)
     else:
