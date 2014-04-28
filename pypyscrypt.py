@@ -111,13 +111,6 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         return n
 
 
-    def make_int32(v):
-        '''Converts (truncates, two's compliments) a number to an int32.'''
-
-        if v > 0x7fffffff: return -1 * ((~v & 0xffffffff) + 1)
-        return v
-
-
     def R(X, destination, a1, a2, b):
         '''A single round of Salsa.'''
 
@@ -129,7 +122,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         '''Salsa 20/8 stream cypher; Used by BlockMix. See http://en.wikipedia.org/wiki/Salsa20'''
 
         # Convert the character array into an int32 array
-        B32 = [ make_int32((ord(B[i * 4]) | (ord(B[i * 4 + 1]) << 8) | (ord(B[i * 4 + 2]) << 16) | (ord(B[i * 4 + 3]) << 24))) for i in xrange(0, 16) ]
+        B32 = struct.unpack('<16I', ''.join(B))
         x = [ i for i in B32 ]
 
         # Salsa... Time to dance.
@@ -144,14 +137,10 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
             R(x, 12, 15, 14, 7); R(x, 13, 12, 15, 9); R(x, 14, 13, 12, 13); R(x, 15, 14, 13, 18)
 
         # Coerce into nice happy 32-bit integers
-        B32 = [ make_int32(x[i] + B32[i]) for i in xrange(0, 16) ]
+        B32 = [ (x[i] + B32[i]) & 0xffffffff for i in xrange(0, 16) ]
 
         # Convert back to bytes
-        for i in xrange(0, 16):
-            B[i * 4 + 0] = chr((B32[i] >> 0) & 0xff)
-            B[i * 4 + 1] = chr((B32[i] >> 8) & 0xff)
-            B[i * 4 + 2] = chr((B32[i] >> 16) & 0xff)
-            B[i * 4 + 3] = chr((B32[i] >> 24) & 0xff)
+        B[:] = struct.pack('<16I', *B32)
 
 
     def blockmix_salsa8(BY, Bi, Yi, r):
