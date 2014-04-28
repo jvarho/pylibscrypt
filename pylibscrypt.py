@@ -61,7 +61,7 @@ _libscrypt_check.argtypes = [
 ]
 
 
-SCRYPT_MCF_ID = "$s1"
+SCRYPT_MCF_ID = b"$s1"
 SCRYPT_MCF_LEN = 125
 
 SCRYPT_N = 1<<14
@@ -115,7 +115,7 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     if not ret:
         raise ValueError
 
-    return out.raw.strip('\0')
+    return out.raw.strip(b'\0')
 
 
 def scrypt_mcf_check(mcf, password):
@@ -137,16 +137,16 @@ if __name__ == "__main__":
     print('Testing scrypt...')
 
     test_vectors = (
-        ('password', 'NaCl', 1024, 8, 16,
-          'fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b373162'
-          '2eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640',
-          '$s1$0e0801$TmFDbA==$qEMNflgfnKA8lS31Bqxmx1eJnWeiHXHA8ZAL13isHRTK'
-          'DtWIP2jrleFuZRPU1OraoUTE8l1tDKpPhxz1HG6c7w=='),
-        ('pleaseletmein', 'SodiumChloride', 16384, 8, 1,
-          '7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2'
-          'd5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887',
-          '$s1$0e0801$U29kaXVtQ2hsb3JpZGU=$cCO9yzr9c0hGHAbNgf046/2o+7qQT44+'
-          'qbVD9lRdofLVQylVYT8Pz2LUlwUkKpr55h6F3A1lHkDfzwF7RVdYhw=='),
+        (b'password', b'NaCl', 1024, 8, 16,
+          b'fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b373162'
+          b'2eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640',
+          b'$s1$0e0801$TmFDbA==$qEMNflgfnKA8lS31Bqxmx1eJnWeiHXHA8ZAL13isHRTK'
+          b'DtWIP2jrleFuZRPU1OraoUTE8l1tDKpPhxz1HG6c7w=='),
+        (b'pleaseletmein', b'SodiumChloride', 16384, 8, 1,
+          b'7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2'
+          b'd5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887',
+          b'$s1$0e0801$U29kaXVtQ2hsb3JpZGU=$cCO9yzr9c0hGHAbNgf046/2o+7qQT44+'
+          b'qbVD9lRdofLVQylVYT8Pz2LUlwUkKpr55h6F3A1lHkDfzwF7RVdYhw=='),
     )
     i = fails = 0
     for pw, s, n, r, p, h, m in test_vectors:
@@ -166,14 +166,14 @@ if __name__ == "__main__":
             print("  Got:      %s" % m2)
             print("  scrypt_mcf_check failed!")
             fails += 1
-        if scrypt_mcf_check(m, 'not' + pw) or scrypt_mcf_check(m2, 'not' + pw):
+        if scrypt_mcf_check(m, b'X' + pw) or scrypt_mcf_check(m2, b'X' + pw):
             print("Test %d.3 failed!" % i)
             print("  scrypt_mcf_check succeeded with wrong password!")
             fails += 1
 
     i += 1
     try:
-        scrypt(u'password', 'salt')
+        scrypt(u'password', b'salt')
     except TypeError:
         pass
     else:
@@ -183,7 +183,7 @@ if __name__ == "__main__":
 
     i += 1
     try:
-        scrypt('password', u'salt')
+        scrypt(b'password', u'salt')
     except TypeError:
         pass
     else:
@@ -193,7 +193,7 @@ if __name__ == "__main__":
 
     i += 1
     try:
-        scrypt('password', 'salt', N=-1)
+        scrypt(b'password', b'salt', N=-1)
     except ValueError:
         pass
     else:
@@ -202,18 +202,18 @@ if __name__ == "__main__":
         fails += 1
 
     i += 1
-    if scrypt_mcf('password', 'salt') != scrypt_mcf('password', 'salt'):
+    if scrypt_mcf(b'password', b'salt') != scrypt_mcf(b'password', b'salt'):
         print("Test %d.1 failed!" % i)
         print("  Inconsistent MCF!")
         fails += 1
-    if scrypt_mcf('password') == scrypt_mcf('password'):
+    if scrypt_mcf(b'password') == scrypt_mcf(b'password'):
         print("Test %d.2 failed!" % i)
         print("  Random salts match!")
         fails += 1
 
     i += 1
     try:
-        mcf = scrypt_mcf('password', 's'*100)
+        mcf = scrypt_mcf(b'password', b's'*100)
     except ValueError:
         pass
     else:
@@ -224,7 +224,7 @@ if __name__ == "__main__":
 
     i += 1
     try:
-        scrypt_mcf_check(42, 'password')
+        scrypt_mcf_check(42, b'password')
     except TypeError:
         pass
     else:
@@ -234,7 +234,7 @@ if __name__ == "__main__":
 
     i += 1
     try:
-        scrypt_mcf_check('mcf', 42)
+        scrypt_mcf_check(b'mcf', 42)
     except TypeError:
         pass
     else:
@@ -244,7 +244,7 @@ if __name__ == "__main__":
 
     i += 1
     try:
-        scrypt_mcf_check('mcf', 'password')
+        scrypt_mcf_check(b'mcf', b'password')
     except ValueError:
         pass
     else:

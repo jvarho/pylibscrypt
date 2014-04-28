@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-python -m coverage run pylibscrypt.py
-python -m coverage report
-python -m coverage annotate
+PYTHON=python
+$PYTHON -m coverage run pylibscrypt.py
+$PYTHON -m coverage report
+$PYTHON -m coverage annotate
 
