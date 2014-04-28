@@ -56,11 +56,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         N, r, p must be positive
     """
 
-    def array_overwrite(source, source_start, dest, dest_start, length):
-        '''Overwrites the dest array with the source array.'''
-
-        for i in xrange(0, length):
-            dest[dest_start + i] = source[source_start + i]
+    def array_overwrite(source, s_start, dest, d_start, length):
+        dest[d_start:d_start + length] = source[s_start:s_start + length]
 
 
     def blockxor(source, source_start, dest, dest_start, length):
