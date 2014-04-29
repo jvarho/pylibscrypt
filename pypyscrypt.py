@@ -27,15 +27,19 @@
 # http://en.wikipedia.org/wiki/Scrypt
 # http://www.tarsnap.com/scrypt/scrypt.pdf
 
-# It was originally written for a pure-Python Litecoin CPU miner, see:
+# It was originally written for a pure-Python Litecoin CPU miner:
 # https://github.com/ricmoo/nightminer
-
 # Imported to this project from:
 # https://github.com/ricmoo/pyscrypt
-# but modified since.
+# And owes thanks to:
+# https://github.com/wg/scrypt
 
 
-import base64, hashlib, hmac, os, struct
+import base64
+import hashlib, hmac
+import os
+import struct
+
 
 import tests
 
@@ -43,7 +47,7 @@ from consts import *
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
-    """Returns the result of the scrypt password-based key derivation function.
+    """Returns the result of the scrypt password-based key derivation function
 
     Constraints:
         r * p < (2 ** 30)
@@ -57,14 +61,12 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
     def blockxor(source, s_start, dest, d_start, length):
-        '''Performs xor on arrays source and dest, storing the result back in dest.'''
-
         for i in xrange(length):
             dest[d_start + i] ^= source[s_start + i]
 
 
     def pbkdf2(passphrase, salt, count, olen, prf):
-        '''Returns the result of the Password-Based Key Derivation Function 2.
+        '''Returns the result of the Password-Based Key Derivation Function 2
 
         See http://en.wikipedia.org/wiki/PBKDF2
         '''
@@ -90,7 +92,6 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         block_number = 0
         blocks = []
 
-        # The iterations
         while size < olen:
             block_number += 1
             block = f(block_number)
@@ -104,42 +105,41 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
     def integerify(B, r):
-        '''"A bijective function from ({0, 1} ** k) to {0, ..., (2 ** k) - 1".'''
+        '''"A bijection from ({0, 1} ** k) to {0, ..., (2 ** k) - 1"'''
 
         Bi = (2 * r - 1) * 16
         return B[Bi]
 
 
     def R(X, destination, a1, a2, b):
-        '''A single round of Salsa.'''
+        '''A single Salsa20 row operation'''
 
         a = (X[a1] + X[a2]) & 0xffffffff
         X[destination] ^= ((a << b) | (a >> (32 - b)))
 
 
     def salsa20_8(B):
-        '''Salsa 20/8 http://en.wikipedia.org/wiki/Salsa20'''
+        '''Salsa20/8 http://en.wikipedia.org/wiki/Salsa20'''
 
         x = B[:]
 
-        # Salsa... Time to dance.
+        # Salsa 20/8 is four identical double rounds
         for i in xrange(4):
-            R(x, 4, 0, 12, 7);   R(x, 8, 4, 0, 9);    R(x, 12, 8, 4, 13);   R(x, 0, 12, 8, 18)
-            R(x, 9, 5, 1, 7);    R(x, 13, 9, 5, 9);   R(x, 1, 13, 9, 13);   R(x, 5, 1, 13, 18)
-            R(x, 14, 10, 6, 7);  R(x, 2, 14, 10, 9);  R(x, 6, 2, 14, 13);   R(x, 10, 6, 2, 18)
-            R(x, 3, 15, 11, 7);  R(x, 7, 3, 15, 9);   R(x, 11, 7, 3, 13);   R(x, 15, 11, 7, 18)
-            R(x, 1, 0, 3, 7);    R(x, 2, 1, 0, 9);    R(x, 3, 2, 1, 13);    R(x, 0, 3, 2, 18)
-            R(x, 6, 5, 4, 7);    R(x, 7, 6, 5, 9);    R(x, 4, 7, 6, 13);    R(x, 5, 4, 7, 18)
-            R(x, 11, 10, 9, 7);  R(x, 8, 11, 10, 9);  R(x, 9, 8, 11, 13);   R(x, 10, 9, 8, 18)
-            R(x, 12, 15, 14, 7); R(x, 13, 12, 15, 9); R(x, 14, 13, 12, 13); R(x, 15, 14, 13, 18)
+            R(x, 4, 0,12, 7);R(x, 8, 4, 0, 9);R(x,12, 8, 4,13);R(x, 0,12, 8,18)
+            R(x, 9, 5, 1, 7);R(x,13, 9, 5, 9);R(x, 1,13, 9,13);R(x, 5, 1,13,18)
+            R(x,14,10, 6, 7);R(x, 2,14,10, 9);R(x, 6, 2,14,13);R(x,10, 6, 2,18)
+            R(x, 3,15,11, 7);R(x, 7, 3,15, 9);R(x,11, 7, 3,13);R(x,15,11, 7,18)
+            R(x, 1, 0, 3, 7);R(x, 2, 1, 0, 9);R(x, 3, 2, 1,13);R(x, 0, 3, 2,18)
+            R(x, 6, 5, 4, 7);R(x, 7, 6, 5, 9);R(x, 4, 7, 6,13);R(x, 5, 4, 7,18)
+            R(x,11,10, 9, 7);R(x, 8,11,10, 9);R(x, 9, 8,11,13);R(x,10, 9, 8,18)
+            R(x,12,15,14, 7);R(x,13,12,15, 9);R(x,14,13,12,13);R(x,15,14,13,18)
 
-        # Coerce into nice happy 32-bit integers
         for i in xrange(16):
             B[i] = (x[i] + B[i]) & 0xffffffff
 
 
     def blockmix_salsa8(BY, Bi, Yi, r):
-        '''Blockmix; Used by SMix.'''
+        '''Blockmix; Used by SMix'''
 
         start = Bi + (2 * r - 1) * 16
         X = BY[start:start+16]                             # BlockMix - 1
@@ -153,11 +153,11 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
             array_overwrite(BY, Yi + (i * 2) * 16, BY, Bi + (i * 16), 16)
 
         for i in xrange(r):
-            array_overwrite(BY, Yi + (i * 2 + 1) * 16, BY, Bi + (i + r) * 16, 16)
+            array_overwrite(BY, Yi + (i*2 + 1) * 16, BY, Bi + (i + r) * 16, 16)
 
 
     def smix(B, Bi, r, N, V, X):
-        '''SMix; a specific case of ROMix. See scrypt.pdf in the links above.'''
+        '''SMix; a specific case of ROMix based on Salsa20/8'''
 
         array_overwrite(B, Bi, X, 0, 32 * r)               # ROMix - 1
 
@@ -173,17 +173,20 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         array_overwrite(X, 0, B, Bi, 32 * r)               # ROMix - 10
 
 
-    # Scrypt implementation. Significant thanks to https://github.com/wg/scrypt
     if not isinstance(salt, bytes):
         raise TypeError('scrypt salt must be a byte string')
     if N < 2 or (N & (N - 1)):
-        raise ValueError('Scrypt N must be a power of 2 greater than 1')
+        raise ValueError('scrypt N must be a power of 2 greater than 1')
+    if r <= 0:
+        raise ValueError('scrypt r must be positive')
+    if p <= 0:
+        raise ValueError('scrypt p must be positive')
 
     prf = lambda k, m: hmac.new(key=k, msg=m, digestmod=hashlib.sha256).digest()
-
     B  = pbkdf2(password, salt, 1, p * 128 * r, prf)
-    B  = list(struct.unpack('<%dI' % (len(B) // 4), B))
 
+    # Everything is lists of 32-bit uints for all but pbkdf2
+    B  = list(struct.unpack('<%dI' % (len(B) // 4), B))
     XY = [0] * (64 * r)
     V  = [0] * (32 * r * N)
 
@@ -194,21 +197,22 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     return pbkdf2(password, B, 1, olen, prf)
 
 
+# deBruijn table for getting ilog2 for powers of two quickly
 _scrypt_dbs = [
     0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
     31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 ]
 
 def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
-    """Derives a Modular Crypt Format hash using the scrypt KDF.
+    """Derives a Modular Crypt Format hash using the scrypt KDF
 
     If no salt is given, 16 random bytes are generated using os.urandom."""
     if salt is None:
         salt = os.urandom(16)
 
-    if not 0 < r < 255:
+    if r > 255:
         raise ValueError('scrypt_mcf r out of range [1,255]')
-    if not 0 < p < 255:
+    if p > 255:
         raise ValueError('scrypt_mcf p out of range [1,255]')
 
     hash = scrypt(password, salt, N, r, p)

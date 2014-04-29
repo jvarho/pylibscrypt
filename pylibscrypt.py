@@ -21,13 +21,18 @@
 # THE SOFTWARE.
 
 
+# Scrypt implementation that calls into system libscrypt.
+
+
 import base64
 import ctypes, ctypes.util
 import os
 
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32
 
+
 import tests
+
 from consts import *
 
 
@@ -86,7 +91,7 @@ _libscrypt_check.argtypes = [
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
-    """Derives a 64-byte hash using the scrypt key-derivarion function.
+    """Derives a 64-byte hash using the scrypt key-derivarion function
 
     Memory usage is proportional to N*r. Defaults require about 16 MiB.
     Time taken is proportional to N*p. Defaults take <100ms of a recent x86.
@@ -116,7 +121,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
 def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
-    """Derives a Modular Crypt Format hash using the scrypt KDF.
+    """Derives a Modular Crypt Format hash using the scrypt KDF
 
     If no salt is given, 16 random bytes are generated using os.urandom."""
     if salt is None:
