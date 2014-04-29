@@ -275,7 +275,12 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     t = _scrypt_dbs[((N * 0x077CB531) & 0xffffffff) >> 27]
     params = p + (r << 8) + (t << 16)
 
-    return '%s$%06x$%s$%s' % (SCRYPT_MCF_ID, params, s64, h64)
+    return (
+        SCRYPT_MCF_ID +
+        ('$%06x' % params).encode() +
+        b'$' + s64 +
+        b'$' + h64
+    )
 
 
 def scrypt_mcf_check(mcf, password):
@@ -285,7 +290,7 @@ def scrypt_mcf_check(mcf, password):
     if not isinstance(password, bytes):
         raise TypeError
 
-    s = mcf.split('$')
+    s = mcf.split(b'$')
     if not (mcf.startswith(SCRYPT_MCF_ID) and len(s) == 5):
         raise ValueError('Unrecognized MCF hash')
 

@@ -219,7 +219,7 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
         fails += 1
 
     i += 1
-    if len(scrypt('pass', 'salt', N=2, olen=42)) != 42:
+    if len(scrypt(b'pass', b'salt', N=2, olen=42)) != 42:
         print("Test %d failed!" % i)
         print("  scrypt didn't support irregular length 42")
     elif verbose:

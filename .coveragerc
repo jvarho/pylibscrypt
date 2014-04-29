@@ -4,8 +4,9 @@ exclude_lines =
     if __name__ == .__main__.:
 
     # Untestable from a working environment
-    except OSError:
     except AttributeError:
+    except NameError:
+    except OSError:
     raise ImportError.*
 
     # Inlined, so not called
