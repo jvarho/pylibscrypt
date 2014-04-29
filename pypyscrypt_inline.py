@@ -32,10 +32,10 @@
 
 # Imported to this project from:
 # https://github.com/ricmoo/pyscrypt
-# but modifier since.
+# but modified since.
 
 
-import hashlib, hmac, struct
+import base64, hashlib, hmac, struct
 
 
 SCRYPT_MCF_ID = "$s1"
