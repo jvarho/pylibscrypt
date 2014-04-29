@@ -121,6 +121,8 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     If no salt is given, 16 random bytes are generated using os.urandom."""
     if salt is None:
         salt = os.urandom(16)
+    if r == 0 or p == 0:
+        raise ValueError('r and p must be positive')
     hash = scrypt(password, salt, N, r, p)
 
     h64 = base64.b64encode(hash)
