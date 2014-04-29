@@ -138,15 +138,15 @@ if __name__ == "__main__":
 
     test_vectors = (
         (b'password', b'NaCl', 1024, 8, 16,
-          b'fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b373162'
-          b'2eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640',
-          b'$s1$0e0801$TmFDbA==$qEMNflgfnKA8lS31Bqxmx1eJnWeiHXHA8ZAL13isHRTK'
-          b'DtWIP2jrleFuZRPU1OraoUTE8l1tDKpPhxz1HG6c7w=='),
+         b'fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b373162'
+         b'2eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640',
+         b'$s1$0a0810$TmFDbA==$/bq+HJ00cgB4VucZDQHp/nxq18vII3gw53N2Y0s3MWIu'
+         b'rzDZLiKjiG/xCSedmDDaxyevuUqD7m2DYMvfoswGQA=='),
         (b'pleaseletmein', b'SodiumChloride', 16384, 8, 1,
-          b'7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2'
-          b'd5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887',
-          b'$s1$0e0801$U29kaXVtQ2hsb3JpZGU=$cCO9yzr9c0hGHAbNgf046/2o+7qQT44+'
-          b'qbVD9lRdofLVQylVYT8Pz2LUlwUkKpr55h6F3A1lHkDfzwF7RVdYhw=='),
+         b'7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2'
+         b'd5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887',
+         b'$s1$0e0801$U29kaXVtQ2hsb3JpZGU=$cCO9yzr9c0hGHAbNgf046/2o+7qQT44+'
+         b'qbVD9lRdofLVQylVYT8Pz2LUlwUkKpr55h6F3A1lHkDfzwF7RVdYhw=='),
     )
     i = fails = 0
     for pw, s, n, r, p, h, m in test_vectors:
@@ -158,7 +158,14 @@ if __name__ == "__main__":
             print("  Expected: %s" % h)
             print("  Got:      %s" % base64.b16encode(h2))
             fails += 1
-        m2 = scrypt_mcf(pw, s)
+        m2 = scrypt_mcf(pw, s, N=n, p=p, r=r)
+        if m != m2:
+            print("Test %d.1.5 failed!" % i)
+            print("  scrypt_mcf('%s', '%s', %d, %d, %d)" % (pw, s, n, r, p))
+            print("  Expected: %s" % m)
+            print("  Got:      %s" % m2)
+            print("  scrypt_mcf_check failed!")
+            fails += 1
         if not (scrypt_mcf_check(m, pw) and scrypt_mcf_check(m2, pw)):
             print("Test %d.2 failed!" % i)
             print("  scrypt_mcf('%s', '%s', %d, %d, %d)" % (pw, s, n, r, p))
