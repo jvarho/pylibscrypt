@@ -23,7 +23,7 @@
 import base64
 
 
-def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check):
+def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
     test_vectors = (
         (b'password', b'NaCl', 1024, 8, 16,
          b'fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b373162'
@@ -37,6 +37,15 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check):
          b'qbVD9lRdofLVQylVYT8Pz2LUlwUkKpr55h6F3A1lHkDfzwF7RVdYhw=='),
     )
     i = fails = 0
+    if fast:
+        test_vectors = (
+            (b'password', b'NaCl', 2, 8, 1,
+             b'e5ed8edc019edfef2d3ced0896faf9eec6921dcc68125ce81c10d53474ce'
+             b'1be545979159700d324e77c68d34c553636a8429c4f3c99b9566466877f9'
+             b'dca2b92b',
+             b'$s1$010801$TmFDbA==$5e2O3AGe3+8tPO0Ilvr57saSHcxoElzoHBDVNHTO'
+             b'G+VFl5FZcA0yTnfGjTTFU2NqhCnE88mblWZGaHf53KK5Kw=='),
+        )
     for pw, s, n, r, p, h, m in test_vectors:
         i += 1
         h2 = scrypt(pw, s, n, r, p)
@@ -46,31 +55,40 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check):
             print("  Expected: %s" % h)
             print("  Got:      %s" % base64.b16encode(h2))
             fails += 1
+        elif verbose:
+            print("Test %d.1 successful!" % i)
         m2 = scrypt_mcf(pw, s, N=n, p=p, r=r)
         if m != m2:
-            print("Test %d.1.5 failed!" % i)
-            print("  scrypt_mcf('%s', '%s', %d, %d, %d)" % (pw, s, n, r, p))
-            print("  Expected: %s" % m)
-            print("  Got:      %s" % m2)
-            print("  scrypt_mcf_check failed!")
-            fails += 1
-        if not (scrypt_mcf_check(m, pw) and scrypt_mcf_check(m2, pw)):
             print("Test %d.2 failed!" % i)
             print("  scrypt_mcf('%s', '%s', %d, %d, %d)" % (pw, s, n, r, p))
             print("  Expected: %s" % m)
             print("  Got:      %s" % m2)
             print("  scrypt_mcf_check failed!")
             fails += 1
-        if scrypt_mcf_check(m, b'X' + pw) or scrypt_mcf_check(m2, b'X' + pw):
+        elif verbose:
+            print("Test %d.2 successful!" % i)
+        if not (scrypt_mcf_check(m, pw) and scrypt_mcf_check(m2, pw)):
             print("Test %d.3 failed!" % i)
+            print("  scrypt_mcf('%s', '%s', %d, %d, %d)" % (pw, s, n, r, p))
+            print("  Expected: %s" % m)
+            print("  Got:      %s" % m2)
+            print("  scrypt_mcf_check failed!")
+            fails += 1
+        elif verbose:
+            print("Test %d.3 successful!" % i)
+        if scrypt_mcf_check(m, b'X' + pw) or scrypt_mcf_check(m2, b'X' + pw):
+            print("Test %d.4 failed!" % i)
             print("  scrypt_mcf_check succeeded with wrong password!")
             fails += 1
+        elif verbose:
+            print("Test %d.4 successful!" % i)
 
     i += 1
     try:
-        scrypt(u'password', b'salt')
+        scrypt(u'password', b'salt', N=2)
     except TypeError:
-        pass
+        if verbose:
+            print("Test %d successful!" % i)
     else:
         print("Test %d failed!" % i)
         print("  Unicode password accepted")
@@ -78,9 +96,10 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check):
 
     i += 1
     try:
-        scrypt(b'password', u'salt')
+        scrypt(b'password', u'salt', N=2)
     except TypeError:
-        pass
+        if verbose:
+            print("Test %d successful!" % i)
     else:
         print("Test %d failed!" % i)
         print("  Unicode salt accepted")
@@ -90,38 +109,55 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check):
     try:
         scrypt(b'password', b'salt', N=-1)
     except ValueError:
-        pass
+        if verbose:
+            print("Test %d successful!" % i)
     else:
         print("Test %d failed!" % i)
         print("  Invalid N value accepted")
         fails += 1
 
     i += 1
-    if scrypt_mcf(b'password', b'salt') != scrypt_mcf(b'password', b'salt'):
+    if (scrypt_mcf(b'password', b'salt', N=2) !=
+            scrypt_mcf(b'password', b'salt', N=2)):
         print("Test %d.1 failed!" % i)
         print("  Inconsistent MCF!")
         fails += 1
-    if scrypt_mcf(b'password') == scrypt_mcf(b'password'):
+    elif verbose:
+        print("Test %d.1 successful!" % i)
+    if scrypt_mcf(b'password', N=2) == scrypt_mcf(b'password', N=2):
         print("Test %d.2 failed!" % i)
         print("  Random salts match!")
         fails += 1
+    elif verbose:
+        print("Test %d.2 successful!" % i)
 
     i += 1
     try:
-        mcf = scrypt_mcf(b'password', b's'*100)
+        mcf = scrypt_mcf(b'password', b's'*100, N=2)
     except ValueError:
-        pass
+        if verbose:
+            print("Test %d successful!" % i)
     else:
         if len(mcf) < 150:
             print("Test %d failed!" % i)
             print("  Long salt truncated by scrypt_mcf")
             fails += 1
+        elif not scrypt_mcf_check(mcf, b'password'):
+            print("Test %d failed!" % i)
+            print("  scrypt_mcf[_check] failed with long salt")
+        elif scrypt_mcf_check(mcf, b'xpassword'):
+            print("Test %d failed!" % i)
+            print("  scrypt_mcf[_check] failed with long salt")
+            print("  scrypt_mcf_check succeeded with wrong password!")
+        elif verbose:
+            print("Test %d successful!" % i)
 
     i += 1
     try:
         scrypt_mcf_check(42, b'password')
     except TypeError:
-        pass
+        if verbose:
+            print("Test %d successful!" % i)
     else:
         print("Test %d failed!" % i)
         print("  Non-string MCF accepted")
@@ -131,7 +167,8 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check):
     try:
         scrypt_mcf_check(b'mcf', 42)
     except TypeError:
-        pass
+        if verbose:
+            print("Test %d successful!" % i)
     else:
         print("Test %d failed!" % i)
         print("  Non-string password accepted")
@@ -141,7 +178,8 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check):
     try:
         scrypt_mcf_check(b'mcf', b'password')
     except ValueError:
-        pass
+        if verbose:
+            print("Test %d successful!" % i)
     else:
         print("Test %d failed!" % i)
         print("  Invalid MCF not reported")
@@ -151,4 +189,15 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check):
         print("%d tests failed!" % fails)
     else:
         print("All tests successful!")
+
+
+if __name__ == "__main__":
+    import pylibscrypt as cs
+    import pypyscrypt_inline as ps
+
+    print('Testing C scrypt...')
+    run_tests(cs.scrypt, cs.scrypt_mcf, cs.scrypt_mcf_check, fast=True)
+
+    print('Testing Python scrypt...')
+    run_tests(ps.scrypt, ps.scrypt_mcf, ps.scrypt_mcf_check, fast=True)
 
