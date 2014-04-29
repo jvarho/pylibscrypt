@@ -62,6 +62,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
     def blockxor(source, s_start, dest, d_start, length):
         '''Performs xor on arrays source and dest, storing the result back in dest.'''
+
         for i in xrange(length):
             dest[d_start + i] ^= source[s_start + i]
 
@@ -89,17 +90,19 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         size = 0
 
         block_number = 0
-        blocks = bytearray()
+        blocks = []
 
         # The iterations
         while size < olen:
             block_number += 1
             block = f(block_number)
 
-            blocks.extend(block)
+            blocks.append(block)
             size += len(block)
 
-        return blocks[:olen]
+        if size > olen:
+            blocks[-1] = blocks[-1][:olen-size]
+        return b''.join(blocks)
 
 
     def integerify(B, r):
@@ -244,7 +247,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         smix(B, i * 32 * r, r, N, V, XY)
 
     B = struct.pack('<%dI' % len(B), *B)
-    return bytes(pbkdf2(password, B, 1, olen, prf))
+    return pbkdf2(password, B, 1, olen, prf)
 
 
 # Simple test harness
