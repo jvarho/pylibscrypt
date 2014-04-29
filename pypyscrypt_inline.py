@@ -62,7 +62,6 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
     def blockxor(source, s_start, dest, d_start, length):
         '''Performs xor on arrays source and dest, storing the result back in dest.'''
-
         for i in xrange(length):
             dest[d_start + i] ^= source[s_start + i]
 
@@ -106,8 +105,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     def integerify(B, r):
         '''"A bijective function from ({0, 1} ** k) to {0, ..., (2 ** k) - 1".'''
 
-        Bi = (2 * r - 1) * 64
-        return struct.unpack('<I', B[Bi:Bi+4])[0]
+        Bi = (2 * r - 1) * 16
+        return B[Bi]
 
 
     def R(X, destination, a1, a2, b):
@@ -118,11 +117,9 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
     def salsa20_8(B):
-        '''Salsa 20/8 stream cypher; Used by BlockMix. See http://en.wikipedia.org/wiki/Salsa20'''
+        '''Salsa 20/8 http://en.wikipedia.org/wiki/Salsa20'''
 
-        # Convert the bytearray into an int32 array
-        B32 = struct.unpack('<16I', B)
-        x = list(B32)
+        x = B[:]
 
         # Salsa... Time to dance.
         for i in xrange(4):
@@ -192,62 +189,61 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
             x[15] ^= (a << 18) | (a >> 14)
 
         # Coerce into nice happy 32-bit integers
-        B32 = [ (x[i] + B32[i]) & 0xffffffff for i in xrange(16) ]
-
-        # Convert back to bytes
-        B[:] = struct.pack('<16I', *B32)
+        for i in xrange(16):
+            B[i] = (x[i] + B[i]) & 0xffffffff
 
 
     def blockmix_salsa8(BY, Bi, Yi, r):
         '''Blockmix; Used by SMix.'''
 
-        start = Bi + (2 * r - 1) * 64
-        X = BY[start:start+64]                   # BlockMix - 1
+        start = Bi + (2 * r - 1) * 16
+        X = BY[start:start+16]                             # BlockMix - 1
 
-        for i in xrange(2 * r):                                         # BlockMix - 2
-            blockxor(BY, i * 64, X, 0, 64)                                   # BlockMix - 3(inner)
-            salsa20_8(X)                                                     # BlockMix - 3(outer)
-            array_overwrite(X, 0, BY, Yi + (i * 64), 64)                     # BlockMix - 4
+        for i in xrange(2 * r):                            # BlockMix - 2
+            blockxor(BY, i * 16, X, 0, 16)                 # BlockMix - 3(inner)
+            salsa20_8(X)                                   # BlockMix - 3(outer)
+            array_overwrite(X, 0, BY, Yi + (i * 16), 16)   # BlockMix - 4
 
-        for i in xrange(r):                                             # BlockMix - 6 (and below)
-            array_overwrite(BY, Yi + (i * 2) * 64, BY, Bi + (i * 64), 64)
+        for i in xrange(r):                                # BlockMix - 6
+            array_overwrite(BY, Yi + (i * 2) * 16, BY, Bi + (i * 16), 16)
 
         for i in xrange(r):
-            array_overwrite(BY, Yi + (i * 2 + 1) * 64, BY, Bi + (i + r) * 64, 64)
+            array_overwrite(BY, Yi + (i * 2 + 1) * 16, BY, Bi + (i + r) * 16, 16)
 
 
     def smix(B, Bi, r, N, V, X):
         '''SMix; a specific case of ROMix. See scrypt.pdf in the links above.'''
 
-        array_overwrite(B, Bi, X, 0, 128 * r)               # ROMix - 1
+        array_overwrite(B, Bi, X, 0, 32 * r)               # ROMix - 1
 
-        for i in xrange(N):                              # ROMix - 2
-            array_overwrite(X, 0, V, i * (128 * r), 128 * r)  # ROMix - 3
-            blockmix_salsa8(X, 0, 128 * r, r)                 # ROMix - 4
+        for i in xrange(N):                                # ROMix - 2
+            array_overwrite(X, 0, V, i * (32 * r), 32 * r) # ROMix - 3
+            blockmix_salsa8(X, 0, 32 * r, r)               # ROMix - 4
 
-        for i in xrange(N):                              # ROMix - 6
-            j = integerify(X, r) & (N - 1)                    # ROMix - 7
-            blockxor(V, j * (128 * r), X, 0, 128 * r)         # ROMix - 8(inner)
-            blockmix_salsa8(X, 0, 128 * r, r)                 # ROMix - 9(outer)
+        for i in xrange(N):                                # ROMix - 6
+            j = integerify(X, r) & (N - 1)                 # ROMix - 7
+            blockxor(V, j * (32 * r), X, 0, 32 * r)        # ROMix - 8(inner)
+            blockmix_salsa8(X, 0, 32 * r, r)               # ROMix - 9(outer)
 
-        array_overwrite(X, 0, B, Bi, 128 * r)               # ROMix - 10
+        array_overwrite(X, 0, B, Bi, 32 * r)               # ROMix - 10
 
 
     # Scrypt implementation. Significant thanks to https://github.com/wg/scrypt
-    if N < 2 or (N & (N - 1)): raise ValueError('Scrypt N must be a power of 2 greater than 1')
+    if N < 2 or (N & (N - 1)):
+        raise ValueError('Scrypt N must be a power of 2 greater than 1')
 
-    prf = lambda k, m: hmac.new(key = k, msg = m, digestmod = hashlib.sha256).digest()
-
-    # Use bytearrays to avoid chr/ord on python2
-    DK = bytearray(olen)
+    prf = lambda k, m: hmac.new(key=k, msg=m, digestmod=hashlib.sha256).digest()
 
     B  = pbkdf2(password, salt, 1, p * 128 * r, prf)
-    XY = bytearray(256 * r)
-    V  = bytearray(128 * r * N)
+    B  = list(struct.unpack('<%dI' % (len(B) // 4), B))
+
+    XY = [0] * (64 * r)
+    V  = [0] * (32 * r * N)
 
     for i in xrange(p):
-        smix(B, i * 128 * r, r, N, V, XY)
+        smix(B, i * 32 * r, r, N, V, XY)
 
+    B = struct.pack('<%dI' % len(B), *B)
     return bytes(pbkdf2(password, B, 1, olen, prf))
 
 
