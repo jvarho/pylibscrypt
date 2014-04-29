@@ -35,7 +35,7 @@
 # but modified since.
 
 
-import base64, hashlib, hmac, struct
+import base64, hashlib, hmac, os, struct
 
 
 SCRYPT_MCF_ID = "$s1"
@@ -176,6 +176,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
     # Scrypt implementation. Significant thanks to https://github.com/wg/scrypt
+    if not isinstance(salt, bytes):
+        raise TypeError('scrypt salt must be a byte string')
     if N < 2 or (N & (N - 1)):
         raise ValueError('Scrypt N must be a power of 2 greater than 1')
 
@@ -194,41 +196,185 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     return pbkdf2(password, B, 1, olen, prf)
 
 
-# Simple test harness
-if __name__ == '__main__':
+_scrypt_dbs = [
+    0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+    31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+]
 
-    Tests = [
-        dict(password = 'password', salt = 'salt', N = 2, r = 1, p = 1, olen = 32, result = '6d1bb878eee9ce4a7b77d7a44103574d4cbfe3c15ae3940f0ffe75cd5e1e0afa'),
-        dict(password = 'password', salt = 'salt', N = 32, r = 4, p = 15, olen = 128, result = '19f255f7dbcc4128e3467c78c795cb934a82bb813793d2634f6e3adbaee1f54b118fca8b067ab4aad3f6557c716b3734bb93a5cb40500b5e42dc96ccee260fc64d8e660b80e7aecd81c83fefedaf1319b6265e6ef37ca268247052f0b5cac91d14800c1b6f8cb23a28f4620aa0a8e12de88906ec5755a4a643917947a010b7bf'),
-        dict(password = 'password', salt = 'salt', N = 128, r = 3, p = 3, olen = 45, result = 'bdbefc353d2145625af2d8f86dad13d6bd993daabbb39a740887ff985803a22675284ad4c3ab5f68a779d0b71a'),
-        dict(password = 'password', salt = 'salt', N = 256, r = 6, p = 2, olen = 100, result = '08d4bd8bc6a0db2d3afb86e14bb3e219c7e067add953576ebc4678f86c85f5bc819de1fe22877c7d98c2ee11fef9f3a1ca0047a079b3ee35152c31d51b8db57f267050255065b933d65edfc65203e9b964c5c54507eba8b990c8c9106274fa105237550a'),
-        dict(password = "You're a master of Karate", salt = 'And friendship for Everyone', N = 1024, r = 1, p = 1, olen = 256, result = '3a3cbca04456f6ee5295460171a2a2b27e1c28163999f19ab1e2eeda01e355d904627c6baa185087f99f3fee33e4a9ccad1f4230681d77301d2b4f6543023e090faf6e86431a1071f64b693402ceb485469ef33308af104fb1f87b39ecaf733ebc3d73b184c0914fbc4e8eff90777c60172596de79070418f3c9998b6b60640f1d8f3019904b3e20f2920d26c21daf81d0652ffcaffccf734773e0730900204b56b5bebbfb8c3a31d543f6e3ac5f4e1431a864da87c239eefec8e462d458ee2d214646864e9207e15f66a3782b52bb5158152d757d0ca25d2062235ee76c431e5016b3a52cd5b575e3a26aba95654d5b9a991527f5a19d7275ac4f9889081ee9'),
-    ]
+def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
+    """Derives a Modular Crypt Format hash using the scrypt KDF.
 
-    # Use the C wrapper to help generate results against a known-correct implementation
-    if True:
-        import pylibscrypt
+    If no salt is given, 16 random bytes are generated using os.urandom."""
+    if salt is None:
+        salt = os.urandom(16)
 
-        for test in Tests:
-            result = test['result']
-            del test['result']
-            h = pylibscrypt.scrypt(**test).encode('hex')
-            if h != result:
-                print "Unexcepted result from libscrypt, overwriting original"
-            test['result'] = h
+    if not 0 < r < 255:
+        raise ValueError('scrypt_mcf r out of range [1,255]')
+    if not 0 < p < 255:
+        raise ValueError('scrypt_mcf p out of range [1,255]')
 
-    # Run each test case
-    index = 0
-    for test in Tests:
-        index += 1
+    hash = scrypt(password, salt, N, r, p)
 
-        # Store and remove the expected result
-        result = test['result']
-        del test['result']
+    h64 = base64.b64encode(hash)
+    s64 = base64.b64encode(salt)
 
-        # Perform the hash
-        h = scrypt(**test).encode('hex')
+    t = _scrypt_dbs[((n * 0x077CB531) & 0xffffffff) >> 27]
+    params = p + (r << 8) + (t << 16)
 
-        # How'd we do?
-        print "Test %d: %s" % (index, { True: "pass", False: "FAIL" }[h == result])
+    return '%s$%06x$%s$%s' % (SCRYPT_MCF_ID, params, s64, h64)
+
+
+def scrypt_mcf_check(mcf, password):
+    """Returns True if the password matches the given MCF hash"""
+    if not isinstance(mcf, bytes):
+        raise TypeError
+    if not isinstance(password, bytes):
+        raise TypeError
+
+    s = mcf.split('$')
+    if not (mcf.startswith(SCRYPT_MCF_ID) and len(s) == 5):
+        raise ValueError('Unrecognized MCF hash')
+
+    params, s64, h64 = s[2:]
+    t, r, p = struct.unpack('3B', base64.b16decode(params, True))
+    N = 2 ** t
+    salt = base64.b64decode(s64)
+    hash = base64.b64decode(h64)
+
+    if not 0 < r < 255:
+        raise ValueError('scrypt_mcf_check r out of range [1,255]')
+    if not 0 < p < 255:
+        raise ValueError('scrypt_mcf_check p out of range [1,255]')
+
+    h = scrypt(password, salt, N=N, r=r, p=p)
+
+    #print((mcf, password, salt, N, r, p))
+    #print((hash, h, hash == h))
+
+    return hash == h
+
+
+if __name__ == "__main__":
+    print('Testing scrypt...')
+
+    test_vectors = (
+        (b'password', b'NaCl', 1024, 8, 16,
+          b'fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b373162'
+          b'2eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640',
+          b'$s1$0e0801$TmFDbA==$qEMNflgfnKA8lS31Bqxmx1eJnWeiHXHA8ZAL13isHRTK'
+          b'DtWIP2jrleFuZRPU1OraoUTE8l1tDKpPhxz1HG6c7w=='),
+        (b'pleaseletmein', b'SodiumChloride', 16384, 8, 1,
+          b'7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2'
+          b'd5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887',
+          b'$s1$0e0801$U29kaXVtQ2hsb3JpZGU=$cCO9yzr9c0hGHAbNgf046/2o+7qQT44+'
+          b'qbVD9lRdofLVQylVYT8Pz2LUlwUkKpr55h6F3A1lHkDfzwF7RVdYhw=='),
+    )
+    i = fails = 0
+    for pw, s, n, r, p, h, m in test_vectors:
+        i += 1
+        h2 = scrypt(pw, s, n, r, p)
+        if h2 != base64.b16decode(h, True):
+            print("Test %d.1 failed!" % i)
+            print("  scrypt('%s', '%s', %d, %d, %d)" % (pw, s, n, r, p))
+            print("  Expected: %s" % h)
+            print("  Got:      %s" % base64.b16encode(h2))
+            fails += 1
+        m2 = scrypt_mcf(pw, s, N=n, r=r, p=p)
+        if not (scrypt_mcf_check(m, pw) and scrypt_mcf_check(m2, pw)):
+            print("Test %d.2 failed!" % i)
+            print("  scrypt_mcf('%s', '%s', %d, %d, %d)" % (pw, s, n, r, p))
+            print("  Expected: %s" % m)
+            print("  Got:      %s" % m2)
+            print("  scrypt_mcf_check failed!")
+            fails += 1
+        if scrypt_mcf_check(m, b'X' + pw) or scrypt_mcf_check(m2, b'X' + pw):
+            print("Test %d.3 failed!" % i)
+            print("  scrypt_mcf_check succeeded with wrong password!")
+            fails += 1
+
+    i += 1
+    try:
+        scrypt(u'password', b'salt')
+    except TypeError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Unicode password accepted")
+        fails += 1
+
+    i += 1
+    try:
+        scrypt(b'password', u'salt')
+    except TypeError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Unicode salt accepted")
+        fails += 1
+
+    i += 1
+    try:
+        scrypt(b'password', b'salt', N=-1)
+    except ValueError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Invalid N value accepted")
+        fails += 1
+
+    i += 1
+    if scrypt_mcf(b'password', b'salt') != scrypt_mcf(b'password', b'salt'):
+        print("Test %d.1 failed!" % i)
+        print("  Inconsistent MCF!")
+        fails += 1
+    if scrypt_mcf(b'password') == scrypt_mcf(b'password'):
+        print("Test %d.2 failed!" % i)
+        print("  Random salts match!")
+        fails += 1
+
+    i += 1
+    try:
+        mcf = scrypt_mcf(b'password', b's'*100)
+    except ValueError:
+        pass
+    else:
+        if len(mcf) < 150:
+            print("Test %d failed!" % i)
+            print("  Long salt truncated by scrypt_mcf")
+            fails += 1
+
+    i += 1
+    try:
+        scrypt_mcf_check(42, b'password')
+    except TypeError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Non-string MCF accepted")
+        fails += 1
+
+    i += 1
+    try:
+        scrypt_mcf_check(b'mcf', 42)
+    except TypeError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Non-string password accepted")
+        fails += 1
+
+    i += 1
+    try:
+        scrypt_mcf_check(b'mcf', b'password')
+    except ValueError:
+        pass
+    else:
+        print("Test %d failed!" % i)
+        print("  Invalid MCF not reported")
+        fails += 1
+
+    if fails:
+        print("%d tests failed!" % fails)
+    else:
+        print("All tests successful!")
 
