@@ -185,6 +185,46 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
         print("  Invalid MCF not reported")
         fails += 1
 
+    i += 1
+    try:
+        scrypt_mcf(b'password', b'NaCl', N=2, r=256)
+    except ValueError:
+        if verbose:
+            print("Test %d successful!" % i)
+    else:
+        print("Test %d failed!" % i)
+        print("  scrypt_mcf accepted invalid r")
+        fails += 1
+
+    i += 1
+    try:
+        scrypt_mcf(b'password', b'NaCl', N=2, p=256)
+    except ValueError:
+        if verbose:
+            print("Test %d successful!" % i)
+    else:
+        print("Test %d failed!" % i)
+        print("  scrypt_mcf accepted invalid p")
+        fails += 1
+
+    i += 1
+    try:
+        scrypt_mcf_check(b'$s1$ffffffff$aaaa$bbbb', b'password')
+    except ValueError:
+        if verbose:
+            print("Test %d successful!" % i)
+    else:
+        print("Test %d failed!" % i)
+        print("  scrypt_mcf_check accepted invalid MCF")
+        fails += 1
+
+    i += 1
+    if len(scrypt('pass', 'salt', N=2, olen=42)) != 42:
+        print("Test %d failed!" % i)
+        print("  scrypt didn't support irregular length 42")
+    elif verbose:
+        print("Test %d successful!" % i)
+
     if fails:
         print("%d tests failed!" % fails)
     else:

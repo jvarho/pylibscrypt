@@ -74,7 +74,9 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
             U = prf(passphrase, salt + struct.pack('>L', block_number))
 
-            if count > 1:
+            # Count is always 1 in scrypt
+            assert count == 1
+            if False:#count > 1:
                 U = bytearray(U)
                 for i in xrange(2, 1 + count):
                     p = bytearray(prf(passphrase, U))
@@ -288,15 +290,14 @@ def scrypt_mcf_check(mcf, password):
         raise ValueError('Unrecognized MCF hash')
 
     params, s64, h64 = s[2:]
-    t, r, p = struct.unpack('3B', base64.b16decode(params, True))
-    N = 2 ** t
+    params = base64.b16decode(params, True)
     salt = base64.b64decode(s64)
     hash = base64.b64decode(h64)
 
-    if not 0 < r < 255:
-        raise ValueError('scrypt_mcf_check r out of range [1,255]')
-    if not 0 < p < 255:
-        raise ValueError('scrypt_mcf_check p out of range [1,255]')
+    if len(params) != 3:
+        raise ValueError('Unrecognized MCF parameters')
+    t, r, p = struct.unpack('3B', params)
+    N = 2 ** t
 
     h = scrypt(password, salt, N=N, r=r, p=p)
 

@@ -1,7 +1,19 @@
 [report]
 exclude_lines =
+    # Not called from coverage tests
     if __name__ == .__main__.:
+
+    # Untestable from a working environment
     except OSError:
     except AttributeError:
     raise ImportError.*
-    
+
+    # Inlined, so not called
+    def R.*:
+
+    # Not used, left in for completeness
+    if False:
+
+    # Duh...
+    def run_tests
+
