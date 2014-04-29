@@ -12,7 +12,9 @@ def indent(line):
 with open('pypyscrypt.py', 'r') as f:
     in_loop = False
     loop_indent = 0
+    lc = 0
     for line in f:
+        lc += 1
         i = indent(line)
         if line[i:].startswith('R('):
             parts = line.split(';')
@@ -27,4 +29,6 @@ with open('pypyscrypt.py', 'r') as f:
                          (vals[0], vals[3], 32 - vals[3]))
         else:
             of.write(line)
+        if lc == 1:
+            of.write('\n# Automatically generated file, see inline.py\n')
 

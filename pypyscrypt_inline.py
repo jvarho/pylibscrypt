@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# Automatically generated file, see inline.py
+
 # Copyright (c) 2014 Richard Moore
 # Copyright (c) 2014 Jan Varho
 #
