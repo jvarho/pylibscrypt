@@ -274,7 +274,7 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     h64 = base64.b64encode(hash)
     s64 = base64.b64encode(salt)
 
-    t = _scrypt_dbs[((n * 0x077CB531) & 0xffffffff) >> 27]
+    t = _scrypt_dbs[((N * 0x077CB531) & 0xffffffff) >> 27]
     params = p + (r << 8) + (t << 16)
 
     return '%s$%06x$%s$%s' % (SCRYPT_MCF_ID, params, s64, h64)
@@ -303,9 +303,6 @@ def scrypt_mcf_check(mcf, password):
         raise ValueError('scrypt_mcf_check p out of range [1,255]')
 
     h = scrypt(password, salt, N=N, r=r, p=p)
-
-    #print((mcf, password, salt, N, r, p))
-    #print((hash, h, hash == h))
 
     return hash == h
 
