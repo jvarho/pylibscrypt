@@ -90,12 +90,14 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         X[destination] ^= ((a << b) | (a >> (32 - b)))
 
 
-    def salsa20_8(B):
+    def salsa20_8(B, x, src, s_start, dest, d_start):
         '''Salsa20/8 http://en.wikipedia.org/wiki/Salsa20'''
 
-        x = B[:]
+        # Merged blockxor for speed
+        for i in xrange(16):
+            x[i] = B[i] = B[i] ^ src[s_start + i]
 
-        # Salsa 20/8 is four identical double rounds
+        # This is the actual Salsa 20/8: four identical double rounds
         for i in xrange(4):
             a = (x[0]+x[12]) & 0xffffffff
             b = (x[5]+x[1]) & 0xffffffff
@@ -162,8 +164,10 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
             x[10] ^= (a << 18) | (a >> 14)
             x[15] ^= (b << 18) | (b >> 14)
 
+        # While we are handling the data, write it to the correct dest.
+        # The latter half is still part of salsa20
         for i in xrange(16):
-            B[i] = (x[i] + B[i]) & 0xffffffff
+            dest[d_start + i] = B[i] = (x[i] + B[i]) & 0xffffffff
 
 
     def blockmix_salsa8(BY, Bi, Yi, r):
@@ -171,11 +175,12 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
         start = Bi + (2 * r - 1) * 16
         X = BY[start:start+16]                             # BlockMix - 1
+        tmp = [0]*16
 
         for i in xrange(2 * r):                            # BlockMix - 2
-            blockxor(BY, i * 16, X, 0, 16)                 # BlockMix - 3(inner)
-            salsa20_8(X)                                   # BlockMix - 3(outer)
-            array_overwrite(X, 0, BY, Yi + (i * 16), 16)   # BlockMix - 4
+            #blockxor(BY, i * 16, X, 0, 16)                # BlockMix - 3(inner)
+            salsa20_8(X, tmp, BY, i * 16, BY, Yi + i*16)   # BlockMix - 3(outer)
+            #array_overwrite(X, 0, BY, Yi + (i * 16), 16)  # BlockMix - 4
 
         for i in xrange(r):                                # BlockMix - 6
             array_overwrite(BY, Yi + (i * 2) * 16, BY, Bi + (i * 16), 16)
