@@ -8,8 +8,8 @@ Features
 --
 * Uses system libscrypt[2] – as up to date as your distro is.
 * Offers a pure Python scrypt implementation for when there's no libscrypt.
-* Not unusably slow, even in pure Python... at least with pypy[3]. (More than
-  one tenth the C speed, anyway.)
+* Not unusably slow, even in pure Python... at least with pypy[3].
+  (Around one fifth the C speed, anyway.)
 
 Requirements
 --
@@ -19,7 +19,7 @@ Requirements
 Usage
 --
 
-    from pylibscrypt import * # or from pypyscrypt import *
+    from pylibscrypt import *
     # Print a raw scrypt hash in hex
     print(scrypt('Hello World', 'salt').encode('hex'))
     # Generate an MCF hash with random salt
