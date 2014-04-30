@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# Inlines the salsa20 core lines into salsa20_8
+
 of = open('pylibscrypt/pypyscrypt_inline.py', 'w')
 assert of
 
@@ -13,20 +15,37 @@ with open('pylibscrypt/pypyscrypt.py', 'r') as f:
     in_loop = False
     loop_indent = 0
     lc = 0
+    rl = []
     for line in f:
         lc += 1
         i = indent(line)
         if line[i:].startswith('R('):
             parts = line.split(';')
-            for p in parts:
-                vals = p.split(',')[1:]
-                vals = [int(v.strip(' )\n')) for v in vals]
-                of.write(' '*i)
-                of.write('a = (x[%d]+x[%d]) & 0xffffffff\n' %
-                         (vals[1], vals[2]))
-                of.write(' '*i)
-                of.write('x[%d] ^= (a << %d) | (a >> %d)\n' %
-                         (vals[0], vals[3], 32 - vals[3]))
+            rl += parts
+            if len(rl) == 32:
+                # Interleave to reduce dependencies for pypy
+                rl1 = rl[:16]
+                rl2 = rl[16:]
+                rl1 = rl1[0::4] + rl1[1::4] + rl1[2::4] + rl1[3::4]
+                rl2 = rl2[0::4] + rl2[1::4] + rl2[2::4] + rl2[3::4]
+                rl = rl1 + rl2
+                for p, q in zip(rl[::2], rl[1::2]):
+                    pvals = p.split(',')[1:]
+                    pvals = [int(v.strip(' )\n')) for v in pvals]
+                    qvals = q.split(',')[1:]
+                    qvals = [int(v.strip(' )\n')) for v in qvals]
+                    of.write(' '*i)
+                    of.write('a = (x[%d]+x[%d]) & 0xffffffff\n' %
+                             (pvals[1], pvals[2]))
+                    of.write(' '*i)
+                    of.write('b = (x[%d]+x[%d]) & 0xffffffff\n' %
+                             (qvals[1], qvals[2]))
+                    of.write(' '*i)
+                    of.write('x[%d] ^= (a << %d) | (a >> %d)\n' %
+                             (pvals[0], pvals[3], 32 - pvals[3]))
+                    of.write(' '*i)
+                    of.write('x[%d] ^= (b << %d) | (b >> %d)\n' %
+                             (qvals[0], qvals[3], 32 - qvals[3]))
         else:
             of.write(line)
         if lc == 1:
