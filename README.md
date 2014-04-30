@@ -25,8 +25,8 @@ Usage
     # Generate an MCF hash with random salt
     mcf = scrypt_mcf('Hello World')
     # Test it
-    print(scryp_mcf_check(mcf, 'Hello World'))
-    print(scryp_mcf_check(mcf, 'HelloPyWorld'))
+    print(scrypt_mcf_check(mcf, 'Hello World'))
+    print(scrypt_mcf_check(mcf, 'HelloPyWorld'))
 
 Testing
 --
