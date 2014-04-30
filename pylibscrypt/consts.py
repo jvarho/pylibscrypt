@@ -11,9 +11,5 @@ SCRYPT_p = 1
 # key derivation is not a problem, you could use 16 as in libscrypt or better
 # yet increase N if memory is plentiful.
 
-# python3...
-try:
-    xrange = xrange
-except NameError:
-    xrange = range
+xrange = xrange if 'xrange' in globals() else range
 

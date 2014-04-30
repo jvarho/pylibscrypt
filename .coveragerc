@@ -5,7 +5,6 @@ exclude_lines =
 
     # Untestable from a working environment
     except AttributeError:
-    except NameError:
     except OSError:
     raise ImportError.*
 
