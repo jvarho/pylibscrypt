@@ -31,8 +31,6 @@ import os
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32
 
 
-import tests
-
 from consts import *
 
 
@@ -162,6 +160,7 @@ def scrypt_mcf_check(mcf, password):
 
 
 if __name__ == "__main__":
+    import tests
     print('Testing scrypt...')
     tests.run_tests(scrypt, scrypt_mcf, scrypt_mcf_check)
 

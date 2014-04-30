@@ -41,8 +41,6 @@ import os
 import struct
 
 
-import tests
-
 from consts import *
 
 
@@ -233,6 +231,7 @@ def scrypt_mcf_check(mcf, password):
 
 
 if __name__ == "__main__":
+    import tests
     print('Testing scrypt...')
     tests.run_tests(scrypt, scrypt_mcf, scrypt_mcf_check)
 
