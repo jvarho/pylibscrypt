@@ -46,6 +46,52 @@ import tests
 from consts import *
 
 
+def _pbkdf2(passphrase, salt, count, olen, prf):
+    '''Returns the result of the Password-Based Key Derivation Function 2
+
+    See http://en.wikipedia.org/wiki/PBKDF2
+    '''
+
+    def f(block_number):
+        '''The function "f".'''
+
+        U = prf(passphrase, salt + struct.pack('>L', block_number))
+
+        # Count is always 1 in scrypt
+        assert count == 1
+        if False:#count > 1:
+            U = bytearray(U)
+            for i in xrange(2, 1 + count):
+                p = bytearray(prf(passphrase, U))
+                for i in xrange(len(u)):
+                    U[i] ^= p[i]
+
+        return U
+
+    # PBKDF2 implementation
+    size = 0
+
+    block_number = 0
+    blocks = []
+
+    while size < olen:
+        block_number += 1
+        block = f(block_number)
+
+        blocks.append(block)
+        size += len(block)
+
+    if size > olen:
+        blocks[-1] = blocks[-1][:olen-size]
+    return b''.join(blocks)
+
+
+# Python 3.4+ have PBKDF2 in hashlib, so use it instead
+if 'pbkdf2_hmac' in dir(hashlib):
+    def _pbkdf2(passphrase, salt, count, olen, prf):
+        return hashlib.pbkdf2_hmac('sha256', passphrase, salt, count, olen)
+
+
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     """Returns the result of the scrypt password-based key derivation function
 
@@ -63,45 +109,6 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     def blockxor(source, s_start, dest, d_start, length):
         for i in xrange(length):
             dest[d_start + i] ^= source[s_start + i]
-
-
-    def pbkdf2(passphrase, salt, count, olen, prf):
-        '''Returns the result of the Password-Based Key Derivation Function 2
-
-        See http://en.wikipedia.org/wiki/PBKDF2
-        '''
-
-        def f(block_number):
-            '''The function "f".'''
-
-            U = prf(passphrase, salt + struct.pack('>L', block_number))
-
-            # Count is always 1 in scrypt
-            assert count == 1
-            if False:#count > 1:
-                U = bytearray(U)
-                for i in xrange(2, 1 + count):
-                    p = bytearray(prf(passphrase, U))
-                    blockxor(p, 0, U, 0, len(U))
-
-            return U
-
-        # PBKDF2 implementation
-        size = 0
-
-        block_number = 0
-        blocks = []
-
-        while size < olen:
-            block_number += 1
-            block = f(block_number)
-
-            blocks.append(block)
-            size += len(block)
-
-        if size > olen:
-            blocks[-1] = blocks[-1][:olen-size]
-        return b''.join(blocks)
 
 
     def integerify(B, r):
@@ -183,7 +190,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise ValueError('scrypt p must be positive')
 
     prf = lambda k, m: hmac.new(key=k, msg=m, digestmod=hashlib.sha256).digest()
-    B  = pbkdf2(password, salt, 1, p * 128 * r, prf)
+    B  = _pbkdf2(password, salt, 1, p * 128 * r, prf)
 
     # Everything is lists of 32-bit uints for all but pbkdf2
     B  = list(struct.unpack('<%dI' % (len(B) // 4), B))
@@ -194,7 +201,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         smix(B, i * 32 * r, r, N, V, XY)
 
     B = struct.pack('<%dI' % len(B), *B)
-    return pbkdf2(password, B, 1, olen, prf)
+    return _pbkdf2(password, B, 1, olen, prf)
 
 
 # deBruijn table for getting ilog2 for powers of two quickly
