@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 
 import base64
+import hashlib, hmac
 
 
 def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
@@ -253,13 +254,45 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
         print("All tests successful!")
 
 
+def run_tests_pbkdf2(f, verbose=False):
+    prf = lambda k, m: hmac.new(key=k, msg=m, digestmod=hashlib.sha256).digest()
+    def g(passphrase, salt, count, olen, prf):
+        return hashlib.pbkdf2_hmac('sha256', passphrase, salt, count, olen)
+
+    test_vectors = (
+        (b'pass', b'salt', 1, 32),
+        (b'pass', b'salt', 3, 256),
+    )
+    fails = 0
+    for i, param in enumerate(test_vectors):
+        if f(*param, prf=prf) != g(*param, prf=prf):
+            print("Test %d failed!" % i)
+            print("  PBKDF output mismatch")
+            print("  hashlib: %s" % g(*param, prf=prf))
+            print("  pbkdf2.py: %s" % f(*param, prf=prf))
+            fails += 1
+        elif verbose:
+            print("Test %d successful!" % i)
+
+    if fails:
+        print("%d tests failed!" % fails)
+    else:
+        print("All tests successful!")
+
+
+
 if __name__ == "__main__":
     import pylibscrypt as cs
     import pypyscrypt_inline as ps
+    import pbkdf2 as pk
 
     print('Testing C scrypt...')
     run_tests(cs.scrypt, cs.scrypt_mcf, cs.scrypt_mcf_check, fast=True)
 
     print('Testing Python scrypt...')
     run_tests(ps.scrypt, ps.scrypt_mcf, ps.scrypt_mcf_check, fast=True)
+
+    if 'pbkdf2_hmac' in dir(hashlib):
+        print('Testing pbkdf2...')
+        run_tests_pbkdf2(pk.pbkdf2)
 
