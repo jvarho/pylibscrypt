@@ -8,12 +8,6 @@ exclude_lines =
     except OSError:
     raise ImportError.*
 
-    # Inlined, so not called
-    def R.*:
-
-    # Not used, left in for completeness
-    if False:
-
     # Duh...
     def run_tests
 

@@ -16,10 +16,17 @@ with open('pylibscrypt/pypyscrypt.py', 'r') as f:
     loop_indent = 0
     lc = 0
     rl = []
+    skipping = False
     for line in f:
         lc += 1
         i = indent(line)
-        if line[i:].startswith('R('):
+        if line[i:].startswith('def R('):
+            skipping = True
+        elif skipping:
+            if line[i:].startswith('def'):
+                of.write(line)
+                skipping = False
+        elif line[i:].startswith('R('):
             parts = line.split(';')
             rl += parts
             if len(rl) == 32:
