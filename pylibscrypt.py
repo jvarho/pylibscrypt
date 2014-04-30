@@ -138,7 +138,12 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     if not ret:
         raise ValueError
 
-    return out.raw.strip(b'\0')
+    out = out.raw.strip(b'\0')
+    # XXX: Hack to support old libscrypt (like in Ubuntu 14.04)
+    if len(out) == 123:
+        out = out + '='
+
+    return out
 
 
 def scrypt_mcf_check(mcf, password):
