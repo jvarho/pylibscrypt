@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-of = open('pypyscrypt_inline.py', 'w')
+of = open('pylibscrypt/pypyscrypt_inline.py', 'w')
 assert of
 
 def indent(line):
@@ -9,7 +9,7 @@ def indent(line):
         i += 1
     return i
 
-with open('pypyscrypt.py', 'r') as f:
+with open('pylibscrypt/pypyscrypt.py', 'r') as f:
     in_loop = False
     loop_indent = 0
     lc = 0
