@@ -161,10 +161,10 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
             dest[d_start + i] = B[i] = (x[i] + B[i]) & 0xffffffff
 
 
-    def blockmix_salsa8(BY, Bi, Yi, r):
+    def blockmix_salsa8(BY, Yi, r):
         '''Blockmix; Used by SMix'''
 
-        start = Bi + (2 * r - 1) * 16
+        start = (2 * r - 1) * 16
         X = BY[start:start+16]                             # BlockMix - 1
         tmp = [0]*16
 
@@ -174,10 +174,10 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
             #array_overwrite(X, 0, BY, Yi + (i * 16), 16)  # BlockMix - 4
 
         for i in xrange(r):                                # BlockMix - 6
-            array_overwrite(BY, Yi + (i * 2) * 16, BY, Bi + (i * 16), 16)
+            array_overwrite(BY, Yi + (i * 2) * 16, BY, i * 16, 16)
 
         for i in xrange(r):
-            array_overwrite(BY, Yi + (i*2 + 1) * 16, BY, Bi + (i + r) * 16, 16)
+            array_overwrite(BY, Yi + (i*2 + 1) * 16, BY, (i + r) * 16, 16)
 
 
     def smix(B, Bi, r, N, V, X):
@@ -187,12 +187,12 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
         for i in xrange(N):                                # ROMix - 2
             array_overwrite(X, 0, V, i * (32 * r), 32 * r) # ROMix - 3
-            blockmix_salsa8(X, 0, 32 * r, r)               # ROMix - 4
+            blockmix_salsa8(X, 32 * r, r)                  # ROMix - 4
 
         for i in xrange(N):                                # ROMix - 6
             j = integerify(X, r) & (N - 1)                 # ROMix - 7
             blockxor(V, j * (32 * r), X, 0, 32 * r)        # ROMix - 8(inner)
-            blockmix_salsa8(X, 0, 32 * r, r)               # ROMix - 9(outer)
+            blockmix_salsa8(X, 32 * r, r)                  # ROMix - 9(outer)
 
         array_overwrite(X, 0, B, Bi, 32 * r)               # ROMix - 10
 
