@@ -124,8 +124,6 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
         for i in xrange(r):                                # BlockMix - 6
             array_overwrite(BY, Yi + (i * 2) * 16, BY, i * 16, 16)
-
-        for i in xrange(r):
             array_overwrite(BY, Yi + (i*2 + 1) * 16, BY, (i + r) * 16, 16)
 
 

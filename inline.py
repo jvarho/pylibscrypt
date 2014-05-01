@@ -26,6 +26,7 @@ with open('pylibscrypt/pypyscrypt.py', 'r') as f:
             if line[i:].startswith('def'):
                 of.write(line)
                 skipping = False
+
         elif line[i:].startswith('R('):
             parts = line.split(';')
             rl += parts
@@ -53,6 +54,18 @@ with open('pylibscrypt/pypyscrypt.py', 'r') as f:
                     of.write(' '*i)
                     of.write('x[%d] ^= (b << %d) | (b >> %d)\n' %
                              (qvals[0], qvals[3], 32 - qvals[3]))
+
+        elif line[i:].startswith('array_overwrite('):
+            vals = line.split(',')
+            vals[0] = vals[0].split('(')[1]
+            vals[-1] = vals[-1].split(')')[0]
+            vals = [v.strip() for v in vals]
+            assert len(vals) == 5
+            of.write(' '*i)
+            of.write(vals[2] + '[' + vals[3] + ':(' + vals[3] + ')+(' +
+                     vals[4] + ')] = ' + vals[0] + '[' + vals[1] + ':(' +
+                     vals[1] + ')+(' + vals[4] + ')]\n')
+
         else:
             of.write(line)
         if lc == 1:
