@@ -32,13 +32,6 @@ import struct
 from consts import *
 
 
-# deBruijn table for getting ilog2 for powers of two quickly
-_scrypt_dbs = [
-    0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
-    31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
-]
-
-
 def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     """Derives a Modular Crypt Format hash using the scrypt KDF given
 
@@ -56,7 +49,9 @@ def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     h64 = base64.b64encode(hash)
     s64 = base64.b64encode(salt)
 
-    t = _scrypt_dbs[((N * 0x077CB531) & 0xffffffff) >> 27]
+    t = 1
+    while 2**t < N:
+        t += 1
     params = p + (r << 8) + (t << 16)
 
     return (

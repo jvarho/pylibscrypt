@@ -47,6 +47,14 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
              b'$s1$010801$TmFDbA==$5e2O3AGe3+8tPO0Ilvr57saSHcxoElzoHBDVNHTO'
              b'G+VFl5FZcA0yTnfGjTTFU2NqhCnE88mblWZGaHf53KK5Kw=='),
         )
+        test_vectors = (
+            (b'pleaseletmein', b'SodiumChloride', 4, 1, 1,
+             b'BB1D77016C543A99FE632C9C43C60180FD05E0CAC8B29374DBD1854569CB'
+             b'534F487240CFC069D6A59A35F2FA5C7428B21D9BE9F84315446D5371119E'
+             b'016FEDF7',
+             b'$s1$020101$U29kaXVtQ2hsb3JpZGU=$ux13AWxUOpn+YyycQ8YBgP0F4MrI'
+             b'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9w=='),
+        )
     for pw, s, n, r, p, h, m in test_vectors:
         i += 1
         h2 = scrypt(pw, s, n, r, p)
@@ -224,6 +232,20 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
         print("  scrypt didn't support irregular length 42")
     elif verbose:
         print("Test %d successful!" % i)
+
+    i += 1
+    try:
+        scrypt_mcf(b'password', b'NaCl', N=2**42)
+    except ValueError:
+        if verbose:
+            print("Test %d failed expectedly!" % i)
+    except MemoryError:
+        if verbose:
+            print("Test %d failed expectedly!" % i)
+    else:
+        print("Warning: Test %d seems to succeed!" % i)
+        print("  N == 2**42 accepted by scrypt_mcf")
+        fails += 1
 
     i += 1
     try:
