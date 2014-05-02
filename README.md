@@ -6,15 +6,16 @@ everything that I'd like, so here's One More[1].
 
 Features
 --
-* Uses system libscrypt[2] – as up to date as your distro is.
-* Offers a pure Python scrypt implementation for when there's no libscrypt.
-* Not unusably slow, even in pure Python... at least with pypy[3].
+* Uses system libscrypt[2] as the first choice.
+* If that isn't available, tries the scrypt Python module[3].
+* Offers a pure Python scrypt implementation for when there's no C scrypt.
+* Not unusably slow, even in pure Python... at least with pypy[4].
   (Around one fifth the C speed, anyway.)
 
 Requirements
 --
 * Python 2.7 or 3.4 or so. Pypy 2.2 also works. Older versions may or may not.
-* If you want speed: libscrypt 1.8 (older may work).
+* If you want speed: libscrypt 1.8+ (older may work) or py-scrypt 0.6+
 
 Usage
 --
@@ -34,7 +35,7 @@ tests.py tests both implementations with some quick tests. Running either
 implementation directly will also compare to scrypt test vectors from the paper
 but this is slow for the Python version unless you have pypy.
 
-run_coverage.sh uses coverage.py[4] to report test coverage.
+run_coverage.sh uses coverage.py[5] to report test coverage.
 
 TODO
 --
@@ -44,6 +45,7 @@ TODO
 
 [1]:https://xkcd.com/927/
 [2]:https://github.com/technion/libscrypt
-[3]:http://pypy.org/
-[4]:http://nedbatchelder.com/code/coverage/
+[3]:https://bitbucket.org/mhallin/py-scrypt/src
+[4]:http://pypy.org/
+[5]:http://nedbatchelder.com/code/coverage/
 
