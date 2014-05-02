@@ -1,4 +1,6 @@
 
+__version__ = '1.0.0'
+
 # First, try loading libscrypt
 _done = False
 try:

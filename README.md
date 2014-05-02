@@ -29,13 +29,27 @@ Usage
     print(scrypt_mcf_check(mcf, 'Hello World'))
     print(scrypt_mcf_check(mcf, 'HelloPyWorld'))
 
-Testing
+Versioning
 --
+The package has a version number that can be read from python like so:
+    print(pyscrypt.__version__)
+
+The version number is of the form X.Y.Z. The number X will only be incremented
+if an incompatible change is done, but this is not planned. The number Y will
+be incremented for new features or API for which a caller may wish to check.
+The last number will be incremented for bugfix-only releases.
+
+Development
+--
+Development happens on GitHub[2]. If you find a bug, please open an issue there.
+
 tests.py tests both implementations with some quick tests. Running either
 implementation directly will also compare to scrypt test vectors from the paper
-but this is slow for the Python version unless you have pypy.
+but this is slow for the Python version unless you have pypy. The best way to
+report a bug is to also provide a new test that fails, but that is not required.
 
-run_coverage.sh uses coverage.py[5] to report test coverage.
+The run_coverage.sh script calls coverage.py[5] to report test coverage. If you
+would like to include a new feature, it should be adequately covered with tests.
 
 TODO
 --
