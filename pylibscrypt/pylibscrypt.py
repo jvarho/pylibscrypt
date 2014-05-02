@@ -108,6 +108,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise TypeError
     if not isinstance(salt, bytes):
         raise TypeError
+    if N > 2**63:
+        raise ValueError('N value cannot be larger than 2**63')
 
     out = ctypes.create_string_buffer(olen)
     ret = _libscrypt_scrypt(password, len(password), salt, len(salt),

@@ -249,6 +249,28 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
 
     i += 1
     try:
+        scrypt(b'password', b'NaCl', N=2**66+2)
+    except ValueError:
+        if verbose:
+            print("Test %d succeeded!" % i)
+    else:
+        print("Test %d failed!" % i)
+        print("  N == 2**66 + 2 interpreted as 2")
+        fails += 1
+
+    i += 1
+    try:
+        scrypt(b'password', b'NaCl', N=2**66)
+    except ValueError:
+        if verbose:
+            print("Test %d succeeded!" % i)
+    else:
+        print("Test %d failed!" % i)
+        print("  N == 2**66 accepted")
+        fails += 1
+
+    i += 1
+    try:
         scrypt_mcf(b'password', b'NaCl', N=2, r=0)
     except ValueError:
         if verbose:

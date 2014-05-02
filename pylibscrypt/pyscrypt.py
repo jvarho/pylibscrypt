@@ -52,6 +52,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise TypeError('scrypt password must be a byte string')
     if not isinstance(salt, bytes):
         raise TypeError('scrypt salt must be a byte string')
+    if N > 2**63:
+        raise ValueError('N value cannot be larger than 2**63')
     try:
         return _scrypt(password=password, salt=salt, N=N, r=r, p=p, buflen=olen)
     except:

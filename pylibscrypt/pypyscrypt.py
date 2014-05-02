@@ -147,6 +147,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise TypeError('scrypt salt must be a byte string')
     if N < 2 or (N & (N - 1)):
         raise ValueError('scrypt N must be a power of 2 greater than 1')
+    if N > 2 ** 63:
+        raise ValueError('N value cannot be larger than 2**63')
     if r <= 0:
         raise ValueError('scrypt r must be positive')
     if p <= 0:
