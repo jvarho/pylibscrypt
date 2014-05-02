@@ -22,6 +22,8 @@ with open('pylibscrypt/pypyscrypt.py', 'r') as f:
         i = indent(line)
         if line[i:].startswith('def R('):
             skipping = True
+        elif line[i:].startswith('def array_overwrite('):
+            skipping = True
         elif skipping:
             if line[i:].startswith('def'):
                 of.write(line)
