@@ -113,7 +113,7 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
             print("Test %d successful!" % i)
     else:
         print("Test %d failed!" % i)
-        print("  Invalid N value accepted")
+        print("  Invalid N value -1 accepted")
         fails += 1
 
     i += 1
@@ -283,21 +283,21 @@ if __name__ == "__main__":
         import pylibscrypt as cs
         print('Testing C scrypt...')
         run_tests(cs.scrypt, cs.scrypt_mcf, cs.scrypt_mcf_check, fast=True)
-    except Exception as e:
+    except ImportError:
         print('C scrypt not tested!')
 
     try:
         import pyscrypt as ms
         print('Testing scrypt module...')
         run_tests(ms.scrypt, ms.scrypt_mcf, ms.scrypt_mcf_check, fast=True)
-    except Exception as e:
+    except ImportError:
         print('scrypt module not tested!')
 
     try:
         import pypyscrypt_inline as ps
         print('Testing pure Python scrypt...')
         run_tests(ps.scrypt, ps.scrypt_mcf, ps.scrypt_mcf_check, fast=True)
-    except Exception as e:
+    except ImportError:
         print('Pure Python scrypt not tested!')
 
     if 'pbkdf2_hmac' in dir(hashlib):
