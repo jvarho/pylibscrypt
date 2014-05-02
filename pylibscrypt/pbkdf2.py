@@ -36,7 +36,7 @@ def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
     hs = h.copy()
     hs.update(salt)
 
-    blocks = []
+    blocks = bytearray()
     dklen = hs.digest_size if dklen is None else dklen
     block_count, last_size = divmod(dklen, hs.digest_size)
     block_count += last_size > 0
@@ -44,21 +44,20 @@ def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
     for block_number in xrange(1, block_count + 1):
         hb = hs.copy()
         hb.update(struct.pack('>L', block_number))
-        U = hb.digest()
+        U = bytearray(hb.digest())
 
         if rounds > 1:
             Ui = U
-            U = bytearray(U)
             for i in xrange(rounds - 1):
                 hi = h.copy()
                 hi.update(Ui)
-                Ui = hi.digest()
+                Ui = bytearray(hi.digest())
                 for j in xrange(hs.digest_size):
                     U[j] ^= Ui[j]
 
-        blocks.append(U)
+        blocks.extend(U)
 
     if last_size:
-        blocks[-1] = blocks[-1][:last_size]
-    return b''.join(blocks)
+        del blocks[dklen:]
+    return bytes(blocks)
 

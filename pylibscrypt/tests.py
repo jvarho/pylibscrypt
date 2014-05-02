@@ -301,19 +301,22 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
 
 
 def run_tests_pbkdf2(f, verbose=False):
-    g = hashlib.pbkdf2_hmac
-
     test_vectors = (
-        ('sha256', b'pass', b'salt', 1, 20),
-        ('sha256', b'pass', b'salt', 3, 256),
+        ('sha1', b'password', b'salt', 1, 20,
+         base64.b16decode(b'0c60c80f961f0e71f3a9b524af6012062fe037a6', True)),
+        ('sha1', b'pass\0word', b'sa\0lt', 4096, 16,
+         base64.b16decode(b'56fa6aa75548099dcc37d7f03425e0c3', True)),
+        ('sha256', b'password', b'NaCl', 7, 42,
+         base64.b16decode(b'8cb94b8721e20e643be099f3c31d332456b4c'
+         b'26f55b6403950267dc2b3c0806bda709a3f2d7f6107db73', True)),
     )
     fails = 0
     for i, param in enumerate(test_vectors):
-        if f(*param) != g(*param):
+        if f(*param[:-1]) != param[-1]:
             print("Test %d failed!" % i)
             print("  PBKDF output mismatch")
-            print("  hashlib: %s" % g(*param))
-            print("  pbkdf2.py: %s" % f(*param))
+            print("  Expected: %s" % param[-1])
+            print("  Got: %s" % f(*param[:-1]))
             fails += 1
         elif verbose:
             print("Test %d successful!" % i)
@@ -347,8 +350,14 @@ if __name__ == "__main__":
     except ImportError:
         print('Pure Python scrypt not tested!')
 
-    if 'pbkdf2_hmac' in dir(hashlib):
+    try:
         import pbkdf2 as pk
         print('Testing pbkdf2...')
         run_tests_pbkdf2(pk.pbkdf2_hmac)
+    except ImportError:
+        print('Pure Python PBKDF2 not tested!')
+
+    if 'pbkdf2_hmac' in dir(hashlib):
+        print('Testing hashlib pbkdf2...')
+        run_tests_pbkdf2(hashlib.pbkdf2_hmac)
 
