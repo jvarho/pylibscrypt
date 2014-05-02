@@ -64,7 +64,6 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
             print("  scrypt_mcf('%s', '%s', %d, %d, %d)" % (pw, s, n, r, p))
             print("  Expected: %s" % m)
             print("  Got:      %s" % m2)
-            print("  scrypt_mcf_check failed!")
             fails += 1
         elif verbose:
             print("Test %d.2 successful!" % i)
