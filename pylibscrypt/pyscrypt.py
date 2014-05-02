@@ -31,6 +31,14 @@ import mcf as mcf_mod
 
 from consts import *
 
+
+# scrypt < 0.6 doesn't support hash length
+try:
+    _scrypt(b'password', b'NaCl', N=2, r=1, p=1, buflen=42)
+except TypeError:
+    raise ImportError('scrypt module version unsupported, 0.6+ required')
+
+
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     """Returns the result of the scrypt password-based key derivation function
 
