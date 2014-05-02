@@ -255,21 +255,19 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
 
 
 def run_tests_pbkdf2(f, verbose=False):
-    prf = lambda k, m: hmac.new(key=k, msg=m, digestmod=hashlib.sha256).digest()
-    def g(passphrase, salt, count, olen, prf):
-        return hashlib.pbkdf2_hmac('sha256', passphrase, salt, count, olen)
+    g = hashlib.pbkdf2_hmac
 
     test_vectors = (
-        (b'pass', b'salt', 1, 32),
-        (b'pass', b'salt', 3, 256),
+        ('sha256', b'pass', b'salt', 1, 20),
+        ('sha256', b'pass', b'salt', 3, 256),
     )
     fails = 0
     for i, param in enumerate(test_vectors):
-        if f(*param, prf=prf) != g(*param, prf=prf):
+        if f(*param) != g(*param):
             print("Test %d failed!" % i)
             print("  PBKDF output mismatch")
-            print("  hashlib: %s" % g(*param, prf=prf))
-            print("  pbkdf2.py: %s" % f(*param, prf=prf))
+            print("  hashlib: %s" % g(*param))
+            print("  pbkdf2.py: %s" % f(*param))
             fails += 1
         elif verbose:
             print("Test %d successful!" % i)
@@ -294,5 +292,5 @@ if __name__ == "__main__":
 
     if 'pbkdf2_hmac' in dir(hashlib):
         print('Testing pbkdf2...')
-        run_tests_pbkdf2(pk.pbkdf2)
+        run_tests_pbkdf2(pk.pbkdf2_hmac)
 

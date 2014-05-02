@@ -48,11 +48,10 @@ from consts import *
 
 # Python 3.4+ have PBKDF2 in hashlib, so use it...
 if 'pbkdf2_hmac' in dir(hashlib):
-    def _pbkdf2(passphrase, salt, count, olen, prf):
-        return hashlib.pbkdf2_hmac('sha256', passphrase, salt, count, olen)
+    _pbkdf2 = hashlib.pbkdf2_hmac
 else:
     # but fall back to Python implementation in < 3.4
-    from pbkdf2 import pbkdf2 as _pbkdf2
+    from pbkdf2 import pbkdf2_hmac as _pbkdf2
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
@@ -204,8 +203,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     if p <= 0:
         raise ValueError('scrypt p must be positive')
 
-    prf = lambda k, m: hmac.new(key=k, msg=m, digestmod=hashlib.sha256).digest()
-    B  = _pbkdf2(password, salt, 1, p * 128 * r, prf)
+    B  = _pbkdf2('sha256', password, salt, 1, p * 128 * r)
 
     # Everything is lists of 32-bit uints for all but pbkdf2
     B  = list(struct.unpack('<%dI' % (len(B) // 4), B))
@@ -216,7 +214,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         smix(B, i * 32 * r, r, N, V, XY)
 
     B = struct.pack('<%dI' % len(B), *B)
-    return _pbkdf2(password, B, 1, olen, prf)
+    return _pbkdf2('sha256', password, B, 1, olen)
 
 
 # deBruijn table for getting ilog2 for powers of two quickly

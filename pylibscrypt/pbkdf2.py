@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2014 Richard Moore
 # Copyright (c) 2014 Jan Varho
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,47 +20,42 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import hashlib
+import hmac
 import struct
 
 from consts import *
 
 
-def pbkdf2(passphrase, salt, count, olen, prf):
-    '''Returns the result of the Password-Based Key Derivation Function 2
+def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
+    '''Returns the result of the Password-Based Key Derivation Function 2'''
+    h = hmac.new(key=password, digestmod=lambda:hashlib.new(name))
+    hs = h.copy()
+    hs.update(salt)
 
-    See http://en.wikipedia.org/wiki/PBKDF2
-    '''
+    blocks = []
+    dklen = hs.digest_size if dklen is None else dklen
+    block_count, last_size = divmod(dklen, hs.digest_size)
+    block_count += last_size > 0
 
-    def f(block_number):
-        '''The function "f".'''
+    for block_number in xrange(1, block_count + 1):
+        hb = hs.copy()
+        hb.update(struct.pack('>L', block_number))
+        U = hb.digest()
 
-        U = prf(passphrase, salt + struct.pack('>L', block_number))
-
-        # Count is always 1 in scrypt, but supported here
-        if count > 1:
+        if rounds > 1:
+            Ui = U
             U = bytearray(U)
-            Ui = U[:]
-            for i in xrange(2, 1 + count):
-                Ui = bytearray(prf(passphrase, bytes(Ui)))
-                for j in xrange(len(U)):
+            for i in xrange(rounds - 1):
+                hi = h.copy()
+                hi.update(Ui)
+                Ui = hi.digest()
+                for j in xrange(hs.digest_size):
                     U[j] ^= Ui[j]
 
-        return U
+        blocks.append(U)
 
-    # PBKDF2 implementation
-    size = 0
-
-    block_number = 0
-    blocks = []
-
-    while size < olen:
-        block_number += 1
-        block = f(block_number)
-
-        blocks.append(block)
-        size += len(block)
-
-    if size > olen:
-        blocks[-1] = blocks[-1][:olen-size]
+    if last_size:
+        blocks[-1] = blocks[-1][:last_size]
     return b''.join(blocks)
 
