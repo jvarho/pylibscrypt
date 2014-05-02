@@ -1,3 +1,4 @@
+'Scrypt for Python'
 
 __version__ = '1.0.0'
 
@@ -31,4 +32,11 @@ if not _done:
 # Finally the non-inlined
 if not _done:
     from pypyscrypt import *
+
+__all__ = ['scrypt', 'scrypt_mcf', 'scrypt_mcf_check']
+
+# Clean up pydoc output
+del __path__
+del consts
+del pylibscrypt
 

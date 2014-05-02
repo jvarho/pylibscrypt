@@ -21,10 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Python implementation of Scrypt password-based key derivation function"""
 
-# This is a pure-Python implementation of the Scrypt password-based key
-# derivation function (PBKDF); see:
-# http://en.wikipedia.org/wiki/Scrypt
+# Scrypt definition:
 # http://www.tarsnap.com/scrypt/scrypt.pdf
 
 # It was originally written for a pure-Python Litecoin CPU miner:
@@ -53,15 +52,24 @@ else:
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
-    """Returns the result of the scrypt password-based key derivation function
+    """Derives a 64-byte hash using the scrypt key-derivarion function
 
-    Constraints:
-        r * p < (2 ** 30)
-        olen <= (((2 ** 32) - 1) * 32
-        N must be a power of 2 greater than 1 (eg. 2, 4, 8, 16, 32...)
-        N, r, p must be positive
+    N must be a power of two larger than 1 but no larger than 2 ** 63 (insane)
+    r and p must be positive numbers such that r * p < 2 ** 30
+
+    The default values are:
+    N -- 2**14 (~16k)
+    r -- 8
+    p -- 1
+
+    Memory usage is proportional to N*r. Defaults require about 16 MiB.
+    Time taken is proportional to N*p. Defaults take <100ms of a recent x86.
+
+    The last one differs from libscrypt defaults, but matches the 'interactive'
+    work factor from the original paper. For long term storage where runtime of
+    key derivation is not a problem, you could use 16 as in libscrypt or better
+    yet increase N if memory is plentiful.
     """
-
     def array_overwrite(source, s_start, dest, d_start, length):
         dest[d_start:d_start + length] = source[s_start:s_start + length]
 

@@ -20,8 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
-# Modular Crypt Format support for scrypt, compatible with libscrypt.
+"""Modular Crypt Format support for scrypt, compatible with libscrypt"""
 
 
 import base64
@@ -34,6 +33,9 @@ from consts import *
 
 def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     """Derives a Modular Crypt Format hash using the scrypt KDF given
+
+    Expects the signature:
+    scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64)
 
     If no salt is given, 16 random bytes are generated using os.urandom."""
     if salt is None:

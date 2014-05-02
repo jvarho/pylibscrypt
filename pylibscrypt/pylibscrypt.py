@@ -20,8 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
-# Scrypt implementation that calls into system libscrypt.
+"""Scrypt implementation that calls into system libscrypt"""
 
 
 import base64
@@ -91,13 +90,16 @@ _libscrypt_check.argtypes = [
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     """Derives a 64-byte hash using the scrypt key-derivarion function
 
-    Memory usage is proportional to N*r. Defaults require about 16 MiB.
-    Time taken is proportional to N*p. Defaults take <100ms of a recent x86.
+    N must be a power of two larger than 1 but no larger than 2 ** 63 (insane)
+    r and p must be positive numbers such that r * p < 2 ** 30
 
     The default values are:
     N -- 2**14 (~16k)
     r -- 8
     p -- 1
+
+    Memory usage is proportional to N*r. Defaults require about 16 MiB.
+    Time taken is proportional to N*p. Defaults take <100ms of a recent x86.
 
     The last one differs from libscrypt defaults, but matches the 'interactive'
     work factor from the original paper. For long term storage where runtime of

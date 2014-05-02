@@ -20,6 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Tests scrypt and PBKDF2 implementations"""
+
+
 import base64
 import hashlib, hmac
 
