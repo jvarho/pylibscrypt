@@ -33,7 +33,7 @@ Versioning
 --
 The package has a version number that can be read from python like so:
 
-    print(pyscrypt.__version__)
+    print(pylibscrypt.__version__)
 
 The version number is of the form X.Y.Z. The number X will only be incremented
 if an incompatible change is done, but this is not planned. The number Y will
