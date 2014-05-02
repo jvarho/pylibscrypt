@@ -280,17 +280,29 @@ def run_tests_pbkdf2(f, verbose=False):
 
 
 if __name__ == "__main__":
-    import pylibscrypt as cs
-    import pypyscrypt_inline as ps
-    import pbkdf2 as pk
+    try:
+        import pylibscrypt as cs
+        print('Testing C scrypt...')
+        run_tests(cs.scrypt, cs.scrypt_mcf, cs.scrypt_mcf_check, fast=True)
+    except Exception as e:
+        print('C scrypt not tested!')
 
-    print('Testing C scrypt...')
-    run_tests(cs.scrypt, cs.scrypt_mcf, cs.scrypt_mcf_check, fast=True)
+    try:
+        import pyscrypt as ms
+        print('Testing scrypt module...')
+        run_tests(ms.scrypt, ms.scrypt_mcf, ms.scrypt_mcf_check, fast=True)
+    except Exception as e:
+        print('scrypt module not tested!')
 
-    print('Testing Python scrypt...')
-    run_tests(ps.scrypt, ps.scrypt_mcf, ps.scrypt_mcf_check, fast=True)
+    try:
+        import pypyscrypt_inline as ps
+        print('Testing pure Python scrypt...')
+        run_tests(ps.scrypt, ps.scrypt_mcf, ps.scrypt_mcf_check, fast=True)
+    except Exception as e:
+        print('Pure Python scrypt not tested!')
 
     if 'pbkdf2_hmac' in dir(hashlib):
+        import pbkdf2 as pk
         print('Testing pbkdf2...')
         run_tests_pbkdf2(pk.pbkdf2_hmac)
 
