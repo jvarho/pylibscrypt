@@ -20,6 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""PBKDF2 in pure Python, compatible with Python3.4 hashlib.pbkdf2_hmac"""
+
+
 import hashlib
 import hmac
 import struct
@@ -28,7 +31,7 @@ from consts import *
 
 
 def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
-    '''Returns the result of the Password-Based Key Derivation Function 2'''
+    """Returns the result of the Password-Based Key Derivation Function 2"""
     h = hmac.new(key=password, digestmod=lambda:hashlib.new(name))
     hs = h.copy()
     hs.update(salt)
