@@ -39,9 +39,7 @@ run_coverage.sh uses coverage.py[5] to report test coverage.
 
 TODO
 --
-* Automate the choice of which implementation to use.
 * Embed C implementation for when there's no system library?
-* ~~Numpy implementation sounds interesting.~~ (is not worth it)
 
 [1]:https://xkcd.com/927/
 [2]:https://github.com/technion/libscrypt
