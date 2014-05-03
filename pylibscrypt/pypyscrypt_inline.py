@@ -229,6 +229,7 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     Parameter space is smaller than for scrypt():
     N must be a power of two larger than 1 but no larger than 2 ** 31
     r and p must be positive numbers between 1 and 255
+    Salt must be a byte string 1-16 bytes long.
 
     If no salt is given, 16 random bytes are generated using os.urandom.
     """

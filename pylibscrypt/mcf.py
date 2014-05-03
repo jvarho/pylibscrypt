@@ -40,7 +40,8 @@ def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     If no salt is given, 16 random bytes are generated using os.urandom."""
     if salt is None:
         salt = os.urandom(16)
-
+    elif not (1 <= len(salt) <= 16):
+        raise ValueError('salt must be 1-16 bytes')
     if r > 255:
         raise ValueError('scrypt_mcf r out of range [1,255]')
     if p > 255:
