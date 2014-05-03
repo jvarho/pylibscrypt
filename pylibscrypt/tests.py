@@ -49,8 +49,6 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
              b'dca2b92b',
              b'$s1$010801$TmFDbA==$5e2O3AGe3+8tPO0Ilvr57saSHcxoElzoHBDVNHTO'
              b'G+VFl5FZcA0yTnfGjTTFU2NqhCnE88mblWZGaHf53KK5Kw=='),
-        )
-        test_vectors = (
             (b'pleaseletmein', b'SodiumChloride', 4, 1, 1,
              b'BB1D77016C543A99FE632C9C43C60180FD05E0CAC8B29374DBD1854569CB'
              b'534F487240CFC069D6A59A35F2FA5C7428B21D9BE9F84315446D5371119E'
