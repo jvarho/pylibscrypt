@@ -25,6 +25,7 @@ setup(name='pylibscrypt',
     url='https://github.com/jvarho/pylibscrypt',
     license='MIT License',
     packages=['pylibscrypt'],
+    data_files=['CHANGES'],
     #extras_require = {
     #    'pyscrypt': ['scrypt>=0.6.0'],
     #},
