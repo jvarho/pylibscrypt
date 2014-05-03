@@ -226,7 +226,12 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     """Derives a Modular Crypt Format hash using the scrypt KDF
 
-    If no salt is given, 16 random bytes are generated using os.urandom."""
+    Parameter space is smaller than for scrypt():
+    N must be a power of two larger than 1 but no larger than 2 ** 31
+    r and p must be positive numbers between 1 and 255
+
+    If no salt is given, 16 random bytes are generated using os.urandom.
+    """
     return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p)
 
 

@@ -45,6 +45,8 @@ def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
         raise ValueError('scrypt_mcf r out of range [1,255]')
     if p > 255:
         raise ValueError('scrypt_mcf p out of range [1,255]')
+    if N > 2**31:
+        raise ValueError('scrypt_mcf N out of range [2,2**31]')
 
     hash = scrypt(password, salt, N, r, p)
 

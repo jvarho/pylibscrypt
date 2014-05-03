@@ -239,12 +239,12 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
         scrypt_mcf(b'password', b'NaCl', N=2**42)
     except ValueError:
         if verbose:
-            print("Test %d failed expectedly!" % i)
+            print("Test %d successful!" % i)
     except MemoryError:
         if verbose:
-            print("Test %d failed expectedly!" % i)
+            print("Test %d successful!" % i)
     else:
-        print("Warning: Test %d seems to succeed!" % i)
+        print("Test %d failed!" % i)
         print("  N == 2**42 accepted by scrypt_mcf")
         fails += 1
 
