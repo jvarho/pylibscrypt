@@ -9,6 +9,3 @@ exclude_lines =
     except TypeError
     raise ImportError.*
 
-    # Duh...
-    def run_tests
-
