@@ -88,15 +88,7 @@ def scrypt_mcf_check(mcf, password):
 
 
 if __name__ == "__main__":
-    import unittest, sys
+    import sys
     import tests
-    suite = unittest.TestSuite()
-    loader = unittest.defaultTestLoader
-    pyscrypt_tests = type(
-        'pyscryptTests',
-        (tests.ScryptTests,),
-        {'module': sys.modules[__name__], 'fast': False}
-    )
-    suite.addTest(loader.loadTestsFromTestCase(pyscrypt_tests))
-    unittest.TextTestRunner().run(suite)
+    tests.run_scrypt_suite(sys.modules[__name__])
 

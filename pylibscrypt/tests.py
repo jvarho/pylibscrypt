@@ -133,7 +133,6 @@ class ScryptTests(unittest.TestCase):
 
     def test_olen(self):
         pw, s, N = b'password', b'salt', 2
-        self.assertEquals(len(self.module.scrypt(pw, s, N, olen=0)), 0)
         self.assertEquals(len(self.module.scrypt(pw, s, N, olen=42)), 42)
         self.assertEquals(len(self.module.scrypt(pw, s, N, olen=100)), 100)
 
@@ -142,6 +141,20 @@ class ScryptTests(unittest.TestCase):
         self.assertRaises(ValueError, self.module.scrypt_mcf_check, b'', pw)
         self.assertRaises(ValueError, self.module.scrypt_mcf_check,
                           b'$s1$ffffffff$aaaa$bbbb', pw)
+        self.assertRaises(TypeError, self.module.scrypt_mcf_check, u'mcf', pw)
+        self.assertRaises(TypeError, self.module.scrypt_mcf_check, b'mcf', 42)
+
+
+def load_scrypt_suite(name, module, fast=True):
+    loader = unittest.defaultTestLoader
+    tests = type(name, (ScryptTests,), {'module': module, 'fast': fast})
+    return unittest.defaultTestLoader.loadTestsFromTestCase(tests)
+
+
+def run_scrypt_suite(module, fast=False):
+    suite = unittest.TestSuite()
+    suite.addTest(load_scrypt_suite('scryptTests', module, fast))
+    unittest.TextTestRunner().run(suite)
 
 
 def run_tests_pbkdf2(f, verbose=False):
@@ -173,37 +186,21 @@ def run_tests_pbkdf2(f, verbose=False):
 
 if __name__ == "__main__":
     suite = unittest.TestSuite()
-    loader = unittest.defaultTestLoader
     try:
         import pylibscrypt
-        pylibscrypt_tests = type(
-            'pylibscryptTests',
-            (ScryptTests,),
-            {'module': pylibscrypt, 'fast': True}
-        )
-        suite.addTest(loader.loadTestsFromTestCase(pylibscrypt_tests))
+        suite.addTest(load_scrypt_suite('pylibscryptTests', pylibscrypt, True))
     except ImportError:
         print('C scrypt not tested!')
 
     try:
         import pyscrypt
-        pyscrypt_tests = type(
-            'pyscryptTests',
-            (ScryptTests,),
-            {'module': pyscrypt, 'fast': True}
-        )
-        suite.addTest(loader.loadTestsFromTestCase(pyscrypt_tests))
+        suite.addTest(load_scrypt_suite('pyscryptTests', pyscrypt, True))
     except ImportError:
         print('scrypt module not tested!')
 
     try:
-        import pypyscrypt_inline
-        pypyscrypt_tests = type(
-            'pypyscryptTests',
-            (ScryptTests,),
-            {'module': pypyscrypt_inline, 'fast': True}
-        )
-        suite.addTest(loader.loadTestsFromTestCase(pypyscrypt_tests))
+        import pypyscrypt_inline as pypyscrypt
+        suite.addTest(load_scrypt_suite('pypyscryptTests', pypyscrypt, True))
     except ImportError:
         print('Pure Python scrypt not tested!')
 
