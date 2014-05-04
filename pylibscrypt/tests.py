@@ -157,31 +157,31 @@ def run_scrypt_suite(module, fast=False):
     unittest.TextTestRunner().run(suite)
 
 
-def run_tests_pbkdf2(f, verbose=False):
-    test_vectors = (
-        ('sha1', b'password', b'salt', 1, 20,
-         base64.b16decode(b'0c60c80f961f0e71f3a9b524af6012062fe037a6', True)),
-        ('sha1', b'pass\0word', b'sa\0lt', 4096, 16,
-         base64.b16decode(b'56fa6aa75548099dcc37d7f03425e0c3', True)),
-        ('sha256', b'password', b'NaCl', 7, 42,
-         base64.b16decode(b'8cb94b8721e20e643be099f3c31d332456b4c'
-         b'26f55b6403950267dc2b3c0806bda709a3f2d7f6107db73', True)),
-    )
-    fails = 0
-    for i, param in enumerate(test_vectors):
-        if f(*param[:-1]) != param[-1]:
-            print("Test %d failed!" % i)
-            print("  PBKDF output mismatch")
-            print("  Expected: %s" % param[-1])
-            print("  Got: %s" % f(*param[:-1]))
-            fails += 1
-        elif verbose:
-            print("Test %d successful!" % i)
+class PBKDF2Tests(unittest.TestCase):
+    """Tests a PBKDF2 implementation from module"""
+    def _test_vector(self, vector):
+        n, p, s, c, l, h = vector
+        h = base64.b16decode(h, True)
+        self.assertEquals(self.module.pbkdf2_hmac(n, p, s, c, l), h)
 
-    if fails:
-        print("%d tests failed!" % fails)
-    else:
-        print("All tests successful!")
+    def test_vector1(self):
+        self._test_vector(('sha1', b'password', b'salt', 1, 20,
+                           b'0c60c80f961f0e71f3a9b524af6012062fe037a6'))
+
+    def test_vector2(self):
+        self._test_vector(('sha1', b'pass\0word', b'sa\0lt', 4096, 16,
+                           b'56fa6aa75548099dcc37d7f03425e0c3'))
+
+    def test_vector3(self):
+        self._test_vector(('sha256', b'password', b'NaCl', 7, 42,
+                           b'8cb94b8721e20e643be099f3c31d332456b4c26f55'
+                           b'b6403950267dc2b3c0806bda709a3f2d7f6107db73'))
+
+
+def load_pbkdf2_suite(name, module):
+    loader = unittest.defaultTestLoader
+    tests = type(name, (PBKDF2Tests,), {'module': module})
+    return unittest.defaultTestLoader.loadTestsFromTestCase(tests)
 
 
 if __name__ == "__main__":
@@ -204,16 +204,15 @@ if __name__ == "__main__":
     except ImportError:
         print('Pure Python scrypt not tested!')
 
-    unittest.TextTestRunner().run(suite)
-
     try:
-        import pbkdf2 as pk
-        print('Testing pbkdf2...')
-        run_tests_pbkdf2(pk.pbkdf2_hmac)
+        import pbkdf2
+        suite.addTest(load_pbkdf2_suite('pbkdf2', pbkdf2))
     except ImportError:
         print('Pure Python PBKDF2 not tested!')
 
     if 'pbkdf2_hmac' in dir(hashlib):
-        print('Testing hashlib pbkdf2...')
-        run_tests_pbkdf2(hashlib.pbkdf2_hmac)
+        suite.addTest(load_pbkdf2_suite('hashlib_pbkdf2', hashlib))
+
+    unittest.TextTestRunner().run(suite)
+
 
