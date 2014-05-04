@@ -37,11 +37,10 @@
 
 
 import hashlib, hmac
+import numbers
 import struct
 
-
 import mcf as mcf_mod
-
 from consts import *
 
 
@@ -197,9 +196,17 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
         B[Bi:(Bi)+(32 * r)] = X[0:(0)+(32 * r)]
 
-
+    if not isinstance(password, bytes):
+        raise TypeError('password must be a byte string')
     if not isinstance(salt, bytes):
-        raise TypeError('scrypt salt must be a byte string')
+        raise TypeError('salt must be a byte string')
+    if not isinstance(N, numbers.Integral):
+        raise TypeError('N must be an integer')
+    if not isinstance(r, numbers.Integral):
+        raise TypeError('r must be an integer')
+    if not isinstance(p, numbers.Integral):
+        raise TypeError('p must be an integer')
+
     if N < 2 or (N & (N - 1)):
         raise ValueError('scrypt N must be a power of 2 greater than 1')
     if N > 2 ** 63:

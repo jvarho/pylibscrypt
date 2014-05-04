@@ -25,10 +25,9 @@
 
 import base64
 import ctypes, ctypes.util
-import os
-
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32
-
+import os
+import numbers
 
 from consts import *
 
@@ -107,9 +106,15 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     yet increase N if memory is plentiful.
     """
     if not isinstance(password, bytes):
-        raise TypeError
+        raise TypeError('password must be a byte string')
     if not isinstance(salt, bytes):
-        raise TypeError
+        raise TypeError('salt must be a byte string')
+    if not isinstance(N, numbers.Integral):
+        raise TypeError('N must be an integer')
+    if not isinstance(r, numbers.Integral):
+        raise TypeError('r must be an integer')
+    if not isinstance(p, numbers.Integral):
+        raise TypeError('p must be an integer')
     if N > 2**63:
         raise ValueError('N value cannot be larger than 2**63')
     if N < 2:

@@ -23,11 +23,11 @@
 """Scrypt implementation that calls into the 'scrypt' python module"""
 
 
+import numbers
+
 from scrypt import hash as _scrypt
 
-
 import mcf as mcf_mod
-
 from consts import *
 
 
@@ -58,9 +58,16 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     yet increase N if memory is plentiful.
     """
     if not isinstance(password, bytes):
-        raise TypeError('scrypt password must be a byte string')
+        raise TypeError('password must be a byte string')
     if not isinstance(salt, bytes):
-        raise TypeError('scrypt salt must be a byte string')
+        raise TypeError('salt must be a byte string')
+    if not isinstance(N, numbers.Integral):
+        raise TypeError('N must be an integer')
+    if not isinstance(r, numbers.Integral):
+        raise TypeError('r must be an integer')
+    if not isinstance(p, numbers.Integral):
+        raise TypeError('p must be an integer')
+
     if N > 2**63:
         raise ValueError('N value cannot be larger than 2**63')
     try:
