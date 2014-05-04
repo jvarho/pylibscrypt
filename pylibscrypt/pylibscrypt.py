@@ -114,6 +114,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise ValueError('N value cannot be larger than 2**63')
     if N < 2:
         raise ValueError('N must be a power of two larger than 1')
+    if r == 0 or p == 0:
+        raise ValueError('r and p must be positive')
 
     out = ctypes.create_string_buffer(olen)
     ret = _libscrypt_scrypt(password, len(password), salt, len(salt),
@@ -138,8 +140,6 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
         salt = os.urandom(16)
     elif not (1 <= len(salt) <= 16):
         raise ValueError('salt must be 1-16 bytes')
-    if r == 0 or p == 0:
-        raise ValueError('r and p must be positive')
     if N > 2**31:
         raise ValueError('N > 2**31 not supported')
     hash = scrypt(password, salt, N, r, p)

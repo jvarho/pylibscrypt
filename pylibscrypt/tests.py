@@ -283,7 +283,7 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
 
     i += 1
     try:
-        scrypt_mcf(b'password', b'NaCl', N=2, r=0)
+        scrypt(b'password', b'NaCl', N=2, r=0)
     except ValueError:
         if verbose:
             print("Test %d successful!" % i)
