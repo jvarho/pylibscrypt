@@ -126,6 +126,17 @@ def run_tests(scrypt, scrypt_mcf, scrypt_mcf_check, verbose=False, fast=False):
         fails += 1
 
     i += 1
+    try:
+        scrypt(b'password', b'salt', N=1)
+    except ValueError:
+        if verbose:
+            print("Test %d successful!" % i)
+    else:
+        print("Test %d failed!" % i)
+        print("  Invalid N value 1 accepted")
+        fails += 1
+
+    i += 1
     if (scrypt_mcf(b'password', b'salt', N=2) !=
             scrypt_mcf(b'password', b'salt', N=2)):
         print("Test %d.1 failed!" % i)
