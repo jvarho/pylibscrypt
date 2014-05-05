@@ -201,7 +201,7 @@ if __name__ == "__main__":
         import pylibsodium
         suite.addTest(load_scrypt_suite('pylibsodiumTests', pylibsodium, True))
     except ImportError:
-        print('scrypt module not tested!')
+        print('Python + libsodium scrypt not tested!')
 
     try:
         import pypyscrypt_inline as pypyscrypt
