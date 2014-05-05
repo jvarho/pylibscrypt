@@ -26,11 +26,12 @@
 
 import base64
 import ctypes, ctypes.util
-import os
-
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
+import hashlib, hmac
+import os
+import struct
 
-
+import mcf as mcf_mod
 from consts import *
 
 
@@ -55,15 +56,6 @@ _libsodium_salsa20_8.argtypes = [
     c_void_p,  # k   (8*4 bytes)
     c_void_p,  # c   (4*4 bytes)
 ]
-
-
-import hashlib, hmac
-import struct
-
-
-import mcf as mcf_mod
-
-from consts import *
 
 
 # Python 3.4+ have PBKDF2 in hashlib, so use it...
@@ -119,34 +111,16 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     class Salsa20Block(ctypes.LittleEndianStructure):
         _fields_ = [('c%d' % i, c_uint32) for i in xrange(16)]
 
-        def __getitem__(self, k):
-            return getattr(self, 'c%d' % k)
-        def __setitem__(self, k, v):
-            return setattr(self, 'c%d' % k, v)
-
 
     def salsa20_8(B, x):
         '''Salsa20/8 http://en.wikipedia.org/wiki/Salsa20'''
 
-        # c
-        x.c0 = B[0]
-        x.c1 = B[5]
-        x.c2 = B[10]
-        x.c3 = B[15]
-        # in
-        x.c4 = B[6]
-        x.c5 = B[7]
-        x.c6 = B[8]
-        x.c7 = B[9]
-        # k
-        x.c8  = B[1]
-        x.c9  = B[2]
-        x.c10 = B[3]
-        x.c11 = B[4]
-        x.c12 = B[11]
-        x.c13 = B[12]
-        x.c14 = B[13]
-        x.c15 = B[14]
+        struct.pack_into('<16I', x, 0,
+            B[0],  B[5],  B[10], B[15], # c
+            B[6],  B[7],  B[8],  B[9],  # in
+            B[1],  B[2],  B[3],  B[4],  # k
+            B[11], B[12], B[13], B[14],
+        )
 
         c = ctypes.addressof(x)
         i = c + 4*4
@@ -154,22 +128,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
         _libsodium_salsa20_8(c, i, k, c)
 
-        B[0] = x.c0
-        B[1] = x.c1
-        B[2] = x.c2
-        B[3] = x.c3
-        B[4] = x.c4
-        B[5] = x.c5
-        B[6] = x.c6
-        B[7] = x.c7
-        B[8] = x.c8
-        B[9] = x.c9
-        B[10] = x.c10
-        B[11] = x.c11
-        B[12] = x.c12
-        B[13] = x.c13
-        B[14] = x.c14
-        B[15] = x.c15
+        B[:] = struct.unpack('<16I', x)
 
 
     def blockmix_salsa8(BY, Yi, r):
@@ -177,11 +136,11 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
         start = (2 * r - 1) * 16
         X = BY[start:start+16]                             # BlockMix - 1
-        tmp = Salsa20Block()
+        x = ctypes.create_string_buffer(16*4)
 
         for i in xrange(2 * r):                            # BlockMix - 2
             blockxor(BY, i * 16, X, 0, 16)                 # BlockMix - 3(inner)
-            salsa20_8(X, tmp)                              # BlockMix - 3(outer)
+            salsa20_8(X, x)                                # BlockMix - 3(outer)
             array_overwrite(X, 0, BY, Yi + (i * 16), 16)   # BlockMix - 4
 
         for i in xrange(r):                                # BlockMix - 6
