@@ -38,12 +38,11 @@ if _libscrypt_soname is None:
 
 try:
     _libscrypt = ctypes.CDLL(_libscrypt_soname)
+    _libscrypt_scrypt = _libscrypt.libscrypt_scrypt
+    _libscrypt_mcf = _libscrypt.libscrypt_mcf
+    _libscrypt_check = _libscrypt.libscrypt_check
 except OSError:
     raise ImportError('Unable to load libscrypt: ' + _libscrypt_soname)
-
-
-try:
-    _libscrypt_scrypt = _libscrypt.libscrypt_scrypt
 except AttributeError:
     raise ImportError('Incompatible libscrypt: ' + _libscrypt_soname)
 
@@ -59,12 +58,6 @@ _libscrypt_scrypt.argtypes = [
     c_size_t,  # out length
 ]
 
-
-try:
-    _libscrypt_mcf = _libscrypt.libscrypt_mcf
-except AttributeError:
-    raise ImportError('Incompatible libscrypt: ' + _libscrypt_soname)
-
 _libscrypt_mcf.argtypes = [
     c_uint64,  # N
     c_uint32,  # r
@@ -73,12 +66,6 @@ _libscrypt_mcf.argtypes = [
     c_char_p,  # hash
     c_char_p,  # out (125+ bytes)
 ]
-
-
-try:
-    _libscrypt_check = _libscrypt.libscrypt_check
-except AttributeError:
-    raise ImportError('Incompatible libscrypt: ' + _libscrypt_soname)
 
 _libscrypt_check.argtypes = [
     c_char_p,  # mcf (modified)

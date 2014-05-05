@@ -41,12 +41,9 @@ if _libsodium_soname is None:
 
 try:
     _libsodium = ctypes.CDLL(_libsodium_soname)
+    _libsodium_salsa20_8 = _libsodium.crypto_core_salsa208
 except OSError:
     raise ImportError('Unable to load libsodium: ' + _libsodium_soname)
-
-
-try:
-    _libsodium_salsa20_8 = _libsodium.crypto_core_salsa208
 except AttributeError:
     raise ImportError('Incompatible libscrypt: ' + _libsodium_soname)
 
