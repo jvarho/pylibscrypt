@@ -28,7 +28,7 @@ import base64
 import ctypes, ctypes.util
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
 import hashlib, hmac
-import os
+import numbers
 import struct
 
 import mcf as mcf_mod
@@ -154,8 +154,17 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         array_overwrite(X, 0, B, Bi, 32 * r)               # ROMix - 10
 
 
+    if not isinstance(password, bytes):
+        raise TypeError('password must be a byte string')
     if not isinstance(salt, bytes):
-        raise TypeError('scrypt salt must be a byte string')
+        raise TypeError('salt must be a byte string')
+    if not isinstance(N, numbers.Integral):
+        raise TypeError('N must be an integer')
+    if not isinstance(r, numbers.Integral):
+        raise TypeError('r must be an integer')
+    if not isinstance(p, numbers.Integral):
+        raise TypeError('p must be an integer')
+
     if N < 2 or (N & (N - 1)):
         raise ValueError('scrypt N must be a power of 2 greater than 1')
     if N > 2 ** 63:
