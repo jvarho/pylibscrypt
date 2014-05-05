@@ -79,21 +79,21 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
     def integerify(B, r):
-        '''"A bijection from ({0, 1} ** k) to {0, ..., (2 ** k) - 1"'''
+        """A bijection from ({0, 1} ** k) to {0, ..., (2 ** k) - 1"""
 
         Bi = (2 * r - 1) * 16
         return B[Bi]
 
 
     def R(X, destination, a1, a2, b):
-        '''A single Salsa20 row operation'''
+        """A single Salsa20 row operation"""
 
         a = (X[a1] + X[a2]) & 0xffffffff
         X[destination] ^= ((a << b) | (a >> (32 - b)))
 
 
     def salsa20_8(B, x, src, s_start, dest, d_start):
-        '''Salsa20/8 http://en.wikipedia.org/wiki/Salsa20'''
+        """Salsa20/8 http://en.wikipedia.org/wiki/Salsa20"""
 
         # Merged blockxor for speed
         for i in xrange(16):
@@ -117,7 +117,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
     def blockmix_salsa8(BY, Yi, r):
-        '''Blockmix; Used by SMix'''
+        """Blockmix; Used by SMix"""
 
         start = (2 * r - 1) * 16
         X = BY[start:start+16]                             # BlockMix - 1
@@ -134,7 +134,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
     def smix(B, Bi, r, N, V, X):
-        '''SMix; a specific case of ROMix based on Salsa20/8'''
+        """SMix; a specific case of ROMix based on Salsa20/8"""
 
         array_overwrite(B, Bi, X, 0, 32 * r)               # ROMix - 1
 

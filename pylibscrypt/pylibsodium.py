@@ -95,15 +95,18 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
     def integerify(B, r):
-        '''"A bijection from ({0, 1} ** k) to {0, ..., (2 ** k) - 1"'''
+        """A bijection from ({0, 1} ** k) to {0, ..., (2 ** k) - 1"""
 
         Bi = (2 * r - 1) * 16
         return B[Bi]
 
 
     def salsa20_8(B, x):
-        """Salsa20/8 http://en.wikipedia.org/wiki/Salsa20"""
+        """Salsa 20/8 using libsodium
 
+        NaCL/libsodium includes crypto_core_salsa208, but unfortunately it
+        expects the data in a different order, so we need to mix it up a bit.
+        """
         struct.pack_into('<16I', x, 0,
             B[0],  B[5],  B[10], B[15], # c
             B[6],  B[7],  B[8],  B[9],  # in
@@ -121,7 +124,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
     def blockmix_salsa8(BY, Yi, r):
-        '''Blockmix; Used by SMix'''
+        """Blockmix; Used by SMix"""
 
         start = (2 * r - 1) * 16
         X = BY[start:start+16]                             # BlockMix - 1
@@ -138,7 +141,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
     def smix(B, Bi, r, N, V, X):
-        '''SMix; a specific case of ROMix based on Salsa20/8'''
+        """SMix; a specific case of ROMix based on Salsa20/8"""
 
         array_overwrite(B, Bi, X, 0, 32 * r)               # ROMix - 1
 
