@@ -101,17 +101,6 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         return B[Bi]
 
 
-    def R(X, destination, a1, a2, b):
-        '''A single Salsa20 row operation'''
-
-        a = (X[a1] + X[a2]) & 0xffffffff
-        X[destination] ^= ((a << b) | (a >> (32 - b)))
-
-
-    class Salsa20Block(ctypes.LittleEndianStructure):
-        _fields_ = [('c%d' % i, c_uint32) for i in xrange(16)]
-
-
     def salsa20_8(B, x):
         '''Salsa20/8 http://en.wikipedia.org/wiki/Salsa20'''
 
