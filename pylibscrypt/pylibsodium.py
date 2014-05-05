@@ -102,7 +102,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
     def salsa20_8(B, x):
-        '''Salsa20/8 http://en.wikipedia.org/wiki/Salsa20'''
+        """Salsa20/8 http://en.wikipedia.org/wiki/Salsa20"""
 
         struct.pack_into('<16I', x, 0,
             B[0],  B[5],  B[10], B[15], # c
