@@ -21,25 +21,41 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Python implementation of Scrypt password-based key derivation function"""
-
-# Scrypt definition:
-# http://www.tarsnap.com/scrypt/scrypt.pdf
-
-# It was originally written for a pure-Python Litecoin CPU miner:
-# https://github.com/ricmoo/nightminer
-# Imported to this project from:
-# https://github.com/ricmoo/pyscrypt
-# And owes thanks to:
-# https://github.com/wg/scrypt
+"""Scrypt implementation that calls into system libsodium"""
 
 
+import base64
+import ctypes, ctypes.util
+from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
 import hashlib, hmac
 import numbers
 import struct
 
 import mcf as mcf_mod
 from consts import *
+
+
+_libsodium_soname = ctypes.util.find_library('sodium')
+if _libsodium_soname is None:
+    raise ImportError('Unable to find libsodium')
+
+try:
+    _libsodium = ctypes.CDLL(_libsodium_soname)
+except OSError:
+    raise ImportError('Unable to load libsodium: ' + _libsodium_soname)
+
+
+try:
+    _libsodium_salsa20_8 = _libsodium.crypto_core_salsa208
+except AttributeError:
+    raise ImportError('Incompatible libscrypt: ' + _libsodium_soname)
+
+_libsodium_salsa20_8.argtypes = [
+    c_void_p,  # out (16*4 bytes)
+    c_void_p,  # in  (4*4 bytes)
+    c_void_p,  # k   (8*4 bytes)
+    c_void_p,  # c   (4*4 bytes)
+]
 
 
 # Python 3.4+ have PBKDF2 in hashlib, so use it...
@@ -85,35 +101,26 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         return B[Bi]
 
 
-    def R(X, destination, a1, a2, b):
-        """A single Salsa20 row operation"""
+    def salsa20_8(B, x):
+        """Salsa 20/8 using libsodium
 
-        a = (X[a1] + X[a2]) & 0xffffffff
-        X[destination] ^= ((a << b) | (a >> (32 - b)))
+        NaCL/libsodium includes crypto_core_salsa208, but unfortunately it
+        expects the data in a different order, so we need to mix it up a bit.
+        """
+        struct.pack_into('<16I', x, 0,
+            B[0],  B[5],  B[10], B[15], # c
+            B[6],  B[7],  B[8],  B[9],  # in
+            B[1],  B[2],  B[3],  B[4],  # k
+            B[11], B[12], B[13], B[14],
+        )
 
+        c = ctypes.addressof(x)
+        i = c + 4*4
+        k = c + 8*4
 
-    def salsa20_8(B, x, src, s_start, dest, d_start):
-        """Salsa20/8 http://en.wikipedia.org/wiki/Salsa20"""
+        _libsodium_salsa20_8(c, i, k, c)
 
-        # Merged blockxor for speed
-        for i in xrange(16):
-            x[i] = B[i] = B[i] ^ src[s_start + i]
-
-        # This is the actual Salsa 20/8: four identical double rounds
-        for i in xrange(4):
-            R(x, 4, 0,12, 7);R(x, 8, 4, 0, 9);R(x,12, 8, 4,13);R(x, 0,12, 8,18)
-            R(x, 9, 5, 1, 7);R(x,13, 9, 5, 9);R(x, 1,13, 9,13);R(x, 5, 1,13,18)
-            R(x,14,10, 6, 7);R(x, 2,14,10, 9);R(x, 6, 2,14,13);R(x,10, 6, 2,18)
-            R(x, 3,15,11, 7);R(x, 7, 3,15, 9);R(x,11, 7, 3,13);R(x,15,11, 7,18)
-            R(x, 1, 0, 3, 7);R(x, 2, 1, 0, 9);R(x, 3, 2, 1,13);R(x, 0, 3, 2,18)
-            R(x, 6, 5, 4, 7);R(x, 7, 6, 5, 9);R(x, 4, 7, 6,13);R(x, 5, 4, 7,18)
-            R(x,11,10, 9, 7);R(x, 8,11,10, 9);R(x, 9, 8,11,13);R(x,10, 9, 8,18)
-            R(x,12,15,14, 7);R(x,13,12,15, 9);R(x,14,13,12,13);R(x,15,14,13,18)
-
-        # While we are handling the data, write it to the correct dest.
-        # The latter half is still part of salsa20
-        for i in xrange(16):
-            dest[d_start + i] = B[i] = (x[i] + B[i]) & 0xffffffff
+        B[:] = struct.unpack('<16I', x)
 
 
     def blockmix_salsa8(BY, Yi, r):
@@ -121,12 +128,12 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
         start = (2 * r - 1) * 16
         X = BY[start:start+16]                             # BlockMix - 1
-        tmp = [0]*16
+        x = ctypes.create_string_buffer(16*4)
 
         for i in xrange(2 * r):                            # BlockMix - 2
-            #blockxor(BY, i * 16, X, 0, 16)                # BlockMix - 3(inner)
-            salsa20_8(X, tmp, BY, i * 16, BY, Yi + i*16)   # BlockMix - 3(outer)
-            #array_overwrite(X, 0, BY, Yi + (i * 16), 16)  # BlockMix - 4
+            blockxor(BY, i * 16, X, 0, 16)                 # BlockMix - 3(inner)
+            salsa20_8(X, x)                                # BlockMix - 3(outer)
+            array_overwrite(X, 0, BY, Yi + (i * 16), 16)   # BlockMix - 4
 
         for i in xrange(r):                                # BlockMix - 6
             array_overwrite(BY, Yi + (i * 2) * 16, BY, i * 16, 16)
@@ -148,6 +155,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
             blockmix_salsa8(X, 32 * r, r)                  # ROMix - 9(outer)
 
         array_overwrite(X, 0, B, Bi, 32 * r)               # ROMix - 10
+
 
     if not isinstance(password, bytes):
         raise TypeError('password must be a byte string')
