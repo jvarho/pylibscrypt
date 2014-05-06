@@ -115,6 +115,17 @@ class ScryptTests(unittest.TestCase):
         self.assertRaises(ValueError, self.module.scrypt, pw, s, 2**66+2)
         self.assertRaises(ValueError, self.module.scrypt_mcf, pw, s, 2**32)
 
+    def test_huge_N(self):
+        pw, s = b'password', b'salt'
+        self.assertRaises(
+            (ValueError, MemoryError, OverflowError),
+            self.module.scrypt, pw, s, 2**50
+        )
+        self.assertRaises(
+            (ValueError, MemoryError, OverflowError),
+            self.module.scrypt, pw, s, 2**60
+        )
+
     def test_invalid_r(self):
         pw, s, N = b'password', b'salt', 2
         self.assertRaises(ValueError, self.module.scrypt, pw, s, N, 0)
