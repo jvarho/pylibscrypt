@@ -61,3 +61,8 @@ def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
         del blocks[dklen:]
     return bytes(blocks)
 
+if __name__ == "__main__":
+    import sys
+    import tests
+    tests.run_pbkdf2_suite(sys.modules[__name__])
+

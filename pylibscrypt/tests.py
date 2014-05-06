@@ -183,6 +183,12 @@ def load_pbkdf2_suite(name, module):
     return unittest.defaultTestLoader.loadTestsFromTestCase(tests)
 
 
+def run_pbkdf2_suite(module, fast=False):
+    suite = unittest.TestSuite()
+    suite.addTest(load_pbkdf2_suite('scryptTests', module))
+    unittest.TextTestRunner().run(suite)
+
+
 if __name__ == "__main__":
     suite = unittest.TestSuite()
     try:
