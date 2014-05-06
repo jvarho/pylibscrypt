@@ -169,12 +169,14 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     if p <= 0:
         raise ValueError('scrypt p must be positive')
 
-    B  = _pbkdf2('sha256', password, salt, 1, p * 128 * r)
-
     # Everything is lists of 32-bit uints for all but pbkdf2
-    B  = list(struct.unpack('<%dI' % (len(B) // 4), B))
-    XY = [0] * (64 * r)
-    V  = [0] * (32 * r * N)
+    try:
+        B  = _pbkdf2('sha256', password, salt, 1, p * 128 * r)
+        B  = list(struct.unpack('<%dI' % (len(B) // 4), B))
+        XY = [0] * (64 * r)
+        V  = [0] * (32 * r * N)
+    except (MemoryError, OverflowError):
+        raise ValueError("scrypt parameters don't fit in memory")
 
     for i in xrange(p):
         smix(B, i * 32 * r, r, N, V, XY)
