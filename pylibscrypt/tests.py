@@ -24,8 +24,7 @@
 
 
 import base64
-import ctypes
-import hashlib, hmac
+import hashlib
 import unittest
 
 
