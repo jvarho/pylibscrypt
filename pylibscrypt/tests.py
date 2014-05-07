@@ -244,8 +244,9 @@ if __name__ == "__main__":
         suite.addTest(load_scrypt_suite('pyscryptTests', None, True))
 
     try:
-        import pylibsodium
-        suite.addTest(load_scrypt_suite('pylibsodiumTests', pylibsodium, True))
+        import pylibsodium_salsa
+        suite.addTest(load_scrypt_suite('pylibsodium_salsaTests',
+                                        pylibsodium_salsa, True))
     except ImportError:
         suite.addTest(load_scrypt_suite('pylibsodiumTests', None, True))
 

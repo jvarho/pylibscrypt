@@ -6,7 +6,7 @@ import time
 from consts import *
 from pylibscrypt import scrypt
 from pypyscrypt_inline import scrypt as pyscrypt
-from pylibsodium import scrypt as pcscrypt
+from pylibsodium_salsa import scrypt as pcscrypt
 
 
 # Benchmark time in seconds
