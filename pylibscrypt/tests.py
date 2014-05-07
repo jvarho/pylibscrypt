@@ -36,12 +36,21 @@ class ScryptTests(unittest.TestCase):
             self.module.scrypt(pw, s, N, r, p),
             base64.b16decode(h, True)
         )
-        self.assertEqual(
-            self.module.scrypt_mcf(pw, s, N, r, p),
-            m
-        )
-        self.assertTrue(self.module.scrypt_mcf_check(m, pw))
-        self.assertFalse(self.module.scrypt_mcf_check(m, b'x' + pw))
+        if m is not None:
+            self.assertEqual(
+                self.module.scrypt_mcf(pw, s, N, r, p),
+                m
+            )
+            self.assertTrue(self.module.scrypt_mcf_check(m, pw))
+            self.assertFalse(self.module.scrypt_mcf_check(m, b'x' + pw))
+
+    def test_vector0(self):
+        self._test_vector((
+            b'', b'', 16, 1, 1,
+            b'77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442'
+            b'fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906',
+            None
+        ))
 
     def test_vector1(self):
         if self.fast:
