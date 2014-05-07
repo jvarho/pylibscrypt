@@ -15,19 +15,20 @@ Features
 Requirements
 --
 * Python 2.7 or 3.4 or so. Pypy 2.2 also works. Older versions may or may not.
-* If you want speed: libscrypt 1.8+ (older may work) or py-scrypt 0.6+
+* If you want speed: libscrypt 1.8+ (older may work) or py-scrypt 0.6+ or pypy
 
 Usage
 --
+You most likely want to create MCF hashes and store them somewhere, then check
+user-entered passwords against those hashes. For that you only need to use two
+functions from the API:
 
     from pylibscrypt import *
-    # Print a raw scrypt hash in hex
-    print(scrypt('Hello World', 'salt').encode('hex'))
     # Generate an MCF hash with random salt
     mcf = scrypt_mcf('Hello World')
     # Test it
-    print(scrypt_mcf_check(mcf, 'Hello World'))
-    print(scrypt_mcf_check(mcf, 'HelloPyWorld'))
+    print(scrypt_mcf_check(mcf, 'Hello World'))   # prints True
+    print(scrypt_mcf_check(mcf, 'HelloPyWorld'))  # prints False
 
 Versioning
 --
