@@ -9,7 +9,7 @@ from pypyscrypt_inline import scrypt as pyscrypt
 from pylibsodium import scrypt as pcscrypt
 
 
-# Benchmark time in seconds 
+# Benchmark time in seconds
 tmin = 5
 Nmax = 20
 

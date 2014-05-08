@@ -20,7 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Modular Crypt Format support for scrypt, compatible with libscrypt"""
+"""Modular Crypt Format support for scrypt, compatible with libscrypt
+
+scrypt_mcf_check also supports the $7$ format.
+"""
 
 
 import base64
@@ -37,7 +40,8 @@ def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     Expects the signature:
     scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64)
 
-    If no salt is given, 16 random bytes are generated using os.urandom."""
+    If no salt is given, 16 random bytes are generated using os.urandom.
+    """
     if salt is None:
         salt = os.urandom(16)
     elif not (1 <= len(salt) <= 16):
@@ -137,7 +141,8 @@ def _scrypt_mcf_parse_7(mcf):
 def scrypt_mcf_check(scrypt, mcf, password):
     """Returns True if the password matches the given MCF hash
 
-    Supports both the libscrypt $s1$ format and the $7$ format."""
+    Supports both the libscrypt $s1$ format and the $7$ format.
+    """
     if not isinstance(mcf, bytes):
         raise TypeError
     if not isinstance(password, bytes):
