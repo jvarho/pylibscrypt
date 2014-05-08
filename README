@@ -38,6 +38,7 @@ functions from the API:
     print(scrypt_mcf_check(mcf, 'Hello World'))   # prints True
     print(scrypt_mcf_check(mcf, 'HelloPyWorld'))  # prints False
 
+For full API, you can try help(pylibscrypt) from python.
 
 
 Versioning
@@ -46,10 +47,9 @@ The package has a version number that can be read from python like so:
 
     print(pylibscrypt.__version__)
 
-The version number is of the form X.Y.Z. The number X will only be incremented
-if an incompatible change is done, but this is not planned. The number Y will
-be incremented for new features or API for which a caller may wish to check.
-The last number will be incremented for bugfix-only releases.
+The version number is of the form X.Y.Z, following Semantic Versioning[6].
+Releases are tagged vX.Y.Z and release branches bX.Y.x when they differ from
+master.
 
 
 Development
@@ -61,7 +61,7 @@ implementation directly will also compare to scrypt test vectors from the paper
 but this is slow for the Python version unless you have pypy. The best way to
 report a bug is to also provide a new test that fails, but that is not required.
 
-The run_coverage.sh script calls coverage.py[6] to report test coverage. If you
+The run_coverage.sh script calls coverage.py[7] to report test coverage. If you
 would like to include a new feature, it should be adequately covered with tests.
 
 
@@ -70,5 +70,6 @@ would like to include a new feature, it should be adequately covered with tests.
 [3]:https://bitbucket.org/mhallin/py-scrypt/src
 [4]:http://pypy.org/
 [5]:https://github.com/jedisct1/libsodium
-[6]:http://nedbatchelder.com/code/coverage/
+[6]:http://semver.org/spec/v2.0.0.html
+[7]:http://nedbatchelder.com/code/coverage/
 
