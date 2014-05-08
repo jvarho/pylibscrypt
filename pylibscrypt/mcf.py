@@ -67,16 +67,10 @@ def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     )
 
 
-def scrypt_mcf_check(scrypt, mcf, password):
-    """Returns True if the password matches the given MCF hash"""
-    if not isinstance(mcf, bytes):
-        raise TypeError
-    if not isinstance(password, bytes):
-        raise TypeError
-
+def _scrypt_mcf_parse_s1(mcf):
     s = mcf.split(b'$')
     if not (mcf.startswith(SCRYPT_MCF_ID) and len(s) == 5):
-        raise ValueError('Unrecognized MCF hash')
+        return
 
     params, s64, h64 = s[2:]
     params = base64.b16decode(params, True)
@@ -84,9 +78,26 @@ def scrypt_mcf_check(scrypt, mcf, password):
     hash = base64.b64decode(h64)
 
     if len(params) != 3:
-        raise ValueError('Unrecognized MCF parameters')
+        return
     t, r, p = struct.unpack('3B', params)
     N = 2 ** t
+    return N, r, p, salt, hash
+
+
+def scrypt_mcf_check(scrypt, mcf, password):
+    """Returns True if the password matches the given MCF hash
+
+    Supports both the libscrypt $s1$ format and the $7$ format."""
+    if not isinstance(mcf, bytes):
+        raise TypeError
+    if not isinstance(password, bytes):
+        raise TypeError
+
+    params = _scrypt_mcf_parse_s1(mcf)
+    if params is None:
+        raise ValueError('Unrecognized MCF hash')
+
+    N, r, p, salt, hash = params
 
     h = scrypt(password, salt, N=N, r=r, p=p)
 
