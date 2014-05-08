@@ -4,6 +4,7 @@ Scrypt for Python
 There are a lot of different scrypt modules for Python, but none of them have
 everything that I'd like, so here's One More[1].
 
+
 Features
 --
 * Uses system libscrypt[2] as the first choice.
@@ -12,10 +13,12 @@ Features
 * Not unusably slow, even in pure Python... at least with pypy[4].
   (Around one fifth the C speed, anyway.)
 
+
 Requirements
 --
 * Python 2.7 or 3.4 or so. Pypy 2.2 also works. Older versions may or may not.
 * If you want speed: libscrypt 1.8+ (older may work) or py-scrypt 0.6+ or pypy
+
 
 Usage
 --
@@ -30,6 +33,7 @@ functions from the API:
     print(scrypt_mcf_check(mcf, 'Hello World'))   # prints True
     print(scrypt_mcf_check(mcf, 'HelloPyWorld'))  # prints False
 
+
 Versioning
 --
 The package has a version number that can be read from python like so:
@@ -40,6 +44,7 @@ The version number is of the form X.Y.Z. The number X will only be incremented
 if an incompatible change is done, but this is not planned. The number Y will
 be incremented for new features or API for which a caller may wish to check.
 The last number will be incremented for bugfix-only releases.
+
 
 Development
 --
@@ -53,9 +58,6 @@ report a bug is to also provide a new test that fails, but that is not required.
 The run_coverage.sh script calls coverage.py[5] to report test coverage. If you
 would like to include a new feature, it should be adequately covered with tests.
 
-TODO
---
-* Embed C implementation for when there's no system library?
 
 [1]:https://xkcd.com/927/
 [2]:https://github.com/technion/libscrypt
