@@ -1,6 +1,14 @@
 Release History
 ==
 
+1.1.0
+
+Feature release:
+- On cPython libsodium is used for salsa20/8, for a 4x speedup when C scrypt
+  is not available but libsodium is (optional).
+- Tests have been converted to unittest. More readable and more coverage.
+
+
 1.0.3
 --
 2014-5-5
