@@ -60,23 +60,17 @@ def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     params = p + (r << 8) + (t << 16)
 
     return (
-        SCRYPT_MCF_ID +
+        b'$s1' +
         ('$%06x' % params).encode() +
         b'$' + s64 +
         b'$' + h64
     )
 
 
-def scrypt_mcf_check(scrypt, mcf, password):
-    """Returns True if the password matches the given MCF hash"""
-    if not isinstance(mcf, bytes):
-        raise TypeError
-    if not isinstance(password, bytes):
-        raise TypeError
-
+def _scrypt_mcf_parse_s1(mcf):
     s = mcf.split(b'$')
-    if not (mcf.startswith(SCRYPT_MCF_ID) and len(s) == 5):
-        raise ValueError('Unrecognized MCF hash')
+    if not (mcf.startswith(b'$s1$') and len(s) == 5):
+        return None
 
     params, s64, h64 = s[2:]
     params = base64.b16decode(params, True)
@@ -87,8 +81,75 @@ def scrypt_mcf_check(scrypt, mcf, password):
         raise ValueError('Unrecognized MCF parameters')
     t, r, p = struct.unpack('3B', params)
     N = 2 ** t
+    return N, r, p, salt, hash, 64
 
-    h = scrypt(password, salt, N=N, r=r, p=p)
 
+# Crypt base 64
+_cb64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+_icb64 = (
+    [None] * 46 +
+    [
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, None, None, None, None, None,
+        None, None, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+        26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, None, None, None,
+        None, None, None, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+        50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+    ] +
+    [None] * 133
+)
+
+def _cb64dec(arr, obytes):
+    out = bytearray()
+    val = bits = pos = 0
+    for b in arr:
+        val += _icb64[b] << bits
+        bits += 6
+        if bits >= 8:
+            out.append(val & 0xff)
+            bits -= 8
+            val >>= 8
+            if len(out) == obytes:
+                return out
+    raise TypeError
+
+
+def _scrypt_mcf_parse_7(mcf):
+    s = mcf.split(b'$')
+    if not (mcf.startswith(b'$7$') and len(s) == 4):
+        return None
+
+    s64 = bytearray(s[2])
+    h64 = bytearray(s[3])
+    try:
+        N = 2 ** _icb64[s64[0]]
+        r = (_icb64[s64[1]] + (_icb64[s64[2]] << 6) + (_icb64[s64[3]] << 12) + 
+             (_icb64[s64[4]] << 18) + (_icb64[s64[5]] << 24))
+        p = (_icb64[s64[6]] + (_icb64[s64[7]] << 6) + (_icb64[s64[8]] << 12) + 
+             (_icb64[s64[9]] << 18) + (_icb64[s64[10]] << 24))
+        salt = bytes(s64[11:])
+        hash = bytes(_cb64dec(h64, 32))
+    except (IndexError, TypeError):
+        raise ValueError('Unrecognized MCF format')
+
+    return N, r, p, salt, hash, 32
+
+
+def scrypt_mcf_check(scrypt, mcf, password):
+    """Returns True if the password matches the given MCF hash
+
+    Supports both the libscrypt $s1$ format and the $7$ format."""
+    if not isinstance(mcf, bytes):
+        raise TypeError
+    if not isinstance(password, bytes):
+        raise TypeError
+
+    params = _scrypt_mcf_parse_s1(mcf)
+    if params is None:
+        params = _scrypt_mcf_parse_7(mcf)
+    if params is None:
+        raise ValueError('Unrecognized MCF hash')
+
+    N, r, p, salt, hash, hlen = params
+    h = scrypt(password, salt, N=N, r=r, p=p, olen=hlen)
     return hash == h
 

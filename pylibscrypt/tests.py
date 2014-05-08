@@ -160,6 +160,25 @@ class ScryptTests(unittest.TestCase):
         self.assertRaises(TypeError, self.module.scrypt_mcf_check, u'mcf', pw)
         self.assertRaises(TypeError, self.module.scrypt_mcf_check, b'mcf', 42)
 
+    def test_mcf_7(self):
+        if self.fast:
+            self.skipTest('slow testcase')
+        p, m = b'pleaseletmein', (
+            b'$7$C6..../....SodiumChloride'
+            b'$kBGj9fHznVYFQMEn/qDCfrDevf9YDtcDdKvEqHJLV8D'
+        )
+        self.assertTrue(self.module.scrypt_mcf_check(m, p))
+        self.assertFalse(self.module.scrypt_mcf_check(m, b'X'+p))
+        self.assertRaises(ValueError, self.module.scrypt_mcf_check,
+            m[:-1], p
+        )
+        self.assertRaises(ValueError, self.module.scrypt_mcf_check,
+            b'$7$$', p
+        )
+        self.assertRaises(ValueError, self.module.scrypt_mcf_check,
+            b'$7$$$', p
+        )
+
 
 def load_scrypt_suite(name, module, fast=True):
     loader = unittest.defaultTestLoader

@@ -30,6 +30,7 @@ import os
 import numbers
 
 from consts import *
+import mcf as mcf_mod
 
 
 _libscrypt_soname = ctypes.util.find_library('scrypt')
@@ -162,7 +163,7 @@ def scrypt_mcf_check(mcf, password):
     mcfbuf = ctypes.create_string_buffer(mcf)
     ret = _libscrypt_check(mcfbuf, password)
     if ret < 0:
-        raise ValueError
+        return mcf_mod.scrypt_mcf_check(scrypt, mcf, password)
 
     return bool(ret)
 
