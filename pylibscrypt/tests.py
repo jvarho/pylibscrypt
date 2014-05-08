@@ -30,6 +30,10 @@ import unittest
 
 class ScryptTests(unittest.TestCase):
     """Tests an scrypt implementation from module"""
+    def setUp(self):
+        if not self.module:
+            self.skipTest('module not tested')
+
     def _test_vector(self, vector):
         pw, s, N, r, p, h, m = vector
         self.assertEqual(
@@ -171,6 +175,10 @@ def run_scrypt_suite(module, fast=False):
 
 class PBKDF2Tests(unittest.TestCase):
     """Tests a PBKDF2 implementation from module"""
+    def setUp(self):
+        if not self.module:
+            self.skipTest('module not tested')
+
     def _test_vector(self, vector):
         n, p, s, c, l, h = vector
         h = base64.b16decode(h, True)
@@ -208,35 +216,36 @@ if __name__ == "__main__":
         import pylibscrypt
         suite.addTest(load_scrypt_suite('pylibscryptTests', pylibscrypt, True))
     except ImportError:
-        print('C scrypt not tested!')
+        suite.addTest(load_scrypt_suite('pylibscryptTests', None, True))
 
     try:
         import pyscrypt
         suite.addTest(load_scrypt_suite('pyscryptTests', pyscrypt, True))
     except ImportError:
-        print('scrypt module not tested!')
+        suite.addTest(load_scrypt_suite('pyscryptTests', None, True))
 
     try:
         import pylibsodium
         suite.addTest(load_scrypt_suite('pylibsodiumTests', pylibsodium, True))
     except ImportError:
-        print('Python + libsodium scrypt not tested!')
+        suite.addTest(load_scrypt_suite('pylibsodiumTests', None, True))
 
     try:
         import pypyscrypt_inline as pypyscrypt
         suite.addTest(load_scrypt_suite('pypyscryptTests', pypyscrypt, True))
     except ImportError:
-        print('Pure Python scrypt not tested!')
+        suite.addTest(load_scrypt_suite('pypyscryptTests', None, True))
 
     try:
         import pbkdf2
         suite.addTest(load_pbkdf2_suite('pbkdf2', pbkdf2))
     except ImportError:
-        print('Pure Python PBKDF2 not tested!')
+        suite.addTest(load_pbkdf2_suite('pbkdf2', None))
 
     if 'pbkdf2_hmac' in dir(hashlib):
         suite.addTest(load_pbkdf2_suite('hashlib_pbkdf2', hashlib))
+    else:
+        suite.addTest(load_pbkdf2_suite('hashlib_pbkdf2', None))
 
     unittest.TextTestRunner().run(suite)
-
 
