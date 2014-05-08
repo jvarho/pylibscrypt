@@ -1,7 +1,6 @@
 
 """Constants used by scrypt"""
 
-SCRYPT_MCF_ID = b"$s1"
 SCRYPT_MCF_LEN = 125
 
 SCRYPT_N = 1<<14
