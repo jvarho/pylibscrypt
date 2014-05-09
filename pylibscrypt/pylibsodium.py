@@ -199,7 +199,7 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
     r and p must be positive numbers between 1 and 255
     Salt must be a byte string 1-16 bytes long.
 
-    If no salt is given, 16 random bytes are generated using os.urandom.
+    If no salt is given, a random salt of 128+ bits is used. (Recommended.)
     """
     return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
 

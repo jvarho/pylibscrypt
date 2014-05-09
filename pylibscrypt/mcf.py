@@ -196,7 +196,7 @@ def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
     Expects the signature:
     scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64)
 
-    If no salt is given, 16 random bytes are generated using os.urandom.
+    If no salt is given, a random salt of 128+ bits is used. (Recommended.)
     """
     if salt is not None and not (1 <= len(salt) <= 16):
         raise ValueError('salt must be 1-16 bytes')
