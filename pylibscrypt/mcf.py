@@ -116,7 +116,7 @@ def _scrypt_mcf_parse_s1(mcf):
         raise ValueError('Unrecognized MCF parameters')
     t, r, p = struct.unpack('3B', params)
     N = 2 ** t
-    return N, r, p, salt, hash, 64
+    return N, r, p, salt, hash, len(hash)
 
 
 # Crypt base 64
@@ -166,7 +166,7 @@ def _scrypt_mcf_parse_7(mcf):
     except (IndexError, TypeError):
         raise ValueError('Unrecognized MCF format')
 
-    return N, r, p, salt, hash, 32
+    return N, r, p, salt, hash, len(hash)
 
 
 def scrypt_mcf_check(scrypt, mcf, password):

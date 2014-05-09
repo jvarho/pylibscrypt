@@ -180,6 +180,14 @@ class ScryptTests(unittest.TestCase):
         self.assertTrue(self.module.scrypt_mcf_check(m2, pw))
         self.assertRaises(ValueError, self.module.scrypt_mcf_check, m3, pw)
 
+    def test_mcf_nonstandard(self):
+        pw = b'pass'
+        m = (
+            b'$s1$010801$$WA1vBj+HFlIk7pG/OPS5bY4NKHBGeGIxEY99farnu2C9uOHxKe'
+            b'LWP3sCXRvP98F7lVi2JNT/Bmte38iodf81VEYB0Nu3pBw9JqTwiCAqMwL+2kqB'
+        )
+        self.assertTrue(self.module.scrypt_mcf_check(m, pw))
+
     def test_mcf_7(self):
         if self.fast:
             self.skipTest('slow testcase')
