@@ -20,13 +20,35 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Modular Crypt Format support for scrypt, compatible with libscrypt
+"""Modular Crypt Format support for scrypt
 
-scrypt_mcf_check also supports the $7$ format.
+Compatible with libscrypt scrypt_mcf_check also supports the $7$ format.
+
+libscrypt format:
+$s1$NNrrpp$salt$hash
+NN   - hex encoded N log2 (two hex digits)
+rr   - hex encoded r in 1-255
+pp   - hex encoded p in 1-255
+salt - base64 encoded salt 1-16 bytes decoded
+hash - base64 encoded 64-byte scrypt hash
+
+$7$ format:
+$7$Nrrrrrpppppsalt$hash
+N     - crypt base64 N log2
+rrrrr - crypt base64 r (little-endian 30 bits)
+ppppp - crypt base64 p (little-endian 30 bits)
+salt  - raw salt (0-43 bytes that should be limited to crypt base64)
+hash  - crypt base64 encoded 32-byte scrypt hash (43 bytes)
+
+(crypt base64 is base64 with the alphabet: ./0-9A-Za-z)
+
+When reading, we are more lax, allowing salts and hashes to be longer and
+incorrectly encoded, since the worst that can happen is that the password does
+not verify.
 """
 
 
-import base64
+import base64, binascii
 import os
 import struct
 
@@ -71,6 +93,15 @@ def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
     )
 
 
+def _b64decode(b64):
+    for b in (b64, b64 + b'=', b64 + b'=='):
+        try:
+            return base64.b64decode(b)
+        except (TypeError, binascii.Error):
+            pass
+    raise ValueError('Incorrect base64 in MCF')
+
+
 def _scrypt_mcf_parse_s1(mcf):
     s = mcf.split(b'$')
     if not (mcf.startswith(b'$s1$') and len(s) == 5):
@@ -78,8 +109,8 @@ def _scrypt_mcf_parse_s1(mcf):
 
     params, s64, h64 = s[2:]
     params = base64.b16decode(params, True)
-    salt = base64.b64decode(s64)
-    hash = base64.b64decode(h64)
+    salt = _b64decode(s64)
+    hash = _b64decode(h64)
 
     if len(params) != 3:
         raise ValueError('Unrecognized MCF parameters')
