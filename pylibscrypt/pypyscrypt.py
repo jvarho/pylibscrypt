@@ -185,7 +185,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     return _pbkdf2('sha256', password, B, 1, olen)
 
 
-def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
+def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
+               prefix=b'$s1$'):
     """Derives a Modular Crypt Format hash using the scrypt KDF
 
     Parameter space is smaller than for scrypt():
@@ -195,7 +196,7 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
 
     If no salt is given, 16 random bytes are generated using os.urandom.
     """
-    return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p)
+    return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
 
 
 def scrypt_mcf_check(mcf, password):

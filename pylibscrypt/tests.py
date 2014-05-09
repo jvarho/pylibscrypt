@@ -207,6 +207,19 @@ class ScryptTests(unittest.TestCase):
             b'$7$$$', p
         )
 
+    def test_mcf_7_fast(self):
+        p, s, m1 = b'pleaseletmein', b'SodiumChloride', (
+            b'$7$06..../....SodiumChloride'
+            b'$ENlyo6fGw4PCcDBOFepfSZjFUnVatHzCcW55.ZGz3B0'
+        )
+        self.assertEqual(
+            self.module.scrypt_mcf(p, s, 4, 8, 1, b'$7$'),
+            m1
+        )
+        self.assertTrue(self.module.scrypt_mcf_check(m1, p))
+        m2 = self.module.scrypt_mcf(p, None, 4, 8, 1, b'$7$')
+        self.assertTrue(self.module.scrypt_mcf_check(m2, p))
+
 
 def load_scrypt_suite(name, module, fast=True):
     loader = unittest.defaultTestLoader
