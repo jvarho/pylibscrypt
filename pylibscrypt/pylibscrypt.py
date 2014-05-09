@@ -159,6 +159,8 @@ def scrypt_mcf_check(mcf, password):
         raise TypeError
     if not isinstance(password, bytes):
         raise TypeError
+    if len(mcf) != 124:
+        return mcf_mod.scrypt_mcf_check(scrypt, mcf, password)
 
     mcfbuf = ctypes.create_string_buffer(mcf)
     ret = _libscrypt_check(mcfbuf, password)
