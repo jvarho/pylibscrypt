@@ -45,7 +45,7 @@ try:
 except OSError:
     raise ImportError('Unable to load libsodium: ' + _libsodium_soname)
 except AttributeError:
-    raise ImportError('Incompatible libscrypt: ' + _libsodium_soname)
+    raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
 
 _libsodium_salsa20_8.argtypes = [
     c_void_p,  # out (16*4 bytes)
