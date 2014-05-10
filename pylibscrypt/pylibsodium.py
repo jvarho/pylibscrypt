@@ -28,11 +28,16 @@ import ctypes, ctypes.util
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
 import hashlib, hmac
 import numbers
+import platform
 import struct
 
-import pylibsodium_salsa as scr_mod
 import mcf as mcf_mod
 from consts import *
+
+if platform.python_implementation() == 'PyPy':
+    import pypyscrypt_inline as scr_mod
+else:
+    import pylibsodium_salsa as scr_mod
 
 
 _libsodium_soname = ctypes.util.find_library('sodium')
@@ -123,7 +128,7 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
     r and p must be positive numbers between 1 and 255
     Salt must be a byte string 1-16 bytes long.
 
-    If no salt is given, 16 random bytes are generated using os.urandom.
+    If no salt is given, a random salt of 128+ bits is used. (Recommended.)
     """
     if salt is not None or r != 8 or (p & (p - 1)) or (N*p <= 512):
         return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
