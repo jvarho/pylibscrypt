@@ -188,5 +188,10 @@ def scrypt_mcf_check(mcf, password):
 if __name__ == "__main__":
     import sys
     import tests
+    try:
+        import pylibscrypt
+        scr_mod = pylibscrypt
+    except ImportError:
+        pass
     tests.run_scrypt_suite(sys.modules[__name__])
 
