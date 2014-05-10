@@ -98,6 +98,17 @@ class ScryptTests(unittest.TestCase):
             b'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9w=='
         ))
 
+    def test_vector5(self):
+        if self.fast:
+            self.skipTest('slow testcase')
+        self._test_vector((
+            b'pleaseletmein', b'X'*32, 2**10, 8, 1,
+            b'cd81f46bd79125651e017a1bf5a28295f68d4b68d397815514bfdc2f3684'
+            b'f034ae2a5df332a48e915f7567306df2d401387b70d8f02f83bd6f4c69ff'
+            b'89d2663c',
+            None
+        ))
+
     def test_bytes_enforced(self):
         self.assertRaises(TypeError, self.module.scrypt, u'pass', b'salt')
         self.assertRaises(TypeError, self.module.scrypt, 42, b'salt')
@@ -207,6 +218,17 @@ class ScryptTests(unittest.TestCase):
             b'$7$$$', p
         )
 
+    def test_mcf_7_2(self):
+        if self.fast:
+            self.skipTest('slow testcase')
+        p = b'pleaseletmein'
+        m1 = self.module.scrypt_mcf(p, None, 2**10, 8, 1, b'$7$')
+        self.assertTrue(m1.startswith(b'$7$'))
+        self.assertTrue(self.module.scrypt_mcf_check(m1, p))
+        m2 = self.module.scrypt_mcf(p, None, 2**10, 8, 1, b'$s1$')
+        self.assertTrue(m2.startswith(b'$s1$'))
+        self.assertTrue(self.module.scrypt_mcf_check(m1, p))
+
     def test_mcf_7_fast(self):
         p, s, m1 = b'pleaseletmein', b'SodiumChloride', (
             b'$7$06..../....SodiumChloride'
@@ -285,11 +307,18 @@ if __name__ == "__main__":
         suite.addTest(load_scrypt_suite('pyscryptTests', None, True))
 
     try:
+        import pylibsodium
+        suite.addTest(load_scrypt_suite('pylibsodiumTests',
+                                        pylibsodium, True))
+    except ImportError:
+        suite.addTest(load_scrypt_suite('pylibsodiumTests', None, True))
+
+    try:
         import pylibsodium_salsa
         suite.addTest(load_scrypt_suite('pylibsodium_salsaTests',
                                         pylibsodium_salsa, True))
     except ImportError:
-        suite.addTest(load_scrypt_suite('pylibsodiumTests', None, True))
+        suite.addTest(load_scrypt_suite('pylibsodium_salsaTests', None, True))
 
     try:
         import pypyscrypt_inline as pypyscrypt
