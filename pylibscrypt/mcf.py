@@ -190,7 +190,7 @@ def _scrypt_mcf_decode_7(mcf):
 
 
 def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
-               prefix=b'$s1$'):
+               prefix=SCRYPT_MCF_PREFIX_DEFAULT):
     """Derives a Modular Crypt Format hash using the scrypt KDF given
 
     Expects the signature:
@@ -207,17 +207,19 @@ def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
     if N > 2**31:
         raise ValueError('scrypt_mcf N out of range [2,2**31]')
 
-    if prefix == b'$s1$':
+    if prefix == SCRYPT_MCF_PREFIX_s1:
         if salt is None:
             salt = os.urandom(16)
         hash = scrypt(password, salt, N, r, p)
         return _scrypt_mcf_encode_s1(N, r, p, salt, hash)
-    elif prefix == b'$7$':
+    elif prefix == SCRYPT_MCF_PREFIX_7 or prefix == SCRYPT_MCF_PREFIX_ANY:
         if salt is None:
             salt = os.urandom(32)
             salt = base64.b64encode(salt)[:43]
         hash = scrypt(password, salt, N, r, p, 32)
         return _scrypt_mcf_encode_7(N, r, p, salt, hash)
+    else:
+        raise ValueError("Unrecognized MCF format")
 
 
 def scrypt_mcf_check(scrypt, mcf, password):

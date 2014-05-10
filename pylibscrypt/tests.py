@@ -220,6 +220,10 @@ class ScryptTests(unittest.TestCase):
         m2 = self.module.scrypt_mcf(p, None, 4, 8, 1, b'$7$')
         self.assertTrue(self.module.scrypt_mcf_check(m2, p))
 
+    def test_mcf_unknown(self):
+        p = b'pleaseletmein'
+        self.assertRaises(ValueError, self.module.scrypt_mcf, p, prefix=b'$$')
+
 
 def load_scrypt_suite(name, module, fast=True):
     loader = unittest.defaultTestLoader

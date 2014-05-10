@@ -233,7 +233,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
 def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
-               prefix=b'$s1$'):
+               prefix=SCRYPT_MCF_PREFIX_DEFAULT):
     """Derives a Modular Crypt Format hash using the scrypt KDF
 
     Parameter space is smaller than for scrypt():

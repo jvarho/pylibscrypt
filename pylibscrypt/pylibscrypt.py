@@ -120,7 +120,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
 def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
-               prefix=b'$s1$'):
+               prefix=SCRYPT_MCF_PREFIX_DEFAULT):
     """Derives a Modular Crypt Format hash using the scrypt KDF
 
     Parameter space is smaller than for scrypt():
@@ -130,7 +130,7 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
 
     If no salt is given, a random salt of 128+ bits is used. (Recommended.)
     """
-    if prefix != b'$s1$':
+    if (prefix != SCRYPT_MCF_PREFIX_s1 and prefix != SCRYPT_MCF_PREFIX_ANY):
         return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
     if salt is None:
         salt = os.urandom(16)
@@ -143,7 +143,7 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
     h64 = base64.b64encode(hash)
     s64 = base64.b64encode(salt)
 
-    out = ctypes.create_string_buffer(SCRYPT_MCF_LEN)
+    out = ctypes.create_string_buffer(125)
     ret = _libscrypt_mcf(N, r, p, s64, h64, out)
     if not ret:
         raise ValueError
