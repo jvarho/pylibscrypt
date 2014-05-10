@@ -131,6 +131,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
             break
     m = 2**(10 + s)
     o = 2**(5 + t + s)
+    if s > 53 or t + s > 58:
+        raise ValueError
     out = ctypes.create_string_buffer(olen)
     if _scrypt(out, olen, password, len(password), salt, m, o) != 0:
         raise ValueError

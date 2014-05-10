@@ -141,11 +141,11 @@ class ScryptTests(unittest.TestCase):
         self.assertRaises(ValueError, self.module.scrypt_mcf, pw, None, 2**32)
 
     def test_huge_N(self):
-        pw, s = b'password', b'salt'
+        pw, s = b'password', b'salt'*8
         self.assertRaises(ValueError, self.module.scrypt, pw, s, 2**50)
         self.assertRaises(ValueError, self.module.scrypt, pw, s, 2**60)
         self.assertRaises(ValueError, self.module.scrypt_mcf, pw,
-                          N=2**60, prefix=b'$7$')
+                          N=2**31, prefix=b'$7$')
 
     def test_invalid_r(self):
         pw, s, N = b'password', b'salt', 2
