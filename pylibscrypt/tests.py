@@ -130,19 +130,22 @@ class ScryptTests(unittest.TestCase):
         self.assertTrue(self.module.scrypt_mcf_check(m2, pw))
 
     def test_invalid_N(self):
-        pw, s = b'password', b'salt'
+        pw, s = b'password', b'salt'*8
         self.assertRaises(TypeError, self.module.scrypt, pw, s, 7.5)
         self.assertRaises(ValueError, self.module.scrypt, pw, s, -1)
         self.assertRaises(ValueError, self.module.scrypt, pw, s, 1)
         self.assertRaises(ValueError, self.module.scrypt, pw, s, 42)
         self.assertRaises(ValueError, self.module.scrypt, pw, s, 2**66)
         self.assertRaises(ValueError, self.module.scrypt, pw, s, 2**66+2)
-        self.assertRaises(ValueError, self.module.scrypt_mcf, pw, s, 2**32)
+        self.assertRaises(ValueError, self.module.scrypt_mcf, pw, None, 1)
+        self.assertRaises(ValueError, self.module.scrypt_mcf, pw, None, 2**32)
 
     def test_huge_N(self):
         pw, s = b'password', b'salt'
         self.assertRaises(ValueError, self.module.scrypt, pw, s, 2**50)
         self.assertRaises(ValueError, self.module.scrypt, pw, s, 2**60)
+        self.assertRaises(ValueError, self.module.scrypt_mcf, pw,
+                          N=2**60, prefix=b'$7$')
 
     def test_invalid_r(self):
         pw, s, N = b'password', b'salt', 2

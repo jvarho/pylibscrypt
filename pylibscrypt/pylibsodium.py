@@ -103,18 +103,36 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     key derivation is not a problem, you could use 16 as in libscrypt or better
     yet increase N if memory is plentiful.
     """
+    if not isinstance(password, bytes):
+        raise TypeError('password must be a byte string')
+    if not isinstance(salt, bytes):
+        raise TypeError('salt must be a byte string')
+    if not isinstance(N, numbers.Integral):
+        raise TypeError('N must be an integer')
+    if not isinstance(r, numbers.Integral):
+        raise TypeError('r must be an integer')
+    if not isinstance(p, numbers.Integral):
+        raise TypeError('p must be an integer')
+    if N > 2**63:
+        raise ValueError('N value cannot be larger than 2**63')
+    if N < 2:
+        raise ValueError('N must be a power of two larger than 1')
+    if r == 0 or p == 0:
+        raise ValueError('r and p must be positive')
+
     if len(salt) != _scrypt_salt or r != 8 or (p & (p - 1)) or (N*p <= 512):
         return scr_mod.scrypt(password, salt, N, r, p, olen)
-    for s in range(1, 32):
+
+    for s in range(1, 64):
         if 2**s == N:
             break
-    for t in range(0, 8):
+    for t in range(0, 30):
         if 2**t == p:
             break
     m = 2**(10 + s)
     o = 2**(5 + t + s)
     out = ctypes.create_string_buffer(olen)
-    if _scrypt(out, olen, password, len(password), salt, m, o) < 0:
+    if _scrypt(out, olen, password, len(password), salt, m, o) != 0:
         raise ValueError
     return out.raw
 
@@ -130,15 +148,15 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
 
     If no salt is given, a random salt of 128+ bits is used. (Recommended.)
     """
-    if salt is not None or r != 8 or (p & (p - 1)) or (N*p <= 512):
-        return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
-
     if N < 2 or (N & (N - 1)):
         raise ValueError('scrypt N must be a power of 2 greater than 1')
     if p > 255 or p < 1:
         raise ValueError('scrypt_mcf p out of range [1,255]')
     if N > 2**31:
         raise ValueError('scrypt_mcf N out of range [2,2**31]')
+
+    if salt is not None or r != 8 or (p & (p - 1)) or (N*p <= 512):
+        return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
 
     for s in range(1, 32):
         if 2**s == N:
