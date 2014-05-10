@@ -160,6 +160,34 @@ class ScryptTests(unittest.TestCase):
         self.assertRaises(TypeError, self.module.scrypt_mcf_check, u'mcf', pw)
         self.assertRaises(TypeError, self.module.scrypt_mcf_check, b'mcf', 42)
 
+    def test_mcf_padding(self):
+        if self.fast:
+            self.skipTest('slow testcase')
+        pw = 'pleaseletmein'
+        m1 = (
+            b'$s1$020101$U29kaXVtQ2hsb3JpZGU$ux13AWxUOpn+YyycQ8YBgP0F4MrI'
+            b'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9w=='
+        )
+        m2 = (
+            b'$s1$020101$U29kaXVtQ2hsb3JpZGU=$ux13AWxUOpn+YyycQ8YBgP0F4MrI'
+            b'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9w='
+        )
+        m3 = (
+            b'$s1$020101$U29kaXVtQ2hsb3JpZGU=$ux13AWxUOpn+YyycQ8YBgP0F4MrI'
+            b'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9'
+        )
+        self.assertTrue(self.module.scrypt_mcf_check(m1, pw))
+        self.assertTrue(self.module.scrypt_mcf_check(m2, pw))
+        self.assertRaises(ValueError, self.module.scrypt_mcf_check, m3, pw)
+
+    def test_mcf_nonstandard(self):
+        pw = b'pass'
+        m = (
+            b'$s1$010801$$WA1vBj+HFlIk7pG/OPS5bY4NKHBGeGIxEY99farnu2C9uOHxKe'
+            b'LWP3sCXRvP98F7lVi2JNT/Bmte38iodf81VEYB0Nu3pBw9JqTwiCAqMwL+2kqB'
+        )
+        self.assertTrue(self.module.scrypt_mcf_check(m, pw))
+
     def test_mcf_7(self):
         if self.fast:
             self.skipTest('slow testcase')
@@ -178,6 +206,19 @@ class ScryptTests(unittest.TestCase):
         self.assertRaises(ValueError, self.module.scrypt_mcf_check,
             b'$7$$$', p
         )
+
+    def test_mcf_7_fast(self):
+        p, s, m1 = b'pleaseletmein', b'SodiumChloride', (
+            b'$7$06..../....SodiumChloride'
+            b'$ENlyo6fGw4PCcDBOFepfSZjFUnVatHzCcW55.ZGz3B0'
+        )
+        self.assertEqual(
+            self.module.scrypt_mcf(p, s, 4, 8, 1, b'$7$'),
+            m1
+        )
+        self.assertTrue(self.module.scrypt_mcf_check(m1, p))
+        m2 = self.module.scrypt_mcf(p, None, 4, 8, 1, b'$7$')
+        self.assertTrue(self.module.scrypt_mcf_check(m2, p))
 
 
 def load_scrypt_suite(name, module, fast=True):
