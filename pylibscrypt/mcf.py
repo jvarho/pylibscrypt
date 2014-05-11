@@ -56,27 +56,7 @@ import struct
 from consts import *
 
 
-def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
-    """Derives a Modular Crypt Format hash using the scrypt KDF given
-
-    Expects the signature:
-    scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64)
-
-    If no salt is given, 16 random bytes are generated using os.urandom.
-    """
-    if salt is None:
-        salt = os.urandom(16)
-    elif not (1 <= len(salt) <= 16):
-        raise ValueError('salt must be 1-16 bytes')
-    if r > 255:
-        raise ValueError('scrypt_mcf r out of range [1,255]')
-    if p > 255:
-        raise ValueError('scrypt_mcf p out of range [1,255]')
-    if N > 2**31:
-        raise ValueError('scrypt_mcf N out of range [2,2**31]')
-
-    hash = scrypt(password, salt, N, r, p)
-
+def _scrypt_mcf_encode_s1(N, r, p, salt, hash):
     h64 = base64.b64encode(hash)
     s64 = base64.b64encode(salt)
 
@@ -102,7 +82,7 @@ def _b64decode(b64):
     raise ValueError('Incorrect base64 in MCF')
 
 
-def _scrypt_mcf_parse_s1(mcf):
+def _scrypt_mcf_decode_s1(mcf):
     s = mcf.split(b'$')
     if not (mcf.startswith(b'$s1$') and len(s) == 5):
         return None
@@ -120,7 +100,8 @@ def _scrypt_mcf_parse_s1(mcf):
 
 
 # Crypt base 64
-_cb64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+_cb64 = b'./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+_cb64a = bytearray(_cb64)
 _icb64 = (
     [None] * 46 +
     [
@@ -132,6 +113,45 @@ _icb64 = (
     ] +
     [None] * 133
 )
+
+
+def _cb64enc(arr):
+    arr = bytearray(arr)
+    out = bytearray()
+    val = bits = pos = 0
+    for b in arr:
+        val += b << bits
+        bits += 8
+        while bits >= 8:
+            out.append(_cb64a[val & 0x3f])
+            bits -= 6
+            val = val >> 6
+    if bits:
+        out.append(_cb64a[val])
+    return bytes(out)
+
+
+def _scrypt_mcf_encode_7(N, r, p, salt, hash):
+    t = 1
+    while 2**t < N:
+        t += 1
+    return (
+        b'$7$' +
+        # N
+        _cb64[t::64] +
+        # r
+        _cb64[r & 0x3f::64] + _cb64[(r >> 6) & 0x3f::64] +
+        _cb64[(r >> 12) & 0x3f::64] + _cb64[(r >> 18) & 0x3f::64] +
+        _cb64[(r >> 24) & 0x3f::64] +
+        # p
+        _cb64[p & 0x3f::64] + _cb64[(p >> 6) & 0x3f::64] +
+        _cb64[(p >> 12) & 0x3f::64] + _cb64[(p >> 18) & 0x3f::64] +
+        _cb64[(p >> 24) & 0x3f::64] +
+        # rest
+        salt +
+        b'$' + _cb64enc(hash)
+    )
+
 
 def _cb64dec(arr, obytes):
     out = bytearray()
@@ -148,7 +168,7 @@ def _cb64dec(arr, obytes):
     raise TypeError
 
 
-def _scrypt_mcf_parse_7(mcf):
+def _scrypt_mcf_decode_7(mcf):
     s = mcf.split(b'$')
     if not (mcf.startswith(b'$7$') and len(s) == 4):
         return None
@@ -169,6 +189,39 @@ def _scrypt_mcf_parse_7(mcf):
     return N, r, p, salt, hash, len(hash)
 
 
+def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
+               prefix=SCRYPT_MCF_PREFIX_DEFAULT):
+    """Derives a Modular Crypt Format hash using the scrypt KDF given
+
+    Expects the signature:
+    scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64)
+
+    If no salt is given, a random salt of 128+ bits is used. (Recommended.)
+    """
+    if salt is not None and not (1 <= len(salt) <= 16):
+        raise ValueError('salt must be 1-16 bytes')
+    if r > 255:
+        raise ValueError('scrypt_mcf r out of range [1,255]')
+    if p > 255:
+        raise ValueError('scrypt_mcf p out of range [1,255]')
+    if N > 2**31:
+        raise ValueError('scrypt_mcf N out of range [2,2**31]')
+
+    if prefix == SCRYPT_MCF_PREFIX_s1:
+        if salt is None:
+            salt = os.urandom(16)
+        hash = scrypt(password, salt, N, r, p)
+        return _scrypt_mcf_encode_s1(N, r, p, salt, hash)
+    elif prefix == SCRYPT_MCF_PREFIX_7 or prefix == SCRYPT_MCF_PREFIX_ANY:
+        if salt is None:
+            salt = os.urandom(32)
+            salt = base64.b64encode(salt)[:43]
+        hash = scrypt(password, salt, N, r, p, 32)
+        return _scrypt_mcf_encode_7(N, r, p, salt, hash)
+    else:
+        raise ValueError("Unrecognized MCF format")
+
+
 def scrypt_mcf_check(scrypt, mcf, password):
     """Returns True if the password matches the given MCF hash
 
@@ -179,9 +232,9 @@ def scrypt_mcf_check(scrypt, mcf, password):
     if not isinstance(password, bytes):
         raise TypeError
 
-    params = _scrypt_mcf_parse_s1(mcf)
+    params = _scrypt_mcf_decode_s1(mcf)
     if params is None:
-        params = _scrypt_mcf_parse_7(mcf)
+        params = _scrypt_mcf_decode_7(mcf)
     if params is None:
         raise ValueError('Unrecognized MCF hash')
 

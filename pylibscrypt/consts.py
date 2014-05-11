@@ -1,7 +1,10 @@
 
 """Constants used by scrypt"""
 
-SCRYPT_MCF_LEN = 125
+SCRYPT_MCF_PREFIX_7 = b'$7$'
+SCRYPT_MCF_PREFIX_s1 = b'$s1$'
+SCRYPT_MCF_PREFIX_DEFAULT = b'$s1$'
+SCRYPT_MCF_PREFIX_ANY = None
 
 SCRYPT_N = 1<<14
 SCRYPT_r = 8
