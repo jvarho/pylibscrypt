@@ -13,20 +13,26 @@ Features
 * Not unusably slow, even in pure Python... at least with pypy[4].
 
 With PyPy as the interpreter the Python implementation is around one fifth the
-speed of C scrypt. With cPython it is one fiftieth if libsodium[5] is available,
-one two-hundredth if not.
-
+speed of C scrypt. With CPython it is one fiftieth if libsodium[5] is available
+to accelerate Salsa20/8, one two-hundredth if not.
 
 
 Requirements
 --
 * Python 2.7 or 3.4 or so. Pypy 2.2 also works. Older versions may or may not.
-* If you want speed: libscrypt 1.8+ (older may work) or py-scrypt 0.6+ or pypy
-
+* If you want speed, you should use one of:
+  - libscrypt 1.8+ (older may work)
+  - py-scrypt 0.6+ (pip install scrypt)
+  - pypy
 
 
 Usage
 --
+
+You can install the most recent release from PyPi using:
+
+    pip install pylibscrypt
+
 You most likely want to create MCF hashes and store them somewhere, then check
 user-entered passwords against those hashes. For that you only need to use two
 functions from the API:
