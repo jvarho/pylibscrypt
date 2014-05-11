@@ -174,7 +174,7 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
     if _scrypt_str(mcf, password, len(password), m, o) != 0:
         return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
 
-    if prefix == b'$7$':
+    if prefix in (SCRYPT_MCF_PREFIX_7, SCRYPT_MCF_PREFIX_ANY):
         return mcf.raw.strip(b'\0')
 
     _N, _r, _p, salt, hash, olen = mcf_mod._scrypt_mcf_decode_7(mcf.raw[:-1])
