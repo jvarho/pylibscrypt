@@ -25,7 +25,7 @@ if not _done:
     import platform
     if platform.python_implementation() != 'PyPy':
         try:
-            from pylibsodium import *
+            from pylibsodium_salsa import *
         except ImportError:
             pass
         else:

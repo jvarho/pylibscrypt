@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2014 Richard Moore
 # Copyright (c) 2014 Jan Varho
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,10 +28,16 @@ import ctypes, ctypes.util
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
 import hashlib, hmac
 import numbers
+import platform
 import struct
 
 import mcf as mcf_mod
 from consts import *
+
+if platform.python_implementation() == 'PyPy':
+    import pypyscrypt_inline as scr_mod
+else:
+    import pylibsodium_salsa as scr_mod
 
 
 _libsodium_soname = ctypes.util.find_library('sodium')
@@ -41,26 +46,42 @@ if _libsodium_soname is None:
 
 try:
     _libsodium = ctypes.CDLL(_libsodium_soname)
-    _libsodium_salsa20_8 = _libsodium.crypto_core_salsa208
+    _scrypt = _libsodium.crypto_pwhash_scryptxsalsa208sha256
+    _scrypt_str = _libsodium.crypto_pwhash_scryptxsalsa208sha256_str
+    _scrypt_str_chk = _libsodium.crypto_pwhash_scryptxsalsa208sha256_str_verify
+    _scrypt_str_bytes = _libsodium.crypto_pwhash_scryptxsalsa208sha256_strbytes
+    _scrypt_salt = _libsodium.crypto_pwhash_scryptxsalsa208sha256_saltbytes
+    _scrypt_salt = _scrypt_salt()
+    if _scrypt_str_bytes() != 102:
+        raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
 except OSError:
     raise ImportError('Unable to load libsodium: ' + _libsodium_soname)
 except AttributeError:
     raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
 
-_libsodium_salsa20_8.argtypes = [
-    c_void_p,  # out (16*4 bytes)
-    c_void_p,  # in  (4*4 bytes)
-    c_void_p,  # k   (8*4 bytes)
-    c_void_p,  # c   (4*4 bytes)
+_scrypt.argtypes = [
+    c_void_p,  # out
+    c_uint64,  # outlen
+    c_void_p,  # passwd
+    c_uint64,  # passwdlen
+    c_void_p,  # salt
+    c_size_t,  # memlimit
+    c_uint64,  # opslimit
 ]
 
+_scrypt_str.argtypes = [
+    c_void_p,  # out (102 bytes)
+    c_void_p,  # passwd
+    c_uint64,  # passwdlen
+    c_size_t,  # memlimit
+    c_uint64,  # opslimit
+]
 
-# Python 3.4+ have PBKDF2 in hashlib, so use it...
-if 'pbkdf2_hmac' in dir(hashlib):
-    _pbkdf2 = hashlib.pbkdf2_hmac
-else:
-    # but fall back to Python implementation in < 3.4
-    from pbkdf2 import pbkdf2_hmac as _pbkdf2
+_scrypt_str_chk.argtypes = [
+    c_void_p,  # str (102 bytes)
+    c_void_p,  # passwd
+    c_uint64,  # passwdlen
+]
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
@@ -82,78 +103,6 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     key derivation is not a problem, you could use 16 as in libscrypt or better
     yet increase N if memory is plentiful.
     """
-    def array_overwrite(source, s_start, dest, d_start, length):
-        dest[d_start:d_start + length] = source[s_start:s_start + length]
-
-
-    def blockxor(source, s_start, dest, d_start, length):
-        for i in xrange(length):
-            dest[d_start + i] ^= source[s_start + i]
-
-
-    def integerify(B, r):
-        """A bijection from ({0, 1} ** k) to {0, ..., (2 ** k) - 1"""
-
-        Bi = (2 * r - 1) * 16
-        return B[Bi]
-
-
-    def salsa20_8(B, x):
-        """Salsa 20/8 using libsodium
-
-        NaCL/libsodium includes crypto_core_salsa208, but unfortunately it
-        expects the data in a different order, so we need to mix it up a bit.
-        """
-        struct.pack_into('<16I', x, 0,
-            B[0],  B[5],  B[10], B[15], # c
-            B[6],  B[7],  B[8],  B[9],  # in
-            B[1],  B[2],  B[3],  B[4],  # k
-            B[11], B[12], B[13], B[14],
-        )
-
-        c = ctypes.addressof(x)
-        i = c + 4*4
-        k = c + 8*4
-
-        _libsodium_salsa20_8(c, i, k, c)
-
-        B[:] = struct.unpack('<16I', x)
-
-
-    def blockmix_salsa8(BY, Yi, r):
-        """Blockmix; Used by SMix"""
-
-        start = (2 * r - 1) * 16
-        X = BY[start:start+16]                             # BlockMix - 1
-        x = ctypes.create_string_buffer(16*4)
-
-        for i in xrange(2 * r):                            # BlockMix - 2
-            blockxor(BY, i * 16, X, 0, 16)                 # BlockMix - 3(inner)
-            salsa20_8(X, x)                                # BlockMix - 3(outer)
-            array_overwrite(X, 0, BY, Yi + (i * 16), 16)   # BlockMix - 4
-
-        for i in xrange(r):                                # BlockMix - 6
-            array_overwrite(BY, Yi + (i * 2) * 16, BY, i * 16, 16)
-            array_overwrite(BY, Yi + (i*2 + 1) * 16, BY, (i + r) * 16, 16)
-
-
-    def smix(B, Bi, r, N, V, X):
-        """SMix; a specific case of ROMix based on Salsa20/8"""
-
-        array_overwrite(B, Bi, X, 0, 32 * r)               # ROMix - 1
-
-        for i in xrange(N):                                # ROMix - 2
-            array_overwrite(X, 0, V, i * (32 * r), 32 * r) # ROMix - 3
-            blockmix_salsa8(X, 32 * r, r)                  # ROMix - 4
-
-        for i in xrange(N):                                # ROMix - 6
-            j = integerify(X, r) & (N - 1)                 # ROMix - 7
-            blockxor(V, j * (32 * r), X, 0, 32 * r)        # ROMix - 8(inner)
-            blockmix_salsa8(X, 32 * r, r)                  # ROMix - 9(outer)
-
-        array_overwrite(X, 0, B, Bi, 32 * r)               # ROMix - 10
-
-
     if not isinstance(password, bytes):
         raise TypeError('password must be a byte string')
     if not isinstance(salt, bytes):
@@ -164,30 +113,30 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise TypeError('r must be an integer')
     if not isinstance(p, numbers.Integral):
         raise TypeError('p must be an integer')
-
-    if N < 2 or (N & (N - 1)):
-        raise ValueError('scrypt N must be a power of 2 greater than 1')
-    if N > 2 ** 63:
+    if N > 2**63:
         raise ValueError('N value cannot be larger than 2**63')
-    if r <= 0:
-        raise ValueError('scrypt r must be positive')
-    if p <= 0:
-        raise ValueError('scrypt p must be positive')
+    if N < 2:
+        raise ValueError('N must be a power of two larger than 1')
+    if r == 0 or p == 0:
+        raise ValueError('r and p must be positive')
 
-    # Everything is lists of 32-bit uints for all but pbkdf2
-    try:
-        B  = _pbkdf2('sha256', password, salt, 1, p * 128 * r)
-        B  = list(struct.unpack('<%dI' % (len(B) // 4), B))
-        XY = [0] * (64 * r)
-        V  = [0] * (32 * r * N)
-    except (MemoryError, OverflowError):
-        raise ValueError("scrypt parameters don't fit in memory")
+    if len(salt) != _scrypt_salt or r != 8 or (p & (p - 1)) or (N*p <= 512):
+        return scr_mod.scrypt(password, salt, N, r, p, olen)
 
-    for i in xrange(p):
-        smix(B, i * 32 * r, r, N, V, XY)
-
-    B = struct.pack('<%dI' % len(B), *B)
-    return _pbkdf2('sha256', password, B, 1, olen)
+    for s in range(1, 64):
+        if 2**s == N:
+            break
+    for t in range(0, 30):
+        if 2**t == p:
+            break
+    m = 2**(10 + s)
+    o = 2**(5 + t + s)
+    if s > 53 or t + s > 58:
+        raise ValueError
+    out = ctypes.create_string_buffer(olen)
+    if _scrypt(out, olen, password, len(password), salt, m, o) != 0:
+        raise ValueError
+    return out.raw
 
 
 def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
@@ -201,16 +150,50 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
 
     If no salt is given, a random salt of 128+ bits is used. (Recommended.)
     """
-    return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
+    if N < 2 or (N & (N - 1)):
+        raise ValueError('scrypt N must be a power of 2 greater than 1')
+    if p > 255 or p < 1:
+        raise ValueError('scrypt_mcf p out of range [1,255]')
+    if N > 2**31:
+        raise ValueError('scrypt_mcf N out of range [2,2**31]')
+
+    if salt is not None or r != 8 or (p & (p - 1)) or (N*p <= 512):
+        return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
+
+    for s in range(1, 32):
+        if 2**s == N:
+            break
+    for t in range(0, 8):
+        if 2**t == p:
+            break
+    m = 2**(10 + s)
+    o = 2**(5 + t + s)
+    mcf = ctypes.create_string_buffer(102)
+    if _scrypt_str(mcf, password, len(password), m, o) != 0:
+        return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
+
+    if prefix == b'$7$':
+        return mcf.raw.strip(b'\0')
+
+    _N, _r, _p, salt, hash, olen = mcf_mod._scrypt_mcf_decode_7(mcf.raw[:-1])
+    assert _N == N and _r == r and _p == p, (_N, _r, _p, N, r, p, m, o)
+    return mcf_mod._scrypt_mcf_encode_s1(N, r, p, salt, hash)
 
 
 def scrypt_mcf_check(mcf, password):
     """Returns True if the password matches the given MCF hash"""
+    if mcf_mod._scrypt_mcf_7_is_standard(mcf):
+        return _scrypt_str_chk(mcf, password, len(password)) == 0
     return mcf_mod.scrypt_mcf_check(scrypt, mcf, password)
 
 
 if __name__ == "__main__":
     import sys
     import tests
+    try:
+        import pylibscrypt
+        scr_mod = pylibscrypt
+    except ImportError:
+        pass
     tests.run_scrypt_suite(sys.modules[__name__])
 
