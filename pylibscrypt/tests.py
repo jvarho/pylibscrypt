@@ -196,11 +196,21 @@ class ScryptTests(unittest.TestCase):
 
     def test_mcf_nonstandard(self):
         pw = b'pass'
-        m = (
+        m1 = ( # empty salt
             b'$s1$010801$$WA1vBj+HFlIk7pG/OPS5bY4NKHBGeGIxEY99farnu2C9uOHxKe'
             b'LWP3sCXRvP98F7lVi2JNT/Bmte38iodf81VEYB0Nu3pBw9JqTwiCAqMwL+2kqB'
         )
-        self.assertTrue(self.module.scrypt_mcf_check(m, pw))
+        m2 = ( # 31 byte hash
+            b'$7$16..../....l/htqjrI38qNowkQZL8RxFVxS8JV9PPJr1+A/WTQWiU'
+            b'$wOcPY0vsHHshxa0u87FDhmTo42WZr0JbSHY2w2Zkyr1'
+        )
+        m3 = ( # 44 byte salt, 31 byte hash
+            b'$7$12..../....aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+            b'$14hkhieutTQcbq.iU1FDZzYz1vW8NPYowy4WERDM70'
+        )
+        self.assertTrue(self.module.scrypt_mcf_check(m1, pw))
+        self.assertTrue(self.module.scrypt_mcf_check(m2, pw))
+        self.assertTrue(self.module.scrypt_mcf_check(m3, pw))
 
     def test_mcf_7(self):
         if self.fast:
@@ -211,9 +221,6 @@ class ScryptTests(unittest.TestCase):
         )
         self.assertTrue(self.module.scrypt_mcf_check(m, p))
         self.assertFalse(self.module.scrypt_mcf_check(m, b'X'+p))
-        self.assertRaises(ValueError, self.module.scrypt_mcf_check,
-            m[:-1], p
-        )
         self.assertRaises(ValueError, self.module.scrypt_mcf_check,
             b'$7$$', p
         )

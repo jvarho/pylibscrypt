@@ -153,7 +153,7 @@ def _scrypt_mcf_encode_7(N, r, p, salt, hash):
     )
 
 
-def _cb64dec(arr, obytes):
+def _cb64dec(arr):
     out = bytearray()
     val = bits = pos = 0
     for b in arr:
@@ -163,9 +163,7 @@ def _cb64dec(arr, obytes):
             out.append(val & 0xff)
             bits -= 8
             val >>= 8
-            if len(out) == obytes:
-                return out
-    raise TypeError
+    return out
 
 
 def _scrypt_mcf_decode_7(mcf):
@@ -182,11 +180,19 @@ def _scrypt_mcf_decode_7(mcf):
         p = (_icb64[s64[6]] + (_icb64[s64[7]] << 6) + (_icb64[s64[8]] << 12) + 
              (_icb64[s64[9]] << 18) + (_icb64[s64[10]] << 24))
         salt = bytes(s64[11:])
-        hash = bytes(_cb64dec(h64, 32))
+        hash = bytes(_cb64dec(h64))
     except (IndexError, TypeError):
         raise ValueError('Unrecognized MCF format')
 
     return N, r, p, salt, hash, len(hash)
+
+
+def _scrypt_mcf_7_is_standard(mcf):
+    params = _scrypt_mcf_decode_7(mcf)
+    if params is None:
+        return False
+    N, r, p, salt, hash, hlen = params
+    return len(salt) == 43 and hlen == 32
 
 
 def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
