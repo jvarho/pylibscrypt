@@ -157,7 +157,9 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
     if N > 2**31:
         raise ValueError('scrypt_mcf N out of range [2,2**31]')
 
-    if salt is not None or r != 8 or (p & (p - 1)) or (N*p <= 512):
+    if (salt is not None or r != 8 or (p & (p - 1)) or (N*p <= 512) or
+        prefix not in (SCRYPT_MCF_PREFIX_7, SCRYPT_MCF_PREFIX_s1,
+                       SCRYPT_MCF_PREFIX_ANY)):
         return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
 
     for s in range(1, 32):
