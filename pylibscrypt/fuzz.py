@@ -109,6 +109,18 @@ class Fuzzer(object):
             kwargs, mod = self.get_bad_args()
             #print('bad', kwargs)
             sys.stdout.flush()
+            if self.g is not None:
+                try:
+                    r2 = self.g(**kwargs)
+                except Exception as e2:
+                    pass
+                else:
+                    print('F')
+                    print(kwargs)
+                    print('fuzzed %s', mod)
+                    print(r1)
+                    print('Expected an exception from g!')
+                    assert False
             r1 = self.f(**kwargs)
             print('F')
             print(kwargs)
@@ -121,7 +133,14 @@ class Fuzzer(object):
             sys.stdout.flush()
         except AssertionError:
             raise
-        except:
+        except Exception as e1:
+            if self.g is not None and type(e1) != type(e2):
+                print('F')
+                print(kwargs)
+                print('fuzzed %s', mod)
+                print('f raised %s' % e1)
+                print('g raised %s' % e2)
+                assert False
             sys.stdout.write('p')
             sys.stdout.flush()
 
@@ -141,6 +160,12 @@ if __name__ == "__main__":
         pass
 
     try:
+        import pylibsodium_salsa
+        modules.append(pylibsodium_salsa)
+    except ImportError:
+        pass
+
+    try:
         import pylibsodium
         modules.append(pylibsodium)
     except ImportError:
@@ -153,12 +178,13 @@ if __name__ == "__main__":
         pass
 
     prev = None
+    random.shuffle(modules)
     for m in modules:
         print('Testing %s...' % m.__name__)
         g = None if prev is None else prev.scrypt
         f = Fuzzer(m.scrypt, g=g, args=(
-            {'name':'password', 'val':'pass'},
-            {'name':'salt', 'val':'salt'},
+            {'name':'password', 'val':b'pass'},
+            {'name':'salt', 'val':b'salt'},
             {
                 'name':'N', 'type':'int', 'opt':False,
                 'valf':(lambda N=None: 4 if N is None else
