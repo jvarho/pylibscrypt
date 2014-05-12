@@ -168,6 +168,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise ValueError('scrypt r must be positive')
     if p <= 0:
         raise ValueError('scrypt p must be positive')
+    if r * p >= 2**30:
+        raise ValueError('r * p >= 2 ** 30')
 
     # Everything is lists of 32-bit uints for all but pbkdf2
     try:

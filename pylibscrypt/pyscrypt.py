@@ -67,9 +67,11 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise TypeError('r must be an integer')
     if not isinstance(p, numbers.Integral):
         raise TypeError('p must be an integer')
-
     if N > 2**63:
         raise ValueError('N value cannot be larger than 2**63')
+    if r * p >= 2**30:
+        raise ValueError('r * p >= 2 ** 30')
+
     try:
         return _scrypt(password=password, salt=salt, N=N, r=r, p=p, buflen=olen)
     except:
