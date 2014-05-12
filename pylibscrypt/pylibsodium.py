@@ -117,8 +117,10 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise ValueError('N value cannot be larger than 2**63')
     if N < 2:
         raise ValueError('N must be a power of two larger than 1')
-    if r == 0 or p == 0:
+    if r <= 0 or p <= 0:
         raise ValueError('r and p must be positive')
+    if r * p >= 2**30:
+        raise ValueError('r * p >= 2 ** 30')
 
     if len(salt) != _scrypt_salt or r != 8 or (p & (p - 1)) or (N*p <= 512):
         return scr_mod.scrypt(password, salt, N, r, p, olen)
