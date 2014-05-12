@@ -195,6 +195,15 @@ def _scrypt_mcf_7_is_standard(mcf):
     return len(salt) == 43 and hlen == 32
 
 
+def _scrypt_mcf_decode(mcf):
+    params = _scrypt_mcf_decode_s1(mcf)
+    if params is None:
+        params = _scrypt_mcf_decode_7(mcf)
+    if params is None:
+        raise ValueError('Unrecognized MCF hash')
+    return params
+
+
 def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
                prefix=SCRYPT_MCF_PREFIX_DEFAULT):
     """Derives a Modular Crypt Format hash using the scrypt KDF given
@@ -238,13 +247,7 @@ def scrypt_mcf_check(scrypt, mcf, password):
     if not isinstance(password, bytes):
         raise TypeError
 
-    params = _scrypt_mcf_decode_s1(mcf)
-    if params is None:
-        params = _scrypt_mcf_decode_7(mcf)
-    if params is None:
-        raise ValueError('Unrecognized MCF hash')
-
-    N, r, p, salt, hash, hlen = params
+    N, r, p, salt, hash, hlen = _scrypt_mcf_decode(mcf)
     h = scrypt(password, salt, N=N, r=r, p=p, olen=hlen)
     return hash == h
 
