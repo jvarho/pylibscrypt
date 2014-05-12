@@ -1,7 +1,18 @@
 Release History
 ==
 
+1.1.1
+--
+2014-5-12
+
+Bugfix release:
+- Fix some r and p values over/underflowing with libscrypt backend.
+- Always check that r*p < 2**30.
+
+
 1.1.0
+--
+2014-5-8
 
 Feature release:
 - On cPython libsodium is used for salsa20/8, for a 4x speedup when C scrypt
