@@ -26,6 +26,11 @@ import random
 from random import randrange as rr
 import sys
 
+
+class Skip(Exception):
+    pass
+
+
 class Fuzzer(object):
     """Fuzzes function input"""
     def __init__(self, f, args, g=None):
@@ -37,7 +42,7 @@ class Fuzzer(object):
         kwargs = {}
         for a in self.args:
             assert isinstance(a, dict)
-            if 'opt' in a and random.randrange(2):
+            if 'opt' in a and a['opt'] and random.randrange(2):
                 continue
             if 'val' in a:
                 kwargs[a['name']] = a['val']
@@ -53,14 +58,34 @@ class Fuzzer(object):
                 if 'opt' in a:
                     del kwargs[a['name']]
                 else:
-                    print kwargs, a
-                    sys.exit(1)
-                    raise OverflowError
+                    raise Skip
         return kwargs
+
+    def get_bad_args(self, kwargs=None):
+        kwargs = kwargs or self.get_good_args()
+        a = random.choice(self.args)
+        if not 'opt' in a:
+            if random.randrange(2):
+                del kwargs[a['name']]
+                return kwargs, a['name']
+        if not 'type' in a:
+            return self.get_bad_args(kwargs)
+        if a['type'] == 'int':
+            v = long((1<<random.randrange(66)) * 1.3)
+            if 'valf' in a:
+                if a['valf'](v):
+                    return self.get_bad_args(kwargs)
+            if 'skip' in a and a['skip'](v):
+                return self.get_bad_args(kwargs)
+            kwargs[a['name']] = v
+            return kwargs, a['name']
+        else:
+            raise TypeError
 
     def fuzz_good(self):
         try:
             kwargs = self.get_good_args()
+            #print('good', kwargs)
             r1 = self.f(**kwargs)
             if self.g is not None:
                 r2 = self.g(**kwargs)
@@ -72,12 +97,33 @@ class Fuzzer(object):
                     print('f and g return mismatch!')
             sys.stdout.write('p')
             sys.stdout.flush()
-        except OverflowError:
-            print('s')
+        except Skip:
+            sys.stdout.write('s')
         except:
             print('F')
             print(kwargs)
             raise
+
+    def fuzz_bad(self):
+        try:
+            kwargs, mod = self.get_bad_args()
+            #print('bad', kwargs)
+            sys.stdout.flush()
+            r1 = self.f(**kwargs)
+            print('F')
+            print(kwargs)
+            print('fuzzed %s', mod)
+            print(r1)
+            print('Expected an exception!')
+            assert False
+        except Skip:
+            sys.stdout.write('s')
+            sys.stdout.flush()
+        except AssertionError:
+            raise
+        except:
+            sys.stdout.write('p')
+            sys.stdout.flush()
 
 
 if __name__ == "__main__":
@@ -114,26 +160,29 @@ if __name__ == "__main__":
             {'name':'password', 'val':'pass'},
             {'name':'salt', 'val':'salt'},
             {
-                'name':'N', 'type':'int',
-                'valf':(lambda N=None: 4 if N is None else not (N & (N - 1))),
-                'skip':(lambda N: (N & (N - 1)) and N > 32)
+                'name':'N', 'type':'int', 'opt':False,
+                'valf':(lambda N=None: 4 if N is None else
+                        1 < N < 2**64 and not (N & (N - 1))),
+                'skip':(lambda N: (N & (N - 1)) == 0 and N > 32 and N < 2**64)
             },
             {
                 'name':'r', 'type':'int', 'opt':True,
                 'valf':(lambda r=None: rr(1, 16) if r is None else 0<r<2**30),
-                'skip':(lambda r: r > 16)
+                'skip':(lambda r: r > 16 and r < 2**30)
             },
             {
                 'name':'p', 'type':'int', 'opt':True,
                 'valf':(lambda p=None: rr(1, 16) if p is None else 0<p<2**30),
-                'skip':(lambda p: p > 16)
+                'skip':(lambda p: p > 16 and p < 2**30)
             },
             {
                 'name':'olen', 'type':'int', 'opt':True,
+                'valf':(lambda l=None: rr(1, 1000) if l is None else l >= 0),
                 'skip':(lambda l: l < 0 or l > 1024)
             },
         ))
         for i in range(1000):
             f.fuzz_good()
+            f.fuzz_bad()
         print('')
 
