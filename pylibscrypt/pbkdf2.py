@@ -32,7 +32,7 @@ from consts import *
 
 def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
     """Returns the result of the Password-Based Key Derivation Function 2"""
-    h = hmac.new(key=password, digestmod=lambda:hashlib.new(name))
+    h = hmac.new(key=password, digestmod=lambda d=b'': hashlib.new(name, d))
     hs = h.copy()
     hs.update(salt)
 

@@ -199,6 +199,9 @@ class PBKDF2Tests(unittest.TestCase):
                            b'8cb94b8721e20e643be099f3c31d332456b4c26f55'
                            b'b6403950267dc2b3c0806bda709a3f2d7f6107db73'))
 
+    def test_long_key(self):
+        self.module.pbkdf2_hmac('sha256', b'pass'*100, b'NaCl', 2, 20)
+
 
 def load_pbkdf2_suite(name, module):
     loader = unittest.defaultTestLoader
