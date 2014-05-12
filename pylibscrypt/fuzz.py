@@ -52,6 +52,12 @@ class Fuzzer(object):
                 kwargs[a['name']] = a['valf']()
             elif 'type' in a and a['type'] == 'int':
                 kwargs[a['name']] = random.randrange(-2**32, 2**32)
+            elif 'type' in a and a['type'] == 'bytes':
+                v = bytearray(random.randrange(1025))
+                for i in range(len(v)):
+                    v[i] = random.randrange(256)
+                v = bytes(v)
+                kwargs[a['name']] = v
             else:
                 raise ValueError
             if 'skip' in a and a['skip'](kwargs[a['name']]):
@@ -183,8 +189,8 @@ if __name__ == "__main__":
         print('Testing %s...' % m.__name__)
         g = None if prev is None else prev.scrypt
         f = Fuzzer(m.scrypt, g=g, args=(
-            {'name':'password', 'val':b'pass'},
-            {'name':'salt', 'val':b'salt'},
+            {'name':'password', 'type':'bytes'},
+            {'name':'salt', 'type':'bytes'},
             {
                 'name':'N', 'type':'int', 'opt':False,
                 'valf':(lambda N=None: 4 if N is None else
