@@ -139,13 +139,15 @@ class ScryptTests(unittest.TestCase):
         self.assertRaises(ValueError, self.module.scrypt, pw, s, N, -1)
         self.assertRaises(TypeError, self.module.scrypt, pw, s, N, 7.5)
         self.assertRaises(ValueError, self.module.scrypt_mcf, pw, s, N, 256)
+        self.assertRaises(ValueError, self.module.scrypt_mcf, pw, s, N, 2**31)
 
     def test_invalid_p(self):
         pw, s, N = b'password', b'salt', 2
         self.assertRaises(ValueError, self.module.scrypt, pw, s, N, 1, 0)
-        self.assertRaises(ValueError, self.module.scrypt, pw, s, N, 1, -1)
+        self.assertRaises(ValueError, self.module.scrypt, pw, s, N, 1, -2**31)
         self.assertRaises(TypeError, self.module.scrypt, pw, s, N, 1, 7.5)
         self.assertRaises(ValueError, self.module.scrypt_mcf, pw, s, N, 1, 256)
+        self.assertRaises(ValueError, self.module.scrypt_mcf, pw, s, N, 2**35)
 
     def test_olen(self):
         pw, s, N = b'password', b'salt', 2
