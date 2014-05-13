@@ -94,8 +94,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     def integerify(B, r):
         """A bijection from ({0, 1} ** k) to {0, ..., (2 ** k) - 1"""
 
-        Bi = (2 * r - 1) * 16
-        return B[Bi]
+        Bi = (2 * r - 1) * 8
+        return B[Bi] & 0xffffffff
 
 
     def salsa20_8(B, x):
@@ -104,54 +104,56 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         NaCL/libsodium includes crypto_core_salsa208, but unfortunately it
         expects the data in a different order, so we need to mix it up a bit.
         """
-        struct.pack_into('<16I', x, 0,
-            B[0],  B[5],  B[10], B[15], # c
-            B[6],  B[7],  B[8],  B[9],  # in
-            B[1],  B[2],  B[3],  B[4],  # k
-            B[11], B[12], B[13], B[14],
+        hi = 0xffffffff00000000
+        lo = 0x00000000ffffffff
+        struct.pack_into('<9Q', x, 0,
+            (B[0] & lo) +  (B[2] & hi),  (B[5] & lo) + (B[7] & hi), # c
+            B[3], B[4],                                             # in
+            B[0], B[1], (B[2] & lo) + (B[5] & hi),                  # pad k pad
+            B[6], B[7],
         )
 
         c = ctypes.addressof(x)
         i = c + 4*4
-        k = c + 8*4
+        k = c + 9*4
 
         _libsodium_salsa20_8(c, i, k, c)
 
-        B[:] = struct.unpack('<16I', x)
+        B[:] = struct.unpack('<8Q8x', x)
 
 
     def blockmix_salsa8(BY, Yi, r):
         """Blockmix; Used by SMix"""
 
-        start = (2 * r - 1) * 16
-        X = BY[start:start+16]                             # BlockMix - 1
-        x = ctypes.create_string_buffer(16*4)
+        start = (2 * r - 1) * 8
+        X = BY[start:start+8]                              # BlockMix - 1
+        x = ctypes.create_string_buffer(8*9)
 
         for i in xrange(2 * r):                            # BlockMix - 2
-            blockxor(BY, i * 16, X, 0, 16)                 # BlockMix - 3(inner)
+            blockxor(BY, i * 8, X, 0, 8)                   # BlockMix - 3(inner)
             salsa20_8(X, x)                                # BlockMix - 3(outer)
-            array_overwrite(X, 0, BY, Yi + (i * 16), 16)   # BlockMix - 4
+            array_overwrite(X, 0, BY, Yi + (i * 8), 8)     # BlockMix - 4
 
         for i in xrange(r):                                # BlockMix - 6
-            array_overwrite(BY, Yi + (i * 2) * 16, BY, i * 16, 16)
-            array_overwrite(BY, Yi + (i*2 + 1) * 16, BY, (i + r) * 16, 16)
+            array_overwrite(BY, Yi + (i * 2) * 8, BY, i * 8, 8)
+            array_overwrite(BY, Yi + (i*2 + 1) * 8, BY, (i + r) * 8, 8)
 
 
     def smix(B, Bi, r, N, V, X):
         """SMix; a specific case of ROMix based on Salsa20/8"""
 
-        array_overwrite(B, Bi, X, 0, 32 * r)               # ROMix - 1
+        array_overwrite(B, Bi, X, 0, 16 * r)               # ROMix - 1
 
         for i in xrange(N):                                # ROMix - 2
-            array_overwrite(X, 0, V, i * (32 * r), 32 * r) # ROMix - 3
-            blockmix_salsa8(X, 32 * r, r)                  # ROMix - 4
+            array_overwrite(X, 0, V, i * (16 * r), 16 * r) # ROMix - 3
+            blockmix_salsa8(X, 16 * r, r)                  # ROMix - 4
 
         for i in xrange(N):                                # ROMix - 6
             j = integerify(X, r) & (N - 1)                 # ROMix - 7
-            blockxor(V, j * (32 * r), X, 0, 32 * r)        # ROMix - 8(inner)
-            blockmix_salsa8(X, 32 * r, r)                  # ROMix - 9(outer)
+            blockxor(V, j * (16 * r), X, 0, 16 * r)        # ROMix - 8(inner)
+            blockmix_salsa8(X, 16 * r, r)                  # ROMix - 9(outer)
 
-        array_overwrite(X, 0, B, Bi, 32 * r)               # ROMix - 10
+        array_overwrite(X, 0, B, Bi, 16 * r)               # ROMix - 10
 
 
     if not isinstance(password, bytes):
@@ -176,19 +178,19 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     if r * p >= 2**30:
         raise ValueError('r * p >= 2 ** 30')
 
-    # Everything is lists of 32-bit uints for all but pbkdf2
+    # Everything is lists of 64-bit uints for all but pbkdf2
     try:
         B  = _pbkdf2('sha256', password, salt, 1, p * 128 * r)
-        B  = list(struct.unpack('<%dI' % (len(B) // 4), B))
-        XY = [0] * (64 * r)
-        V  = [0] * (32 * r * N)
+        B  = list(struct.unpack('<%dQ' % (len(B) // 8), B))
+        XY = [0] * (32 * r)
+        V  = [0] * (16 * r * N)
     except (MemoryError, OverflowError):
         raise ValueError("scrypt parameters don't fit in memory")
 
     for i in xrange(p):
-        smix(B, i * 32 * r, r, N, V, XY)
+        smix(B, i * 16 * r, r, N, V, XY)
 
-    B = struct.pack('<%dI' % len(B), *B)
+    B = struct.pack('<%dQ' % len(B), *B)
     return _pbkdf2('sha256', password, B, 1, olen)
 
 
