@@ -78,7 +78,7 @@ _scrypt_str.argtypes = [
 ]
 
 _scrypt_str_chk.argtypes = [
-    c_void_p,  # str (102 bytes)
+    c_char_p,  # str (102 bytes)
     c_void_p,  # passwd
     c_uint64,  # passwdlen
 ]
