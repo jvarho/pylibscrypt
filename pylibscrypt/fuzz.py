@@ -38,6 +38,15 @@ class Fuzzer(object):
         self.g = g
         self.args = args
 
+    def get_random_int(self):
+        return long((1<<random.randrange(66)) * 1.3)
+
+    def get_random_bytes(self):
+        v = bytearray(random.randrange(1025))
+        for i in range(len(v)):
+            v[i] = random.randrange(256)
+        return bytes(v)
+
     def get_good_args(self):
         kwargs = {}
         for a in self.args:
@@ -51,13 +60,9 @@ class Fuzzer(object):
             elif 'valf' in a:
                 kwargs[a['name']] = a['valf']()
             elif 'type' in a and a['type'] == 'int':
-                kwargs[a['name']] = random.randrange(-2**32, 2**32)
+                kwargs[a['name']] = self.get_random_int()
             elif 'type' in a and a['type'] == 'bytes':
-                v = bytearray(random.randrange(1025))
-                for i in range(len(v)):
-                    v[i] = random.randrange(256)
-                v = bytes(v)
-                kwargs[a['name']] = v
+                kwargs[a['name']] = self.get_random_bytes()
             else:
                 raise ValueError
             if 'skip' in a and a['skip'](kwargs[a['name']]):
@@ -71,13 +76,22 @@ class Fuzzer(object):
         kwargs = kwargs or self.get_good_args()
         a = random.choice(self.args)
         if not 'opt' in a:
-            if random.randrange(2):
+            if not random.randrange(10):
                 del kwargs[a['name']]
                 return kwargs, a['name']
         if not 'type' in a:
             return self.get_bad_args(kwargs)
-        if a['type'] == 'int':
-            v = long((1<<random.randrange(66)) * 1.3)
+
+        if not random.randrange(10):
+            wrongtype = [
+                self.get_random_int(), self.get_random_bytes(), None,
+                1.1*self.get_random_int()
+            ]
+            if a['type'] == 'int':
+                del wrongtype[0]
+            elif a['type'] == 'bytes':
+                del wrongtype[1]
+            v = random.choice(wrongtype)
             if 'valf' in a:
                 if a['valf'](v):
                     return self.get_bad_args(kwargs)
@@ -85,8 +99,17 @@ class Fuzzer(object):
                 return self.get_bad_args(kwargs)
             kwargs[a['name']] = v
             return kwargs, a['name']
-        else:
-            raise TypeError
+
+        if a['type'] == 'int':
+            v = self.get_random_int()
+            if 'valf' in a:
+                if a['valf'](v):
+                    return self.get_bad_args(kwargs)
+            if 'skip' in a and a['skip'](v):
+                return self.get_bad_args(kwargs)
+            kwargs[a['name']] = v
+            return kwargs, a['name']
+        return self.get_bad_args(kwargs)
 
     def fuzz_good(self):
         try:
@@ -101,7 +124,7 @@ class Fuzzer(object):
                     print(r1)
                     print(r2)
                     print('f and g return mismatch!')
-            sys.stdout.write('p')
+            sys.stdout.write('.')
             sys.stdout.flush()
         except Skip:
             sys.stdout.write('s')
@@ -147,7 +170,7 @@ class Fuzzer(object):
                 print('f raised %s' % e1)
                 print('g raised %s' % e2)
                 assert False
-            sys.stdout.write('p')
+            sys.stdout.write('.')
             sys.stdout.flush()
 
 
