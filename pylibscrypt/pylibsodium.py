@@ -65,16 +65,16 @@ _scrypt.argtypes = [
     c_void_p,  # passwd
     c_uint64,  # passwdlen
     c_void_p,  # salt
-    c_size_t,  # memlimit
     c_uint64,  # opslimit
+    c_size_t,  # memlimit
 ]
 
 _scrypt_str.argtypes = [
     c_void_p,  # out (102 bytes)
     c_void_p,  # passwd
     c_uint64,  # passwdlen
-    c_size_t,  # memlimit
     c_uint64,  # opslimit
+    c_size_t,  # memlimit
 ]
 
 _scrypt_str_chk.argtypes = [
@@ -136,7 +136,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     if s > 53 or t + s > 58:
         raise ValueError
     out = ctypes.create_string_buffer(olen)
-    if _scrypt(out, olen, password, len(password), salt, m, o) != 0:
+    if _scrypt(out, olen, password, len(password), salt, o, m) != 0:
         raise ValueError
     return out.raw
 
@@ -173,14 +173,14 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
     m = 2**(10 + s)
     o = 2**(5 + t + s)
     mcf = ctypes.create_string_buffer(102)
-    if _scrypt_str(mcf, password, len(password), m, o) != 0:
+    if _scrypt_str(mcf, password, len(password), o, m) != 0:
         return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
 
     if prefix in (SCRYPT_MCF_PREFIX_7, SCRYPT_MCF_PREFIX_ANY):
         return mcf.raw.strip(b'\0')
 
     _N, _r, _p, salt, hash, olen = mcf_mod._scrypt_mcf_decode_7(mcf.raw[:-1])
-    assert _N == N and _r == r and _p == p, (_N, _r, _p, N, r, p, m, o)
+    assert _N == N and _r == r and _p == p, (_N, _r, _p, N, r, p, o, m)
     return mcf_mod._scrypt_mcf_encode_s1(N, r, p, salt, hash)
 
 
