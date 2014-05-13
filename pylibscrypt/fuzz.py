@@ -24,7 +24,7 @@
 
 import random
 from random import randrange as rr
-import sys
+import unittest
 
 
 class Skip(Exception):
@@ -39,12 +39,12 @@ class Fuzzer(object):
         self.args = args
 
     def get_random_int(self):
-        return long((1<<random.randrange(66)) * 1.3)
+        return long((1<<rr(66)) * 1.3)
 
     def get_random_bytes(self):
-        v = bytearray(random.randrange(1025))
+        v = bytearray(rr(2**rr(20)))
         for i in range(len(v)):
-            v[i] = random.randrange(256)
+            v[i] = rr(256)
         return bytes(v)
 
     def get_good_args(self):
@@ -66,7 +66,7 @@ class Fuzzer(object):
             else:
                 raise ValueError
             if 'skip' in a and a['skip'](kwargs[a['name']]):
-                if 'opt' in a:
+                if 'opt' in a and a['opt']:
                     del kwargs[a['name']]
                 else:
                     raise Skip
@@ -92,11 +92,14 @@ class Fuzzer(object):
             elif a['type'] == 'bytes':
                 del wrongtype[1]
             v = random.choice(wrongtype)
-            if 'valf' in a:
-                if a['valf'](v):
+            try:
+                if 'valf' in a:
+                    if a['valf'](v):
+                        return self.get_bad_args(kwargs)
+                if 'skip' in a and a['skip'](v):
                     return self.get_bad_args(kwargs)
-            if 'skip' in a and a['skip'](v):
-                return self.get_bad_args(kwargs)
+            except TypeError:
+                pass # Surely bad enough
             kwargs[a['name']] = v
             return kwargs, a['name']
 
@@ -114,64 +117,63 @@ class Fuzzer(object):
     def fuzz_good(self):
         try:
             kwargs = self.get_good_args()
-            #print('good', kwargs)
             r1 = self.f(**kwargs)
             if self.g is not None:
                 r2 = self.g(**kwargs)
-                if r1 != r2:
-                    print('F')
-                    print(kwargs)
-                    print(r1)
-                    print(r2)
-                    print('f and g return mismatch!')
-            sys.stdout.write('.')
-            sys.stdout.flush()
+                assert r1 == r2, ('f and g mismatch', kwargs, r1, r2)
+            return r1
         except Skip:
-            sys.stdout.write('s')
-        except:
-            print('F')
-            print(kwargs)
-            raise
+            return Skip
+        except Exception as e:
+            assert False, ('unexpected exception', kwargs, e)
 
-    def fuzz_bad(self):
+    def fuzz_good_run(self, tc):
+        r = self.fuzz_good()
+        if r == Skip:
+            tc.skipTest('slow')
+        tc.assertTrue(r)
+
+    def fuzz_bad(self, f=None, kwargs=None):
+        f = f or self.f
+        kwargs = kwargs or self.get_bad_args()
+        return self.f(**kwargs)
+
+    def fuzz_bad_run(self, tc):
+        assert self.g
+        if not self.g:
+            try:
+                r = self.fuzz_bad()
+                assert False, ('no exception', kwargs, r)
+            except Skip:
+                tc.skipTest('slow')
+            except AssertionError:
+                raise
+            except Exception:
+                return
+        kwargs = self.get_bad_args()
         try:
-            kwargs, mod = self.get_bad_args()
-            #print('bad', kwargs)
-            sys.stdout.flush()
-            if self.g is not None:
-                try:
-                    r2 = self.g(**kwargs)
-                except Exception as e2:
-                    pass
-                else:
-                    print('F')
-                    print(kwargs)
-                    print('fuzzed %s', mod)
-                    print(r1)
-                    print('Expected an exception from g!')
-                    assert False
-            r1 = self.f(**kwargs)
-            print('F')
-            print(kwargs)
-            print('fuzzed %s', mod)
-            print(r1)
-            print('Expected an exception!')
-            assert False
+            r = self.fuzz_bad(self.g, kwargs)
+            assert False, ('no exception', kwargs, r)
         except Skip:
-            sys.stdout.write('s')
-            sys.stdout.flush()
+            tc.skipTest('slow')
         except AssertionError:
             raise
         except Exception as e1:
-            if self.g is not None and type(e1) != type(e2):
-                print('F')
-                print(kwargs)
-                print('fuzzed %s', mod)
-                print('f raised %s' % e1)
-                print('g raised %s' % e2)
-                assert False
-            sys.stdout.write('.')
-            sys.stdout.flush()
+            tc.assertRaises(type(e1), self.fuzz_bad, None, kwargs)
+
+    def testcase_good(self, tests=1, name='FuzzTestGood'):
+        testfs = {}
+        for i in range(tests):
+            testfs['test_fuzz_good_%d' % i] = lambda s: self.fuzz_good_run(s)
+        t = type(name, (unittest.TestCase,), testfs)
+        return t
+
+    def testcase_bad(self, tests=1, name='FuzzTestBad'):
+        testfs = {}
+        for i in range(tests):
+            testfs['test_fuzz_bad_%d' % i] = lambda s: self.fuzz_bad_run(s)
+        t = type(name, (unittest.TestCase,), testfs)
+        return t
 
 
 if __name__ == "__main__":
@@ -206,17 +208,20 @@ if __name__ == "__main__":
     except ImportError:
         pass
 
-    prev = None
+    modules *= 5
     random.shuffle(modules)
+    prev = modules[-1]
+    suite = unittest.TestSuite()
+    loader = unittest.defaultTestLoader
     for m in modules:
-        print('Testing %s...' % m.__name__)
         g = None if prev is None else prev.scrypt
+        prev = m
         f = Fuzzer(m.scrypt, g=g, args=(
             {'name':'password', 'type':'bytes'},
             {'name':'salt', 'type':'bytes'},
             {
                 'name':'N', 'type':'int', 'opt':False,
-                'valf':(lambda N=None: 4 if N is None else
+                'valf':(lambda N=None: 2**rr(1,6) if N is None else
                         1 < N < 2**64 and not (N & (N - 1))),
                 'skip':(lambda N: (N & (N - 1)) == 0 and N > 32 and N < 2**64)
             },
@@ -236,8 +241,7 @@ if __name__ == "__main__":
                 'skip':(lambda l: l < 0 or l > 1024)
             },
         ))
-        for i in range(1000):
-            f.fuzz_good()
-            f.fuzz_bad()
-        print('')
+        suite.addTest(loader.loadTestsFromTestCase(f.testcase_good(25)))
+        suite.addTest(loader.loadTestsFromTestCase(f.testcase_bad(25)))
+    unittest.TextTestRunner().run(suite)
 
