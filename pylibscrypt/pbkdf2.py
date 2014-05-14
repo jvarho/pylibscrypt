@@ -27,7 +27,7 @@ import hashlib
 import hmac
 import struct
 
-from consts import *
+from common import *
 
 
 def pbkdf2_hmac(name, password, salt, rounds, dklen=None):

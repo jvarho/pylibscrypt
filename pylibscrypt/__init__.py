@@ -48,5 +48,4 @@ __all__ = ['scrypt', 'scrypt_mcf', 'scrypt_mcf_check']
 
 # Clean up pydoc output
 del __path__
-del consts
 

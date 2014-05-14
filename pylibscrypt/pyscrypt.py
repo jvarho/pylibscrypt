@@ -28,7 +28,7 @@ import numbers
 from scrypt import hash as _scrypt
 
 import mcf as mcf_mod
-from consts import *
+from common import *
 
 
 # scrypt < 0.6 doesn't support hash length
@@ -57,24 +57,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     key derivation is not a problem, you could use 16 as in libscrypt or better
     yet increase N if memory is plentiful.
     """
-    if not isinstance(password, bytes):
-        raise TypeError('password must be a byte string')
-    if not isinstance(salt, bytes):
-        raise TypeError('salt must be a byte string')
-    if not isinstance(N, numbers.Integral):
-        raise TypeError('N must be an integer')
-    if not isinstance(r, numbers.Integral):
-        raise TypeError('r must be an integer')
-    if not isinstance(p, numbers.Integral):
-        raise TypeError('p must be an integer')
-    if not isinstance(olen, numbers.Integral):
-        raise TypeError('length must be an integer')
-    if N > 2**63:
-        raise ValueError('N value cannot be larger than 2**63')
-    if r * p >= 2**30:
-        raise ValueError('r * p >= 2 ** 30')
-    if olen <= 0:
-        raise ValueError('length must be positive')
+    check_args(password, salt, N, r, p, olen)
 
     try:
         return _scrypt(password=password, salt=salt, N=N, r=r, p=p, buflen=olen)

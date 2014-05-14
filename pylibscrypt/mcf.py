@@ -53,7 +53,7 @@ import os
 import struct
 
 
-from consts import *
+from common import *
 
 
 def _scrypt_mcf_encode_s1(N, r, p, salt, hash):

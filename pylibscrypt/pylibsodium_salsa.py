@@ -32,7 +32,7 @@ import numbers
 import struct
 
 import mcf as mcf_mod
-from consts import *
+from common import *
 
 
 _libsodium_soname = ctypes.util.find_library('sodium')
@@ -155,32 +155,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
         array_overwrite(X, 0, B, Bi, 16 * r)               # ROMix - 10
 
-
-    if not isinstance(password, bytes):
-        raise TypeError('password must be a byte string')
-    if not isinstance(salt, bytes):
-        raise TypeError('salt must be a byte string')
-    if not isinstance(N, numbers.Integral):
-        raise TypeError('N must be an integer')
-    if not isinstance(r, numbers.Integral):
-        raise TypeError('r must be an integer')
-    if not isinstance(p, numbers.Integral):
-        raise TypeError('p must be an integer')
-    if not isinstance(olen, numbers.Integral):
-        raise TypeError('length must be an integer')
-
-    if N < 2 or (N & (N - 1)):
-        raise ValueError('scrypt N must be a power of 2 greater than 1')
-    if N > 2 ** 63:
-        raise ValueError('N value cannot be larger than 2**63')
-    if r <= 0:
-        raise ValueError('scrypt r must be positive')
-    if p <= 0:
-        raise ValueError('scrypt p must be positive')
-    if r * p >= 2**30:
-        raise ValueError('r * p >= 2 ** 30')
-    if olen <= 0:
-        raise ValueError('length must be positive')
+    check_args(password, salt, N, r, p, olen)
 
     # Everything is lists of 64-bit uints for all but pbkdf2
     try:

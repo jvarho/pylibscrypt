@@ -27,9 +27,8 @@ import base64
 import ctypes, ctypes.util
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32
 import os
-import numbers
 
-from consts import *
+from common import *
 import mcf as mcf_mod
 
 
@@ -93,28 +92,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     key derivation is not a problem, you could use 16 as in libscrypt or better
     yet increase N if memory is plentiful.
     """
-    if not isinstance(password, bytes):
-        raise TypeError('password must be a byte string')
-    if not isinstance(salt, bytes):
-        raise TypeError('salt must be a byte string')
-    if not isinstance(N, numbers.Integral):
-        raise TypeError('N must be an integer')
-    if not isinstance(r, numbers.Integral):
-        raise TypeError('r must be an integer')
-    if not isinstance(p, numbers.Integral):
-        raise TypeError('p must be an integer')
-    if not isinstance(olen, numbers.Integral):
-        raise TypeError('length must be an integer')
-    if N > 2**63:
-        raise ValueError('N value cannot be larger than 2**63')
-    if N < 2:
-        raise ValueError('N must be a power of two larger than 1')
-    if r <= 0 or p <= 0:
-        raise ValueError('r and p must be positive')
-    if r * p >= 2**30:
-        raise ValueError('r * p >= 2 ** 30')
-    if olen <= 0:
-        raise ValueError('length must be positive')
+    check_args(password, salt, N, r, p, olen)
 
     out = ctypes.create_string_buffer(olen)
     ret = _libscrypt_scrypt(password, len(password), salt, len(salt),

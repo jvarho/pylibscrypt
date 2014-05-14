@@ -3,7 +3,7 @@
 
 import time
 
-from consts import *
+from common import *
 from pylibscrypt import scrypt
 from pypyscrypt_inline import scrypt as pyscrypt
 from pylibsodium_salsa import scrypt as pcscrypt
