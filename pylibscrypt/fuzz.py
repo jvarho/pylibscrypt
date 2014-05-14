@@ -240,11 +240,40 @@ if __name__ == "__main__":
         },
     )
 
+    scrypt_mcf_args = (
+        {'name':'password', 'type':'bytes'},
+        {
+            'name':'salt', 'type':'bytes', 'opt':False,
+            'valf':(lambda s=None: b'a'*rr(1,17) if s is None else 0<len(s)<17)
+        },
+        {
+            'name':'N', 'type':'int', 'opt':False,
+            'valf':(lambda N=None: 2**rr(1,6) if N is None else
+                    1 < N < 2**64 and not (N & (N - 1))),
+            'skip':(lambda N: (N & (N - 1)) == 0 and N > 32 and N < 2**64)
+        },
+        {
+            'name':'r', 'type':'int', 'opt':True,
+            'valf':(lambda r=None: rr(1, 16) if r is None else 0<r<2**30),
+            'skip':(lambda r: r > 16 and r < 2**30)
+        },
+        {
+            'name':'p', 'type':'int', 'opt':True,
+            'valf':(lambda p=None: rr(1, 16) if p is None else 0<p<2**30),
+            'skip':(lambda p: p > 16 and p < 2**30)
+        },
+    )
+
     count = 50
     random.shuffle(modules)
     suite = unittest.TestSuite()
     loader = unittest.defaultTestLoader
     for m, prev in itertools.combinations(modules, 2):
-        Fuzzer(m.scrypt, scrypt_args, prev.scrypt).generate_tests(suite, count)
+        Fuzzer(
+            m.scrypt, scrypt_args, prev.scrypt
+        ).generate_tests(suite, count)
+        Fuzzer(
+            m.scrypt_mcf, scrypt_mcf_args, prev.scrypt_mcf
+        ).generate_tests(suite, count)
     unittest.TextTestRunner().run(suite)
 
