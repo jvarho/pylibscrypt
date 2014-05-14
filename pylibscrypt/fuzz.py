@@ -34,10 +34,12 @@ class Skip(Exception):
 
 class Fuzzer(object):
     """Fuzzes function input"""
-    def __init__(self, f, args, g=None):
+    def __init__(self, f, args, g=None, pass_good=None, pass_bad=None):
         self.f = f
         self.g = g
         self.args = args
+        self.pass_good = pass_good
+        self.pass_bad = pass_bad
 
     def get_random_int(self):
         return int((1<<rr(66)) * 1.3)
@@ -115,24 +117,23 @@ class Fuzzer(object):
             return kwargs
         return self.get_bad_args(kwargs)
 
-    def fuzz_good(self):
+    def fuzz_good_run(self, tc):
         try:
             kwargs = self.get_good_args()
             r1 = self.f(**kwargs)
             if self.g is not None:
                 r2 = self.g(**kwargs)
                 assert r1 == r2, ('f and g mismatch', kwargs, r1, r2)
-            return r1
         except Skip:
-            return Skip
+            tc.skipTest('slow')
         except Exception as e:
             assert False, ('unexpected exception', kwargs, e)
 
-    def fuzz_good_run(self, tc):
-        r = self.fuzz_good()
-        if r == Skip:
-            tc.skipTest('slow')
-        tc.assertTrue(r)
+        if self.pass_good:
+            tc.assertTrue(self.pass_good(r1, kwargs),
+                          msg=('unexpected output', r1, kwargs))
+        else:
+            tc.assertTrue(r1)
 
     def fuzz_bad(self, f=None, kwargs=None):
         f = f or self.f
@@ -260,10 +261,14 @@ if __name__ == "__main__":
     loader = unittest.defaultTestLoader
     for m, prev in itertools.combinations(modules, 2):
         Fuzzer(
-            m.scrypt, scrypt_args, prev.scrypt
+            m.scrypt, scrypt_args, prev.scrypt,
+            pass_good=lambda r, a: isinstance(r, bytes) and (
+                len(r) == 64 if 'olen' not in a else len(r) == a['olen']
+            )
         ).generate_tests(suite, count)
         Fuzzer(
-            m.scrypt_mcf, scrypt_mcf_args, prev.scrypt_mcf
+            m.scrypt_mcf, scrypt_mcf_args, prev.scrypt_mcf,
+            pass_good=lambda r, a: m.scrypt_mcf_check(r, a['password'])
         ).generate_tests(suite, count)
     unittest.TextTestRunner().run(suite)
 
