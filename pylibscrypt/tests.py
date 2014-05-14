@@ -269,6 +269,16 @@ class ScryptTests(unittest.TestCase):
         p = b'pleaseletmein'
         self.assertRaises(ValueError, self.module.scrypt_mcf, p, prefix=b'$$')
 
+    def test_mcf_any_null(self):
+        if self.fast:
+            self.skipTest('slow testcase')
+        p1, p2, p3 = b'please', b'please\0letmein', b'pleaseletmein'
+        m = self.module.scrypt_mcf(p2, prefix=None)
+        self.assertTrue(m)
+        self.assertTrue(self.module.scrypt_mcf_check(m, p2))
+        self.assertFalse(self.module.scrypt_mcf_check(m, p1))
+        self.assertFalse(self.module.scrypt_mcf_check(m, p3))
+
 
 def load_scrypt_suite(name, module, fast=True):
     loader = unittest.defaultTestLoader
