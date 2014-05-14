@@ -43,7 +43,7 @@ class Fuzzer(object):
         return int((1<<rr(66)) * 1.3)
 
     def get_random_bytes(self):
-        v = bytearray(rr(2**rr(20)))
+        v = bytearray(rr(2**rr(10)))
         for i in range(len(v)):
             v[i] = rr(256)
         return bytes(v)
@@ -79,7 +79,7 @@ class Fuzzer(object):
         if not 'opt' in a:
             if not random.randrange(10):
                 del kwargs[a['name']]
-                return kwargs, a['name']
+                return kwargs
         if not 'type' in a:
             return self.get_bad_args(kwargs)
 
@@ -102,7 +102,7 @@ class Fuzzer(object):
             except TypeError:
                 pass # Surely bad enough
             kwargs[a['name']] = v
-            return kwargs, a['name']
+            return kwargs
 
         if a['type'] == 'int':
             v = self.get_random_int()
@@ -112,7 +112,7 @@ class Fuzzer(object):
             if 'skip' in a and a['skip'](v):
                 return self.get_bad_args(kwargs)
             kwargs[a['name']] = v
-            return kwargs, a['name']
+            return kwargs
         return self.get_bad_args(kwargs)
 
     def fuzz_good(self):
@@ -137,30 +137,20 @@ class Fuzzer(object):
     def fuzz_bad(self, f=None, kwargs=None):
         f = f or self.f
         kwargs = kwargs or self.get_bad_args()
-        return self.f(**kwargs)
+        return f(**kwargs)
 
     def fuzz_bad_run(self, tc):
-        assert self.g
-        if not self.g:
+        kwargs = self.get_bad_args()
+        for f in ((self.f,) if not self.g else (self.f, self.g)):
             try:
-                r = self.fuzz_bad()
+                r = self.fuzz_bad(f, kwargs)
                 assert False, ('no exception', kwargs, r)
             except Skip:
                 tc.skipTest('slow')
             except AssertionError:
                 raise
             except Exception:
-                return
-        kwargs = self.get_bad_args()
-        try:
-            r = self.fuzz_bad(self.g, kwargs)
-            assert False, ('no exception', kwargs, r)
-        except Skip:
-            tc.skipTest('slow')
-        except AssertionError:
-            raise
-        except Exception as e1:
-            tc.assertRaises(type(e1), self.fuzz_bad, None, kwargs)
+                pass
 
     def testcase_good(self, tests=1, name='FuzzTestGood'):
         testfs = {}
