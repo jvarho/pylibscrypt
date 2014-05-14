@@ -98,6 +98,28 @@ class ScryptTests(unittest.TestCase):
             b'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9w=='
         ))
 
+    def test_vector5(self):
+        if self.fast:
+            self.skipTest('slow testcase')
+        self._test_vector((
+            b'pleaseletmein', b'X'*32, 2**10, 8, 1,
+            b'cd81f46bd79125651e017a1bf5a28295f68d4b68d397815514bfdc2f3684'
+            b'f034ae2a5df332a48e915f7567306df2d401387b70d8f02f83bd6f4c69ff'
+            b'89d2663c',
+            None
+        ))
+
+    def test_vector6(self):
+        self._test_vector((
+            b'pa\0ss', b'salt'*4, 32, 2, 2,
+            b'76c5260f1dc6339512ae87143d799089f5b508c823c870a3d55f641efa84'
+            b'63a813221050c93a44255ac8027804c49a87c1ecc9911356b9fc17e06eda'
+            b'85f23ff5',
+            b'$s1$050202$c2FsdHNhbHRzYWx0c2FsdA==$dsUmDx3GM5USrocUPXmQifW1'
+            b'CMgjyHCj1V9kHvqEY6gTIhBQyTpEJVrIAngExJqHwezJkRNWufwX4G7ahfI/'
+            b'9Q=='
+        ))
+
     def test_bytes_enforced(self):
         self.assertRaises(TypeError, self.module.scrypt, u'pass', b'salt')
         self.assertRaises(TypeError, self.module.scrypt, 42, b'salt')
