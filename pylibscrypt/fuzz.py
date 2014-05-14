@@ -22,6 +22,7 @@
 
 """Fuzzes scrypt function input, comparing two implementations"""
 
+import itertools
 import random
 from random import randrange as rr
 import unittest
@@ -39,7 +40,7 @@ class Fuzzer(object):
         self.args = args
 
     def get_random_int(self):
-        return long((1<<rr(66)) * 1.3)
+        return int((1<<rr(66)) * 1.3)
 
     def get_random_bytes(self):
         v = bytearray(rr(2**rr(20)))
@@ -175,6 +176,11 @@ class Fuzzer(object):
         t = type(name, (unittest.TestCase,), testfs)
         return t
 
+    def generate_tests(self, suite, count):
+        loader = unittest.defaultTestLoader
+        suite.addTest(loader.loadTestsFromTestCase(self.testcase_good(count)))
+        suite.addTest(loader.loadTestsFromTestCase(self.testcase_bad(count)))
+
 
 if __name__ == "__main__":
     modules = []
@@ -208,40 +214,37 @@ if __name__ == "__main__":
     except ImportError:
         pass
 
-    modules *= 5
+    scrypt_args = (
+        {'name':'password', 'type':'bytes'},
+        {'name':'salt', 'type':'bytes'},
+        {
+            'name':'N', 'type':'int', 'opt':False,
+            'valf':(lambda N=None: 2**rr(1,6) if N is None else
+                    1 < N < 2**64 and not (N & (N - 1))),
+            'skip':(lambda N: (N & (N - 1)) == 0 and N > 32 and N < 2**64)
+        },
+        {
+            'name':'r', 'type':'int', 'opt':True,
+            'valf':(lambda r=None: rr(1, 16) if r is None else 0<r<2**30),
+            'skip':(lambda r: r > 16 and r < 2**30)
+        },
+        {
+            'name':'p', 'type':'int', 'opt':True,
+            'valf':(lambda p=None: rr(1, 16) if p is None else 0<p<2**30),
+            'skip':(lambda p: p > 16 and p < 2**30)
+        },
+        {
+            'name':'olen', 'type':'int', 'opt':True,
+            'valf':(lambda l=None: rr(1, 1000) if l is None else l >= 0),
+            'skip':(lambda l: l < 0 or l > 1024)
+        },
+    )
+
+    count = 50
     random.shuffle(modules)
-    prev = modules[-1]
     suite = unittest.TestSuite()
     loader = unittest.defaultTestLoader
-    for m in modules:
-        g = None if prev is None else prev.scrypt
-        prev = m
-        f = Fuzzer(m.scrypt, g=g, args=(
-            {'name':'password', 'type':'bytes'},
-            {'name':'salt', 'type':'bytes'},
-            {
-                'name':'N', 'type':'int', 'opt':False,
-                'valf':(lambda N=None: 2**rr(1,6) if N is None else
-                        1 < N < 2**64 and not (N & (N - 1))),
-                'skip':(lambda N: (N & (N - 1)) == 0 and N > 32 and N < 2**64)
-            },
-            {
-                'name':'r', 'type':'int', 'opt':True,
-                'valf':(lambda r=None: rr(1, 16) if r is None else 0<r<2**30),
-                'skip':(lambda r: r > 16 and r < 2**30)
-            },
-            {
-                'name':'p', 'type':'int', 'opt':True,
-                'valf':(lambda p=None: rr(1, 16) if p is None else 0<p<2**30),
-                'skip':(lambda p: p > 16 and p < 2**30)
-            },
-            {
-                'name':'olen', 'type':'int', 'opt':True,
-                'valf':(lambda l=None: rr(1, 1000) if l is None else l >= 0),
-                'skip':(lambda l: l < 0 or l > 1024)
-            },
-        ))
-        suite.addTest(loader.loadTestsFromTestCase(f.testcase_good(25)))
-        suite.addTest(loader.loadTestsFromTestCase(f.testcase_bad(25)))
+    for m, prev in itertools.combinations(modules, 2):
+        Fuzzer(m.scrypt, scrypt_args, prev.scrypt).generate_tests(suite, count)
     unittest.TextTestRunner().run(suite)
 
