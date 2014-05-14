@@ -152,7 +152,10 @@ class Fuzzer(object):
         return f(**kwargs)
 
     def fuzz_bad_run(self, tc):
-        kwargs = self.get_bad_args()
+        try:
+            kwargs = self.get_bad_args()
+        except Skip:
+            tc.skipTest('slow')
         for f in ((self.f,) if not self.g else (self.f, self.g)):
             try:
                 r = self.fuzz_bad(f, kwargs)
@@ -264,6 +267,11 @@ if __name__ == "__main__":
             'valf':(lambda p=None: rr(1, 16) if p is None else 0<p<2**30),
             'skip':(lambda p: p > 16 and p < 2**30)
         },
+        {
+            'name':'prefix', 'type':'bytes', 'opt':True,
+            'vals':(b'$s1$', b'$7$'),
+            'skip':(lambda p: p is None)
+        }
     )
 
     count = 50
