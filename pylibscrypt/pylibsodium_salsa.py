@@ -166,6 +166,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise TypeError('r must be an integer')
     if not isinstance(p, numbers.Integral):
         raise TypeError('p must be an integer')
+    if not isinstance(olen, numbers.Integral):
+        raise TypeError('length must be an integer')
 
     if N < 2 or (N & (N - 1)):
         raise ValueError('scrypt N must be a power of 2 greater than 1')
@@ -177,6 +179,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise ValueError('scrypt p must be positive')
     if r * p >= 2**30:
         raise ValueError('r * p >= 2 ** 30')
+    if olen <= 0:
+        raise ValueError('length must be positive')
 
     # Everything is lists of 64-bit uints for all but pbkdf2
     try:
