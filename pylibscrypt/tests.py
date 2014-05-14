@@ -109,6 +109,17 @@ class ScryptTests(unittest.TestCase):
             None
         ))
 
+    def test_vector6(self):
+        self._test_vector((
+            b'pa\0ss', b'salt'*4, 32, 2, 2,
+            b'76c5260f1dc6339512ae87143d799089f5b508c823c870a3d55f641efa84'
+            b'63a813221050c93a44255ac8027804c49a87c1ecc9911356b9fc17e06eda'
+            b'85f23ff5',
+            b'$s1$050202$c2FsdHNhbHRzYWx0c2FsdA==$dsUmDx3GM5USrocUPXmQifW1'
+            b'CMgjyHCj1V9kHvqEY6gTIhBQyTpEJVrIAngExJqHwezJkRNWufwX4G7ahfI/'
+            b'9Q=='
+        ))
+
     def test_bytes_enforced(self):
         self.assertRaises(TypeError, self.module.scrypt, u'pass', b'salt')
         self.assertRaises(TypeError, self.module.scrypt, 42, b'salt')
