@@ -68,6 +68,8 @@ class Fuzzer(object):
                 kwargs[a['name']] = self.get_random_bytes()
             else:
                 raise ValueError
+            if 'none' in a and not random.randrange(10):
+                kwargs[a['name']] = None
             if 'skip' in a and a['skip'](kwargs[a['name']]):
                 if 'opt' in a and a['opt']:
                     del kwargs[a['name']]
@@ -115,24 +117,33 @@ class Fuzzer(object):
                 return self.get_bad_args(kwargs)
             kwargs[a['name']] = v
             return kwargs
+
+        if a['type'] == 'bytes' and 'valf' in a:
+            v = self.get_random_bytes()
+            if not a['valf'](v):
+                kwargs[a['name']] = v
+                return kwargs
+
         return self.get_bad_args(kwargs)
 
     def fuzz_good_run(self, tc):
         try:
             kwargs = self.get_good_args()
             r1 = self.f(**kwargs)
+            r2 = self.g(**kwargs) if self.g is not None else None
             if self.g is not None:
                 r2 = self.g(**kwargs)
-                assert r1 == r2, ('f and g mismatch', kwargs, r1, r2)
         except Skip:
             tc.skipTest('slow')
         except Exception as e:
             assert False, ('unexpected exception', kwargs, e)
 
         if self.pass_good:
-            tc.assertTrue(self.pass_good(r1, kwargs),
-                          msg=('unexpected output', r1, kwargs))
+            tc.assertTrue(self.pass_good(r1, r2, kwargs),
+                          msg=('unexpected output', r1, r2, kwargs))
         else:
+            if self.g is not None:
+                assert r1 == r2, ('f and g mismatch', kwargs, r1, r2)
             tc.assertTrue(r1)
 
     def fuzz_bad(self, f=None, kwargs=None):
@@ -234,7 +245,7 @@ if __name__ == "__main__":
     scrypt_mcf_args = (
         {'name':'password', 'type':'bytes'},
         {
-            'name':'salt', 'type':'bytes', 'opt':False,
+            'name':'salt', 'type':'bytes', 'opt':False, 'none':True,
             'valf':(lambda s=None: b'a'*rr(1,17) if s is None else 0<len(s)<17)
         },
         {
@@ -262,13 +273,19 @@ if __name__ == "__main__":
     for m, prev in itertools.combinations(modules, 2):
         Fuzzer(
             m.scrypt, scrypt_args, prev.scrypt,
-            pass_good=lambda r, a: isinstance(r, bytes) and (
-                len(r) == 64 if 'olen' not in a else len(r) == a['olen']
+            pass_good=lambda r1, r2, a: (
+                isinstance(r1, bytes) and
+                (r2 is None or r1 == r2) and
+                (len(r1) == 64 if 'olen' not in a else len(r1) == a['olen'])
             )
         ).generate_tests(suite, count)
         Fuzzer(
             m.scrypt_mcf, scrypt_mcf_args, prev.scrypt_mcf,
-            pass_good=lambda r, a: m.scrypt_mcf_check(r, a['password'])
+            pass_good=lambda r1, r2, a: (
+                prev.scrypt_mcf_check(r1, a['password']) and
+                (r2 is None or m.scrypt_mcf_check(r2, a['password'])) and
+                (r2 is None or 'salt' not in a or a['salt'] is None or r1 == r2)
+            )
         ).generate_tests(suite, count)
     unittest.TextTestRunner().run(suite)
 
