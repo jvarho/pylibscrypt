@@ -41,13 +41,20 @@ class Fuzzer(object):
         self.pass_good = pass_good
         self.pass_bad = pass_bad
 
-    def get_random_int(self):
+    @staticmethod
+    def get_random_int():
         return int((1<<rr(66)) * 1.3)
 
-    def get_random_bytes(self):
-        v = bytearray(rr(2**rr(10)))
+    @staticmethod
+    def get_random_bytes(lrange=None, skip=None):
+        if lrange is None:
+            v = bytearray(rr(2**rr(10)))
+        else:
+            v = bytearray(rr(*lrange))
         for i in range(len(v)):
             v[i] = rr(256)
+            while v[i] == skip:
+                v[i] = rr(256)
         return bytes(v)
 
     def get_good_args(self):
@@ -138,13 +145,17 @@ class Fuzzer(object):
         except Exception as e:
             assert False, ('unexpected exception', kwargs, e)
 
-        if self.pass_good:
-            tc.assertTrue(self.pass_good(r1, r2, kwargs),
-                          msg=('unexpected output', r1, r2, kwargs))
-        else:
-            if self.g is not None:
-                assert r1 == r2, ('f and g mismatch', kwargs, r1, r2)
-            tc.assertTrue(r1)
+        try:
+            if self.pass_good:
+                tc.assertTrue(self.pass_good(r1, r2, kwargs),
+                              msg=('unexpected output', r1, r2, kwargs))
+            else:
+                if self.g is not None:
+                    assert r1 == r2, ('f and g mismatch', kwargs, r1, r2)
+                tc.assertTrue(r1)
+        except Exception as e:
+            print ('unexpected exception', kwargs, r1, r2, e)
+            raise
 
     def fuzz_bad(self, f=None, kwargs=None):
         f = f or self.f
@@ -255,10 +266,15 @@ if __name__ == "__main__":
     )
 
     scrypt_mcf_args = (
-        {'name':'password', 'type':'bytes'},
+        {
+            'name':'password', 'type':'bytes',
+            'valf':(lambda p=None: Fuzzer.get_random_bytes(skip=0) if p is None
+                    else not b'\0' in p)
+        },
         {
             'name':'salt', 'type':'bytes', 'opt':False, 'none':True,
-            'valf':(lambda s=None: b'a'*rr(1,17) if s is None else 0<len(s)<17)
+            'valf':(lambda s=None: Fuzzer.get_random_bytes((1,17)) if s is None
+                    else 1 <= len(s) <= 16)
         },
         {
             'name':'N', 'type':'int', 'opt':False,
