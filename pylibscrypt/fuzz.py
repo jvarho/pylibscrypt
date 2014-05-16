@@ -181,41 +181,50 @@ class Fuzzer(object):
         t = type(name, (unittest.TestCase,), testfs)
         return t
 
-    def generate_tests(self, suite, count):
+    def generate_tests(self, suite, count, name):
         loader = unittest.defaultTestLoader
-        suite.addTest(loader.loadTestsFromTestCase(self.testcase_good(count)))
-        suite.addTest(loader.loadTestsFromTestCase(self.testcase_bad(count)))
+        suite.addTest(
+            loader.loadTestsFromTestCase(
+                self.testcase_good(count, name + 'Good')
+            )
+        )
+        suite.addTest(
+            loader.loadTestsFromTestCase(
+                self.testcase_bad(count, name + 'Bad')
+            )
+        )
+
 
 
 if __name__ == "__main__":
     modules = []
     try:
         import pylibscrypt
-        modules.append(pylibscrypt)
+        modules.append((pylibscrypt, 'pylibscrypt'))
     except ImportError:
         pass
 
     try:
         import pyscrypt
-        modules.append(pyscrypt)
+        modules.append((pyscrypt, 'pyscrypt'))
     except ImportError:
         pass
 
     try:
         import pylibsodium_salsa
-        modules.append(pylibsodium_salsa)
+        modules.append((pylibsodium_salsa, 'pylibsodium_salsa'))
     except ImportError:
         pass
 
     try:
         import pylibsodium
-        modules.append(pylibsodium)
+        modules.append((pylibsodium, 'pylibsodium'))
     except ImportError:
         pass
 
     try:
         import pypyscrypt_inline as pypyscrypt
-        modules.append(pypyscrypt)
+        modules.append((pypyscrypt, 'pypyscrypt'))
     except ImportError:
         pass
 
@@ -278,22 +287,22 @@ if __name__ == "__main__":
     random.shuffle(modules)
     suite = unittest.TestSuite()
     loader = unittest.defaultTestLoader
-    for m, prev in itertools.combinations(modules, 2):
+    for m1, m2 in itertools.combinations(modules, 2):
         Fuzzer(
-            m.scrypt, scrypt_args, prev.scrypt,
+            m1[0].scrypt, scrypt_args, m2[0].scrypt,
             pass_good=lambda r1, r2, a: (
                 isinstance(r1, bytes) and
                 (r2 is None or r1 == r2) and
                 (len(r1) == 64 if 'olen' not in a else len(r1) == a['olen'])
             )
-        ).generate_tests(suite, count)
+        ).generate_tests(suite, count, m1[1])
         Fuzzer(
-            m.scrypt_mcf, scrypt_mcf_args, prev.scrypt_mcf,
+            m1[0].scrypt_mcf, scrypt_mcf_args, m2[0].scrypt_mcf,
             pass_good=lambda r1, r2, a: (
-                prev.scrypt_mcf_check(r1, a['password']) and
-                (r2 is None or m.scrypt_mcf_check(r2, a['password'])) and
+                m2[0].scrypt_mcf_check(r1, a['password']) and
+                (r2 is None or m1[0].scrypt_mcf_check(r2, a['password'])) and
                 (r2 is None or 'salt' not in a or a['salt'] is None or r1 == r2)
             )
-        ).generate_tests(suite, count)
+        ).generate_tests(suite, count, m1[1])
     unittest.TextTestRunner().run(suite)
 
