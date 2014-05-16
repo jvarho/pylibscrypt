@@ -8,12 +8,12 @@ everything that I'd like, so here's One More[1].
 Features
 --
 * Uses system libscrypt[2] as the first choice.
-* If that isn't available, tries the scrypt Python module[3].
+* If that isn't available, tries the scrypt Python module[3] or libsodium[4].
 * Offers a pure Python scrypt implementation for when there's no C scrypt.
-* Not unusably slow, even in pure Python... at least with pypy[4].
+* Not unusably slow, even in pure Python... at least with pypy[5].
 
 With PyPy as the interpreter the Python implementation is around one fifth the
-speed of C scrypt. With CPython it is one fiftieth if libsodium[5] is available
+speed of C scrypt. With CPython it is one fiftieth if libsodium is available
 to accelerate Salsa20/8, one two-hundredth if not.
 
 
@@ -23,6 +23,7 @@ Requirements
 * If you want speed, you should use one of:
   - libscrypt 1.8+ (older may work)
   - py-scrypt 0.6+ (pip install scrypt)
+  - libsodium 0.5+ and the $7$ prefix (see below)
   - pypy
 
 
@@ -44,7 +45,13 @@ functions from the API:
     print(scrypt_mcf_check(mcf, 'Hello World'))   # prints True
     print(scrypt_mcf_check(mcf, 'HelloPyWorld'))  # prints False
 
-For full API, you can try help(pylibscrypt) from python.
+For full API, you can try help(pylibscrypt) from python after importing.
+
+It is highly recommended that you use a random salt, i.e. don't pass one.
+
+Additionally, using the $7$ MCF format by calling with prefix=$7$ is recommended
+both because it will be made the default in a future release and because it
+allows using libsodium as a backend.
 
 
 Versioning
@@ -64,18 +71,16 @@ Development happens on GitHub[2]. If you find a bug, please open an issue there.
 
 tests.py tests both implementations with some quick tests. Running either
 implementation directly will also compare to scrypt test vectors from the paper
-but this is slow for the Python version unless you have pypy. The best way to
-report a bug is to also provide a new test that fails, but that is not required.
+but this is slow for the Python version unless you have pypy.
 
-The run_coverage.sh script calls coverage.py[7] to report test coverage. If you
-would like to include a new feature, it should be adequately covered with tests.
+fuzz.py runs some basic fuzz tests with semi-randomly chosen inputs.
 
 
 [1]:https://xkcd.com/927/
 [2]:https://github.com/technion/libscrypt
 [3]:https://bitbucket.org/mhallin/py-scrypt/src
-[4]:http://pypy.org/
-[5]:https://github.com/jedisct1/libsodium
+[4]:https://github.com/jedisct1/libsodium
+[5]:http://pypy.org/
 [6]:http://semver.org/spec/v2.0.0.html
 [7]:http://nedbatchelder.com/code/coverage/
 
