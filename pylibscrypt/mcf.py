@@ -231,7 +231,7 @@ def scrypt_mcf(scrypt, password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
     elif prefix == SCRYPT_MCF_PREFIX_7 or prefix == SCRYPT_MCF_PREFIX_ANY:
         if salt is None:
             salt = os.urandom(32)
-            salt = base64.b64encode(salt)[:43]
+        salt = _cb64enc(salt)
         hash = scrypt(password, salt, N, r, p, 32)
         return _scrypt_mcf_encode_7(N, r, p, salt, hash)
     else:
