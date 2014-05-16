@@ -1,6 +1,17 @@
 Release History
 ==
 
+1.1.3
+--
+2014-5-16
+
+Bugfix release:
+- Disallow null in MCF passwords, because that could result in a password that
+  libscrypt can't verify.
+- Verify MCF passwords with null even when using libscrypt to stay compatible
+  with earlier releases.
+
+
 1.1.2
 --
 2014-5-12

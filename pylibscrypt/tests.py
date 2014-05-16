@@ -115,9 +115,7 @@ class ScryptTests(unittest.TestCase):
             b'76c5260f1dc6339512ae87143d799089f5b508c823c870a3d55f641efa84'
             b'63a813221050c93a44255ac8027804c49a87c1ecc9911356b9fc17e06eda'
             b'85f23ff5',
-            b'$s1$050202$c2FsdHNhbHRzYWx0c2FsdA==$dsUmDx3GM5USrocUPXmQifW1'
-            b'CMgjyHCj1V9kHvqEY6gTIhBQyTpEJVrIAngExJqHwezJkRNWufwX4G7ahfI/'
-            b'9Q=='
+            None
         ))
 
     def test_bytes_enforced(self):
@@ -274,12 +272,14 @@ class ScryptTests(unittest.TestCase):
         p = b'pleaseletmein'
         self.assertRaises(ValueError, self.module.scrypt_mcf, p, prefix=b'$$')
 
-    def test_mcf_any_null(self):
-        if self.fast:
-            self.skipTest('slow testcase')
+    def test_mcf_null(self):
         p1, p2, p3 = b'please', b'please\0letmein', b'pleaseletmein'
-        m = self.module.scrypt_mcf(p2, prefix=None)
-        self.assertTrue(m)
+        self.assertRaises(ValueError, self.module.scrypt_mcf, p2, N=4)
+        m = (
+            b'$s1$020801$m8/OZVv4hi8rHFVTvOH3tQ==$jwi4vgiCjyqrZKOaksMFks5A'
+            b'M9ZRcrVPhAwqT1iRMTqXYrwkTngwjR2rwbAet9cSGdFfSverOEVLiLuUzG4k'
+            b'Hg=='
+        )
         self.assertTrue(self.module.scrypt_mcf_check(m, p2))
         self.assertFalse(self.module.scrypt_mcf_check(m, p1))
         self.assertFalse(self.module.scrypt_mcf_check(m, p3))
