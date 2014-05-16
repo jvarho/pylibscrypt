@@ -137,6 +137,9 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p):
         raise ValueError('salt must be 1-16 bytes')
     if N > 2**31:
         raise ValueError('N > 2**31 not supported')
+    if b'\0' in password:
+        raise ValueError('scrypt_mcf password must not contain zero bytes')
+
     hash = scrypt(password, salt, N, r, p)
 
     h64 = base64.b64encode(hash)
