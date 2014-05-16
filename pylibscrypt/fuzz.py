@@ -22,6 +22,7 @@
 
 """Fuzzes scrypt function input, comparing two implementations"""
 
+import itertools
 import random
 from random import randrange as rr
 import unittest
@@ -33,16 +34,18 @@ class Skip(Exception):
 
 class Fuzzer(object):
     """Fuzzes function input"""
-    def __init__(self, f, args, g=None):
+    def __init__(self, f, args, g=None, pass_good=None, pass_bad=None):
         self.f = f
         self.g = g
         self.args = args
+        self.pass_good = pass_good
+        self.pass_bad = pass_bad
 
     def get_random_int(self):
-        return long((1<<rr(66)) * 1.3)
+        return int((1<<rr(66)) * 1.3)
 
     def get_random_bytes(self):
-        v = bytearray(rr(2**rr(20)))
+        v = bytearray(rr(2**rr(10)))
         for i in range(len(v)):
             v[i] = rr(256)
         return bytes(v)
@@ -65,6 +68,8 @@ class Fuzzer(object):
                 kwargs[a['name']] = self.get_random_bytes()
             else:
                 raise ValueError
+            if 'none' in a and not random.randrange(10):
+                kwargs[a['name']] = None
             if 'skip' in a and a['skip'](kwargs[a['name']]):
                 if 'opt' in a and a['opt']:
                     del kwargs[a['name']]
@@ -78,7 +83,7 @@ class Fuzzer(object):
         if not 'opt' in a:
             if not random.randrange(10):
                 del kwargs[a['name']]
-                return kwargs, a['name']
+                return kwargs
         if not 'type' in a:
             return self.get_bad_args(kwargs)
 
@@ -101,7 +106,7 @@ class Fuzzer(object):
             except TypeError:
                 pass # Surely bad enough
             kwargs[a['name']] = v
-            return kwargs, a['name']
+            return kwargs
 
         if a['type'] == 'int':
             v = self.get_random_int()
@@ -111,55 +116,56 @@ class Fuzzer(object):
             if 'skip' in a and a['skip'](v):
                 return self.get_bad_args(kwargs)
             kwargs[a['name']] = v
-            return kwargs, a['name']
+            return kwargs
+
+        if a['type'] == 'bytes' and 'valf' in a:
+            v = self.get_random_bytes()
+            if not a['valf'](v):
+                kwargs[a['name']] = v
+                return kwargs
+
         return self.get_bad_args(kwargs)
 
-    def fuzz_good(self):
+    def fuzz_good_run(self, tc):
         try:
             kwargs = self.get_good_args()
             r1 = self.f(**kwargs)
+            r2 = self.g(**kwargs) if self.g is not None else None
             if self.g is not None:
                 r2 = self.g(**kwargs)
-                assert r1 == r2, ('f and g mismatch', kwargs, r1, r2)
-            return r1
         except Skip:
-            return Skip
+            tc.skipTest('slow')
         except Exception as e:
             assert False, ('unexpected exception', kwargs, e)
 
-    def fuzz_good_run(self, tc):
-        r = self.fuzz_good()
-        if r == Skip:
-            tc.skipTest('slow')
-        tc.assertTrue(r)
+        if self.pass_good:
+            tc.assertTrue(self.pass_good(r1, r2, kwargs),
+                          msg=('unexpected output', r1, r2, kwargs))
+        else:
+            if self.g is not None:
+                assert r1 == r2, ('f and g mismatch', kwargs, r1, r2)
+            tc.assertTrue(r1)
 
     def fuzz_bad(self, f=None, kwargs=None):
         f = f or self.f
         kwargs = kwargs or self.get_bad_args()
-        return self.f(**kwargs)
+        return f(**kwargs)
 
     def fuzz_bad_run(self, tc):
-        assert self.g
-        if not self.g:
+        try:
+            kwargs = self.get_bad_args()
+        except Skip:
+            tc.skipTest('slow')
+        for f in ((self.f,) if not self.g else (self.f, self.g)):
             try:
-                r = self.fuzz_bad()
+                r = self.fuzz_bad(f, kwargs)
                 assert False, ('no exception', kwargs, r)
             except Skip:
                 tc.skipTest('slow')
             except AssertionError:
                 raise
             except Exception:
-                return
-        kwargs = self.get_bad_args()
-        try:
-            r = self.fuzz_bad(self.g, kwargs)
-            assert False, ('no exception', kwargs, r)
-        except Skip:
-            tc.skipTest('slow')
-        except AssertionError:
-            raise
-        except Exception as e1:
-            tc.assertRaises(type(e1), self.fuzz_bad, None, kwargs)
+                pass
 
     def testcase_good(self, tests=1, name='FuzzTestGood'):
         testfs = {}
@@ -175,73 +181,128 @@ class Fuzzer(object):
         t = type(name, (unittest.TestCase,), testfs)
         return t
 
+    def generate_tests(self, suite, count, name):
+        loader = unittest.defaultTestLoader
+        suite.addTest(
+            loader.loadTestsFromTestCase(
+                self.testcase_good(count, name + 'Good')
+            )
+        )
+        suite.addTest(
+            loader.loadTestsFromTestCase(
+                self.testcase_bad(count, name + 'Bad')
+            )
+        )
+
+
 
 if __name__ == "__main__":
     modules = []
     try:
         import pylibscrypt
-        modules.append(pylibscrypt)
+        modules.append((pylibscrypt, 'pylibscrypt'))
     except ImportError:
         pass
 
     try:
         import pyscrypt
-        modules.append(pyscrypt)
+        modules.append((pyscrypt, 'pyscrypt'))
     except ImportError:
         pass
 
     try:
         import pylibsodium_salsa
-        modules.append(pylibsodium_salsa)
+        modules.append((pylibsodium_salsa, 'pylibsodium_salsa'))
     except ImportError:
         pass
 
     try:
         import pylibsodium
-        modules.append(pylibsodium)
+        modules.append((pylibsodium, 'pylibsodium'))
     except ImportError:
         pass
 
     try:
         import pypyscrypt_inline as pypyscrypt
-        modules.append(pypyscrypt)
+        modules.append((pypyscrypt, 'pypyscrypt'))
     except ImportError:
         pass
 
-    modules *= 5
+    scrypt_args = (
+        {'name':'password', 'type':'bytes'},
+        {'name':'salt', 'type':'bytes'},
+        {
+            'name':'N', 'type':'int', 'opt':False,
+            'valf':(lambda N=None: 2**rr(1,6) if N is None else
+                    1 < N < 2**64 and not (N & (N - 1))),
+            'skip':(lambda N: (N & (N - 1)) == 0 and N > 32 and N < 2**64)
+        },
+        {
+            'name':'r', 'type':'int', 'opt':True,
+            'valf':(lambda r=None: rr(1, 16) if r is None else 0<r<2**30),
+            'skip':(lambda r: r > 16 and r < 2**30)
+        },
+        {
+            'name':'p', 'type':'int', 'opt':True,
+            'valf':(lambda p=None: rr(1, 16) if p is None else 0<p<2**30),
+            'skip':(lambda p: p > 16 and p < 2**30)
+        },
+        {
+            'name':'olen', 'type':'int', 'opt':True,
+            'valf':(lambda l=None: rr(1, 1000) if l is None else l >= 0),
+            'skip':(lambda l: l < 0 or l > 1024)
+        },
+    )
+
+    scrypt_mcf_args = (
+        {'name':'password', 'type':'bytes'},
+        {
+            'name':'salt', 'type':'bytes', 'opt':False, 'none':True,
+            'valf':(lambda s=None: b'a'*rr(1,17) if s is None else 0<len(s)<17)
+        },
+        {
+            'name':'N', 'type':'int', 'opt':False,
+            'valf':(lambda N=None: 2**rr(1,6) if N is None else
+                    1 < N < 2**64 and not (N & (N - 1))),
+            'skip':(lambda N: (N & (N - 1)) == 0 and N > 32 and N < 2**64)
+        },
+        {
+            'name':'r', 'type':'int', 'opt':True,
+            'valf':(lambda r=None: rr(1, 16) if r is None else 0<r<2**30),
+            'skip':(lambda r: r > 16 and r < 2**30)
+        },
+        {
+            'name':'p', 'type':'int', 'opt':True,
+            'valf':(lambda p=None: rr(1, 16) if p is None else 0<p<2**30),
+            'skip':(lambda p: p > 16 and p < 2**30)
+        },
+        {
+            'name':'prefix', 'type':'bytes', 'opt':True,
+            'vals':(b'$s1$', b'$7$'),
+            'skip':(lambda p: p is None)
+        }
+    )
+
+    count = 50
     random.shuffle(modules)
-    prev = modules[-1]
     suite = unittest.TestSuite()
     loader = unittest.defaultTestLoader
-    for m in modules:
-        g = None if prev is None else prev.scrypt
-        prev = m
-        f = Fuzzer(m.scrypt, g=g, args=(
-            {'name':'password', 'type':'bytes'},
-            {'name':'salt', 'type':'bytes'},
-            {
-                'name':'N', 'type':'int', 'opt':False,
-                'valf':(lambda N=None: 2**rr(1,6) if N is None else
-                        1 < N < 2**64 and not (N & (N - 1))),
-                'skip':(lambda N: (N & (N - 1)) == 0 and N > 32 and N < 2**64)
-            },
-            {
-                'name':'r', 'type':'int', 'opt':True,
-                'valf':(lambda r=None: rr(1, 16) if r is None else 0<r<2**30),
-                'skip':(lambda r: r > 16 and r < 2**30)
-            },
-            {
-                'name':'p', 'type':'int', 'opt':True,
-                'valf':(lambda p=None: rr(1, 16) if p is None else 0<p<2**30),
-                'skip':(lambda p: p > 16 and p < 2**30)
-            },
-            {
-                'name':'olen', 'type':'int', 'opt':True,
-                'valf':(lambda l=None: rr(1, 1000) if l is None else l >= 0),
-                'skip':(lambda l: l < 0 or l > 1024)
-            },
-        ))
-        suite.addTest(loader.loadTestsFromTestCase(f.testcase_good(25)))
-        suite.addTest(loader.loadTestsFromTestCase(f.testcase_bad(25)))
+    for m1, m2 in itertools.combinations(modules, 2):
+        Fuzzer(
+            m1[0].scrypt, scrypt_args, m2[0].scrypt,
+            pass_good=lambda r1, r2, a: (
+                isinstance(r1, bytes) and
+                (r2 is None or r1 == r2) and
+                (len(r1) == 64 if 'olen' not in a else len(r1) == a['olen'])
+            )
+        ).generate_tests(suite, count, m1[1])
+        Fuzzer(
+            m1[0].scrypt_mcf, scrypt_mcf_args, m2[0].scrypt_mcf,
+            pass_good=lambda r1, r2, a: (
+                m2[0].scrypt_mcf_check(r1, a['password']) and
+                (r2 is None or m1[0].scrypt_mcf_check(r2, a['password'])) and
+                (r2 is None or 'salt' not in a or a['salt'] is None or r1 == r2)
+            )
+        ).generate_tests(suite, count, m1[1])
     unittest.TextTestRunner().run(suite)
 

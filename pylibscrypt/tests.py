@@ -176,6 +176,8 @@ class ScryptTests(unittest.TestCase):
         pw, s, N = b'password', b'salt', 2
         self.assertEquals(len(self.module.scrypt(pw, s, N, olen=42)), 42)
         self.assertEquals(len(self.module.scrypt(pw, s, N, olen=100)), 100)
+        self.assertRaises(TypeError, self.module.scrypt, pw, s, N, olen=b'7')
+        self.assertRaises(ValueError, self.module.scrypt, pw, s, N, olen=-1)
 
     def test_invalid_olen(self):
         pw, s, N = b'password', b'salt', 2**10
