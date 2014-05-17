@@ -20,7 +20,16 @@ if not _done:
     else:
         _done = True
 
-# Unless we are on pypy, we want to try libsodium as well
+# Next: libsodium
+if not _done:
+    try:
+        from .pylibsodium import *
+    except ImportError:
+        pass
+    else:
+        _done = True
+
+# Unless we are on pypy, we want to try libsodium_salsa as well
 if not _done:
     import platform
     if platform.python_implementation() != 'PyPy':
@@ -33,16 +42,7 @@ if not _done:
 
 # If that didn't work either, the inlined Python version
 if not _done:
-    try:
-        from .pypyscrypt_inline import *
-    except ImportError:
-        pass
-    else:
-        _done = True
-
-# Finally the non-inlined
-if not _done:
-    from .pypyscrypt import *
+    from .pypyscrypt_inline import *
 
 __all__ = ['scrypt', 'scrypt_mcf', 'scrypt_mcf_check']
 
