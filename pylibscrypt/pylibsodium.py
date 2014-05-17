@@ -31,13 +31,13 @@ import numbers
 import platform
 import struct
 
-import mcf as mcf_mod
-from common import *
+from . import mcf as mcf_mod
+from .common import *
 
 if platform.python_implementation() == 'PyPy':
-    import pypyscrypt_inline as scr_mod
+    from . import pypyscrypt_inline as scr_mod
 else:
-    import pylibsodium_salsa as scr_mod
+    from . import pylibsodium_salsa as scr_mod
 
 
 _libsodium_soname = ctypes.util.find_library('sodium')
@@ -176,9 +176,9 @@ def scrypt_mcf_check(mcf, password):
 
 if __name__ == "__main__":
     import sys
-    import tests
+    from . import tests
     try:
-        import pylibscrypt
+        from . import pylibscrypt
         scr_mod = pylibscrypt
     except ImportError:
         pass

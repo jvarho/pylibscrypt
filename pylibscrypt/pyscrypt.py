@@ -27,8 +27,8 @@ import numbers
 
 from scrypt import hash as _scrypt
 
-import mcf as mcf_mod
-from common import *
+from . import mcf as mcf_mod
+from .common import *
 
 
 # scrypt < 0.6 doesn't support hash length
@@ -86,6 +86,6 @@ def scrypt_mcf_check(mcf, password):
 
 if __name__ == "__main__":
     import sys
-    import tests
+    from . import tests
     tests.run_scrypt_suite(sys.modules[__name__])
 

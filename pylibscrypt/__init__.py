@@ -5,7 +5,7 @@ __version__ = '1.2.0'
 # First, try loading libscrypt
 _done = False
 try:
-    from pylibscrypt import *
+    from .pylibscrypt import *
 except ImportError:
     pass
 else:
@@ -14,7 +14,7 @@ else:
 # If that didn't work, try the scrypt module
 if not _done:
     try:
-        from pyscrypt import *
+        from .pyscrypt import *
     except ImportError:
         pass
     else:
@@ -25,7 +25,7 @@ if not _done:
     import platform
     if platform.python_implementation() != 'PyPy':
         try:
-            from pylibsodium_salsa import *
+            from .pylibsodium_salsa import *
         except ImportError:
             pass
         else:
@@ -34,7 +34,7 @@ if not _done:
 # If that didn't work either, the inlined Python version
 if not _done:
     try:
-        from pypyscrypt_inline import *
+        from .pypyscrypt_inline import *
     except ImportError:
         pass
     else:
@@ -42,10 +42,8 @@ if not _done:
 
 # Finally the non-inlined
 if not _done:
-    from pypyscrypt import *
+    from .pypyscrypt import *
 
 __all__ = ['scrypt', 'scrypt_mcf', 'scrypt_mcf_check']
 
-# Clean up pydoc output
-del __path__
 

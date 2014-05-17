@@ -52,7 +52,7 @@ import base64, binascii
 import os
 import struct
 
-from common import *
+from .common import *
 
 
 def _scrypt_mcf_encode_s1(N, r, p, salt, hash):

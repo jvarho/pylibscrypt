@@ -37,8 +37,8 @@
 import hashlib, hmac
 import struct
 
-import mcf as mcf_mod
-from common import *
+from . import mcf as mcf_mod
+from .common import *
 
 
 # Python 3.4+ have PBKDF2 in hashlib, so use it...
@@ -187,6 +187,6 @@ def scrypt_mcf_check(mcf, password):
 
 if __name__ == "__main__":
     import sys
-    import tests
+    from . import tests
     tests.run_scrypt_suite(sys.modules[__name__])
 

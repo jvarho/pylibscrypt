@@ -28,8 +28,8 @@ import ctypes, ctypes.util
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32
 import os
 
-from common import *
-import mcf as mcf_mod
+from .common import *
+from . import mcf as mcf_mod
 
 
 _libscrypt_soname = ctypes.util.find_library('scrypt')
@@ -162,6 +162,6 @@ def scrypt_mcf_check(mcf, password):
 
 if __name__ == "__main__":
     import sys
-    import tests
+    from . import tests
     tests.run_scrypt_suite(sys.modules[__name__])
 
