@@ -210,31 +210,31 @@ class Fuzzer(object):
 if __name__ == "__main__":
     modules = []
     try:
-        import pylibscrypt
+        from . import pylibscrypt
         modules.append((pylibscrypt, 'pylibscrypt'))
     except ImportError:
         pass
 
     try:
-        import pyscrypt
+        from . import pyscrypt
         modules.append((pyscrypt, 'pyscrypt'))
     except ImportError:
         pass
 
     try:
-        import pylibsodium_salsa
+        from . import pylibsodium_salsa
         modules.append((pylibsodium_salsa, 'pylibsodium_salsa'))
     except ImportError:
         pass
 
     try:
-        import pylibsodium
+        from . import pylibsodium
         modules.append((pylibsodium, 'pylibsodium'))
     except ImportError:
         pass
 
     try:
-        import pypyscrypt_inline as pypyscrypt
+        from . import pypyscrypt_inline as pypyscrypt
         modules.append((pypyscrypt, 'pypyscrypt'))
     except ImportError:
         pass
