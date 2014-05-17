@@ -195,7 +195,7 @@ class ScryptTests(unittest.TestCase):
     def test_mcf_padding(self):
         if self.fast:
             self.skipTest('slow testcase')
-        pw = 'pleaseletmein'
+        pw = b'pleaseletmein'
         m1 = (
             b'$s1$020101$U29kaXVtQ2hsb3JpZGU$ux13AWxUOpn+YyycQ8YBgP0F4MrI'
             b'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9w=='
