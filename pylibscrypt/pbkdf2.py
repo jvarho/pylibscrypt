@@ -27,7 +27,7 @@ import hashlib
 import hmac
 import struct
 
-from common import *
+from .common import *
 
 
 def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
@@ -63,6 +63,6 @@ def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
 
 if __name__ == "__main__":
     import sys
-    import tests
+    from . import tests
     tests.run_pbkdf2_suite(sys.modules[__name__])
 
