@@ -250,10 +250,10 @@ class ScryptTests(unittest.TestCase):
         if self.fast:
             self.skipTest('slow testcase')
         p = b'pleaseletmein'
-        m1 = self.module.scrypt_mcf(p, None, 2**10, 8, 1, b'$7$')
+        m1 = self.module.scrypt_mcf(p, None, 2**10, 8, 2, b'$7$')
         self.assertTrue(m1.startswith(b'$7$'))
         self.assertTrue(self.module.scrypt_mcf_check(m1, p))
-        m2 = self.module.scrypt_mcf(p, None, 2**10, 8, 1, b'$s1$')
+        m2 = self.module.scrypt_mcf(p, None, 2**10, 8, 2, b'$s1$')
         self.assertTrue(m2.startswith(b'$s1$'))
         self.assertTrue(self.module.scrypt_mcf_check(m1, p))
 

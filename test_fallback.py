@@ -1,5 +1,8 @@
 
+import platform
 import sys
+
+platform.python_implementation = lambda:'PyPy'
 
 def unimport():
     del sys.modules['pylibscrypt']
