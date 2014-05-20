@@ -108,12 +108,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     if len(salt) != _scrypt_salt or r != 8 or (p & (p - 1)) or (N*p <= 512):
         return scr_mod.scrypt(password, salt, N, r, p, olen)
 
-    for s in range(1, 64):
-        if 2**s == N:
-            break
-    for t in range(0, 30):
-        if 2**t == p:
-            break
+    s = next(i for i in range(1, 64) if 2**i == N)
+    t = next(i for i in range(0, 30) if 2**i == p)
     m = 2**(10 + s)
     o = 2**(5 + t + s)
     if s > 53 or t + s > 58:
@@ -147,12 +143,8 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
                        SCRYPT_MCF_PREFIX_ANY)):
         return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
 
-    for s in range(1, 32):
-        if 2**s == N:
-            break
-    for t in range(0, 8):
-        if 2**t == p:
-            break
+    s = next(i for i in range(1, 32) if 2**i == N)
+    t = next(i for i in range(0, 8) if 2**i == p)
     m = 2**(10 + s)
     o = 2**(5 + t + s)
     mcf = ctypes.create_string_buffer(102)
