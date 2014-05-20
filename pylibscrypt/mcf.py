@@ -121,12 +121,10 @@ def _cb64enc(arr):
     for b in arr:
         val += b << bits
         bits += 8
-        while bits >= 8:
-            out.append(_cb64a[val & 0x3f])
-            bits -= 6
-            val = val >> 6
-    if bits:
-        out.append(_cb64a[val])
+    while bits >= 0:
+        out.append(_cb64a[val & 0x3f])
+        bits -= 6
+        val = val >> 6
     return bytes(out)
 
 

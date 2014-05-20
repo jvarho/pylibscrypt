@@ -263,7 +263,7 @@ class ScryptTests(unittest.TestCase):
             b'$ENlyo6fGw4PCcDBOFepfSZjFUnVatHzCcW55.ZGz3B0'
         )
         self.assertTrue(self.module.scrypt_mcf_check(m1, p))
-        m2 = self.module.scrypt_mcf(p, None, 4, 8, 1, b'$7$')
+        m2 = self.module.scrypt_mcf(p, b'NaCl', 4, 8, 1, b'$7$')
         self.assertTrue(self.module.scrypt_mcf_check(m2, p))
 
     def test_mcf_unknown(self):
