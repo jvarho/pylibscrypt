@@ -92,6 +92,22 @@ _scrypt_str_chk.argtypes = [
     c_uint64,  # passwdlen
 ]
 
+try:
+    _scrypt_ll = _lib.crypto_pwhash_scryptsalsa208sha256_ll
+    _scrypt_ll.argtypes = [
+        c_void_p,  # passwd
+        c_size_t,  # passwdlen
+        c_void_p,  # salt
+        c_size_t,  # saltlen
+        c_uint64,  # N
+        c_uint32,  # r
+        c_uint32,  # p
+        c_void_p,  # buf
+        c_size_t,  # buflen
+    ]
+except AttributeError:
+    _scrypt_ll = None
+
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     """Derives a 64-byte hash using the scrypt key-derivarion function
@@ -113,6 +129,13 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     yet increase N if memory is plentiful.
     """
     check_args(password, salt, N, r, p, olen)
+
+    if _scrypt_ll:
+        out = ctypes.create_string_buffer(olen)
+        if _scrypt_ll(password, len(password), salt, len(salt),
+                      N, r, p, out, olen):
+            raise ValueError
+        return out.raw
 
     if len(salt) != _scrypt_salt or r != 8 or (p & (p - 1)) or (N*p <= 512):
         return scr_mod.scrypt(password, salt, N, r, p, olen)
