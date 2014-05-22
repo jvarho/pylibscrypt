@@ -30,9 +30,18 @@ import unittest
 
 class ScryptTests(unittest.TestCase):
     """Tests an scrypt implementation from module"""
+    set_up_lambda = None
+    tear_down_lambda = None
+
     def setUp(self):
         if not self.module:
             self.skipTest('module not tested')
+        if self.set_up_lambda:
+            self.set_up_lambda()
+
+    def tearDown(self):
+        if self.tear_down_lambda:
+            self.tear_down_lambda()
 
     def _test_vector(self, vector):
         pw, s, N, r, p, h, m = vector
@@ -364,6 +373,27 @@ if __name__ == "__main__":
         from . import pylibsodium
         suite.addTest(load_scrypt_suite('pylibsodiumTests',
                                         pylibsodium, True))
+        from . import pylibscrypt
+        loader = unittest.defaultTestLoader
+        def set_up_ll(self):
+            if not self.module._scrypt_ll:
+                self.skipTest('no ll')
+            self.tmp_ll = self.module._scrypt_ll
+            self.tmp_scr = self.module.scr_mod
+            self.module._scrypt_ll = None
+            self.module.scr_mod = pylibscrypt
+        def tear_down_ll(self):
+            self.module._scrypt_ll = self.tmp_ll
+            self.module.scr_mod = self.tmp_scr
+        tmp = type(
+            'pylibsodiumFallbackTests', (ScryptTests,),
+            {
+                'module': pylibsodium, 'fast': False,
+                'set_up_lambda': set_up_ll,
+                'tear_down_lambda': tear_down_ll,
+            }
+        )
+        suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(tmp))
     except ImportError:
         raise
         suite.addTest(load_scrypt_suite('pylibsodiumTests', None, True))
