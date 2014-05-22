@@ -13,8 +13,7 @@ Features
 * Not unusably slow, even in pure Python... at least with pypy[5].
 
 With PyPy as the interpreter the Python implementation is around one fifth the
-speed of C scrypt. With CPython it is one fiftieth if libsodium is available
-to accelerate Salsa20/8, one two-hundredth if not.
+speed of C scrypt. With CPython it is between about 50x and 250x slower.
 
 
 Requirements
@@ -23,8 +22,7 @@ Requirements
 * If you want speed, you should use one of:
   - libscrypt 1.8+ (older may work)
   - py-scrypt 0.6+ (pip install scrypt)
-  - libsodium 0.5+ and the $7$ prefix (see below)
-  - pypy
+  - libsodium 0.5.1+
 
 
 Usage
@@ -50,8 +48,7 @@ For full API, you can try help(pylibscrypt) from python after importing.
 It is highly recommended that you use a random salt, i.e. don't pass one.
 
 Additionally, using the $7$ MCF format by calling with prefix=$7$ is recommended
-both because it will be made the default in a future release and because it
-allows using libsodium as a backend.
+because it may be made the default in a future release.
 
 
 Versioning
