@@ -40,24 +40,33 @@ else:
     from . import pylibsodium_salsa as scr_mod
 
 
-_libsodium_soname = ctypes.util.find_library('sodium')
-if _libsodium_soname is None:
+_lib_soname = ctypes.util.find_library('sodium')
+if _lib_soname is None:
     raise ImportError('Unable to find libsodium')
 
 try:
-    _libsodium = ctypes.CDLL(_libsodium_soname)
-    _scrypt = _libsodium.crypto_pwhash_scryptxsalsa208sha256
-    _scrypt_str = _libsodium.crypto_pwhash_scryptxsalsa208sha256_str
-    _scrypt_str_chk = _libsodium.crypto_pwhash_scryptxsalsa208sha256_str_verify
-    _scrypt_str_bytes = _libsodium.crypto_pwhash_scryptxsalsa208sha256_strbytes
-    _scrypt_salt = _libsodium.crypto_pwhash_scryptxsalsa208sha256_saltbytes
-    _scrypt_salt = _scrypt_salt()
-    if _scrypt_str_bytes() != 102:
-        raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
+    _lib = ctypes.CDLL(_lib_soname)
+    _scrypt = _lib.crypto_pwhash_scryptsalsa208sha256
+    _scrypt_str = _lib.crypto_pwhash_scryptsalsa208sha256_str
+    _scrypt_str_chk = _lib.crypto_pwhash_scryptsalsa208sha256_str_verify
+    _scrypt_str_bytes = _lib.crypto_pwhash_scryptsalsa208sha256_strbytes()
+    _scrypt_salt = _lib.crypto_pwhash_scryptsalsa208sha256_saltbytes()
+    if _scrypt_str_bytes != 102:
+        raise ImportError('Incompatible libsodium: ' + _lib_soname)
 except OSError:
-    raise ImportError('Unable to load libsodium: ' + _libsodium_soname)
+    raise ImportError('Unable to load libsodium: ' + _lib_soname)
 except AttributeError:
-    raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
+    try:
+        _scrypt = _lib.crypto_pwhash_scryptxsalsa208sha256
+        _scrypt_str = _lib.crypto_pwhash_scryptxsalsa208sha256_str
+        _scrypt_str_chk = _lib.crypto_pwhash_scryptxsalsa208sha256_str_verify
+        _scrypt_str_bytes = _lib.crypto_pwhash_scryptxsalsa208sha256_strbytes()
+        _scrypt_salt = _lib.crypto_pwhash_scryptxsalsa208sha256_saltbytes
+        _scrypt_salt = _scrypt_salt()
+        if _scrypt_str_bytes != 102:
+            raise ImportError('Incompatible libsodium: ' + _lib_soname)
+    except AttributeError:
+        raise ImportError('Incompatible libsodium: ' + _lib_soname)
 
 _scrypt.argtypes = [
     c_void_p,  # out
