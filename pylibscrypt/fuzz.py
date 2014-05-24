@@ -97,7 +97,7 @@ class Fuzzer(object):
         if not random.randrange(10):
             wrongtype = [
                 self.get_random_int(), self.get_random_bytes(), None,
-                1.1*self.get_random_int()
+                1.1*self.get_random_int(), 1.0*self.get_random_int()
             ]
             if a['type'] == 'int':
                 del wrongtype[0]
@@ -208,6 +208,13 @@ class Fuzzer(object):
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Fuzz testing')
+    parser.add_argument('-c', '--count', type=int, default=100)
+    parser.add_argument('-f', '--failfast', action='store_true')
+    clargs = parser.parse_args()
+
     modules = []
     try:
         from . import pylibscrypt
@@ -299,11 +306,10 @@ if __name__ == "__main__":
         }
     )
 
-    count = 50
     random.shuffle(modules)
     suite = unittest.TestSuite()
     loader = unittest.defaultTestLoader
-    for m1, m2 in itertools.combinations(modules, 2):
+    for m1, m2 in itertools.permutations(modules, 2):
         Fuzzer(
             m1[0].scrypt, scrypt_args, m2[0].scrypt,
             pass_good=lambda r1, r2, a: (
@@ -311,7 +317,7 @@ if __name__ == "__main__":
                 (r2 is None or r1 == r2) and
                 (len(r1) == 64 if 'olen' not in a else len(r1) == a['olen'])
             )
-        ).generate_tests(suite, count, m1[1])
+        ).generate_tests(suite, clargs.count, m1[1])
         Fuzzer(
             m1[0].scrypt_mcf, scrypt_mcf_args, m2[0].scrypt_mcf,
             pass_good=lambda r1, r2, a: (
@@ -319,6 +325,6 @@ if __name__ == "__main__":
                 (r2 is None or m1[0].scrypt_mcf_check(r2, a['password'])) and
                 (r2 is None or 'salt' not in a or a['salt'] is None or r1 == r2)
             )
-        ).generate_tests(suite, count, m1[1])
-    unittest.TextTestRunner().run(suite)
+        ).generate_tests(suite, clargs.count, m1[1])
+    unittest.TextTestRunner(failfast=clargs.failfast).run(suite)
 
