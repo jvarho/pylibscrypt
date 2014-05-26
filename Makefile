@@ -30,6 +30,10 @@ coverage:
 	./run_coverage.sh
 
 
+bench:
+	env python -m pylibscrypt.bench
+
+
 pypi-upload:
 	env python setup.py sdist upload
 
