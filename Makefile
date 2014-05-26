@@ -10,7 +10,7 @@ pylibscrypt/pypyscrypt_inline.py: pylibscrypt/inline.py pylibscrypt/pypyscrypt.p
 
 
 clean:
-	rm -f *~ *.pyc pylibscrypt/*~ pylibscrypt/*.pyc
+	rm -f *~ *.pyc *,cover pylibscrypt/*~ pylibscrypt/*.pyc pylibscrypt/*,cover
 	rm -rf __pycache__/ pylibscrypt/__pycache__/
 
 
