@@ -26,27 +26,31 @@ from .pylibsodium_salsa import scrypt as pcscrypt
 
 # Benchmark time in seconds
 tmin = 5
+Nmin = 8
 Nmax = 20
 
+# Benched defaults
+kwargs = dict(password=b'password', salt=b'NaCl')
+
 t1 = time.time()
-for i in xrange(1, Nmax+1):
-    pyscrypt(b'password', b'NaCl', N=2**i)
+for i in xrange(Nmin, Nmax+1):
+    pyscrypt(N=2**i, **kwargs)
     if time.time() - t1 > tmin:
         Nmax = i
         break
 t1 = time.time() - t1
-print('Using N = 2,4,..., 2**%d' % Nmax)
+print('Using N = 2**%d,..., 2**%d' % (Nmin, Nmax))
 print('Python scrypt took %.2fs' % t1)
 
 t2 = time.time()
-for i in xrange(1, Nmax+1):
-    pcscrypt(b'password', b'NaCl', N=2**i)
+for i in xrange(Nmin, Nmax+1):
+    pcscrypt(N=2**i, **kwargs)
 t2 = time.time() - t2
 print('Py + C scrypt took %.2fs' % t2)
 
 t3 = time.time()
-for i in xrange(1, Nmax+1):
-    scrypt(b'password', b'NaCl', N=2**i)
+for i in xrange(Nmin, Nmax+1):
+    scrypt(N=2**i, **kwargs)
 t3 = time.time() - t3
 print('C scrypt took      %.2fs' % t3)
 
