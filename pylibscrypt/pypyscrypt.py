@@ -35,6 +35,7 @@
 
 
 import hashlib, hmac
+import multiprocessing as mp
 import struct
 
 from . import mcf as mcf_mod
@@ -130,6 +131,35 @@ def smix(B, Bi, r, N, V, X):
     array_overwrite(X, 0, B, Bi, 32 * r)               # ROMix - 10
 
 
+def smix_mp(Bp, r, N):
+    XY = [0] * (64 * r)
+    V  = [0] * (32 * r * N)
+    Bl = list(Bp)
+    smix(Bl, 0, r, N, V, XY)
+    Bp[:] = Bl
+
+
+def scrypt_mp(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
+    """Parallel scrypt for p > 1"""
+    try:
+        B  = _pbkdf2('sha256', password, salt, 1, p * 128 * r)
+        B  = struct.unpack('<%dI' % (len(B) // 4), B)
+        ps = []
+        Bp = []
+        for i in xrange(p):
+            Bp.append(mp.Array('L', B[i*32*r:(i+1)*32*r]))
+            ps.append(mp.Process(target=smix_mp, args=(Bp[-1], r, N)))
+            ps[-1].start()
+        B = []
+        for i, j in zip(ps, Bp):
+            i.join()
+            B += j
+        B = struct.pack('<%dI' % len(B), *B)
+        return _pbkdf2('sha256', password, B, 1, olen)
+    except (MemoryError, OverflowError):
+        raise ValueError("scrypt parameters don't fit in memory")
+
+
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     """Derives a 64-byte hash using the scrypt key-derivarion function
 
@@ -151,6 +181,9 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     """
 
     check_args(password, salt, N, r, p, olen)
+
+    if 2 <= p <= 8:
+        return scrypt_mp(password, salt, N=N, r=r, p=p, olen=olen)
 
     # Everything is lists of 32-bit uints for all but pbkdf2
     try:
