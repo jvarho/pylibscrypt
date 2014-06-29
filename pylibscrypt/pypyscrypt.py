@@ -36,6 +36,7 @@
 
 import hashlib, hmac
 import multiprocessing as mp
+import platform
 import struct
 
 from . import mcf as mcf_mod
@@ -160,6 +161,9 @@ def scrypt_mp(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise ValueError("scrypt parameters don't fit in memory")
 
 
+parallelize = [] if platform.python_implementation() == 'PyPy' else [4, 6, 8]
+
+
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     """Derives a 64-byte hash using the scrypt key-derivarion function
 
@@ -182,7 +186,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
     check_args(password, salt, N, r, p, olen)
 
-    if 2 <= p <= 8:
+    if p in parallelize:
         return scrypt_mp(password, salt, N=N, r=r, p=p, olen=olen)
 
     # Everything is lists of 32-bit uints for all but pbkdf2
