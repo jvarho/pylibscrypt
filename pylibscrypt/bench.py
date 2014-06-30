@@ -17,12 +17,17 @@
 """Simple benchmark of python vs c scrypt"""
 
 import time
+import platform
 
 from .common import *
 from .pylibscrypt import scrypt
 from .pypyscrypt_inline import scrypt as pyscrypt
-from .pylibsodium_salsa import scrypt as pcscrypt
+from .pypyscrypt_inline import scrypt_mp as pcscrypt
+from . import pypyscrypt_inline
 
+pypyscrypt_inline.parallelize = []
+
+print('Using %s' % platform.python_implementation())
 
 # Benchmark time in seconds
 tmin = 5
@@ -30,7 +35,9 @@ Nmin = 8
 Nmax = 20
 
 # Benched defaults
-kwargs = dict(password=b'password', salt=b'NaCl')
+kwargs = dict(password=b'password', salt=b'NaCl', p=8)
+print('Using %s' % kwargs)
+
 
 t1 = time.time()
 for i in xrange(Nmin, Nmax+1):
@@ -40,20 +47,18 @@ for i in xrange(Nmin, Nmax+1):
         break
 t1 = time.time() - t1
 print('Using N = 2**%d,..., 2**%d' % (Nmin, Nmax))
-print('Python scrypt took %.2fs' % t1)
+print('Single-threaded scrypt took %.2fs' % t1)
 
 t2 = time.time()
 for i in xrange(Nmin, Nmax+1):
     pcscrypt(N=2**i, **kwargs)
 t2 = time.time() - t2
-print('Py + C scrypt took %.2fs' % t2)
+print('Multiprocessing scrypt took %.2fs' % t2)
 
-t3 = time.time()
+t2 = time.time()
 for i in xrange(Nmin, Nmax+1):
-    scrypt(N=2**i, **kwargs)
-t3 = time.time() - t3
-print('C scrypt took      %.2fs' % t3)
+    pyscrypt(N=2**i, **kwargs)
+t2 = time.time() - t2
+print('Single-threaded scrypt took %.2fs' % t2)
 
-print('Python scrypt took %.2f times as long as C' % (t1 / t3))
-print('Py + C scrypt took %.2f times as long as C' % (t2 / t3))
 
