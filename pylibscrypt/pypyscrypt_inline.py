@@ -38,6 +38,7 @@
 
 import hashlib, hmac
 import multiprocessing as mp
+import platform
 import struct
 
 from . import mcf as mcf_mod
@@ -207,8 +208,7 @@ def scrypt_mp(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         raise ValueError("scrypt parameters don't fit in memory")
 
 
-import platform
-parallelize = () if platform.python_implementation() == 'PyPy' else (4, 6, 8)
+parallelize = [] if platform.python_implementation() == 'PyPy' else [4, 6, 8]
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
