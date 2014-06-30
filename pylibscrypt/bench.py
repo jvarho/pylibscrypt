@@ -22,23 +22,23 @@ import platform
 from .common import *
 from .pylibscrypt import scrypt
 from .pypyscrypt_inline import scrypt as pyscrypt
-from .pypyscrypt_inline import scrypt_mp as pcscrypt
 from . import pypyscrypt_inline
 
-pypyscrypt_inline.parallelize = []
 
-print('Using %s' % platform.python_implementation())
+print('%s %s' % (platform.python_implementation(), platform.python_version()))
 
 # Benchmark time in seconds
-tmin = 5
+tmin = 10
 Nmin = 8
 Nmax = 20
 
 # Benched defaults
-kwargs = dict(password=b'password', salt=b'NaCl', p=8)
+kwargs = dict(password=b'password', salt=b'NaCl', p=4)
 print('Using %s' % kwargs)
 
 
+pp = pypyscrypt_inline.parallelize_p
+pypyscrypt_inline.parallelize_p = False
 t1 = time.time()
 for i in xrange(Nmin, Nmax+1):
     pyscrypt(N=2**i, **kwargs)
@@ -49,16 +49,19 @@ t1 = time.time() - t1
 print('Using N = 2**%d,..., 2**%d' % (Nmin, Nmax))
 print('Single-threaded scrypt took %.2fs' % t1)
 
+pypyscrypt_inline.parallelize_p = pp
 t2 = time.time()
 for i in xrange(Nmin, Nmax+1):
-    pcscrypt(N=2**i, **kwargs)
+    a = pyscrypt(N=2**i, **kwargs)
 t2 = time.time() - t2
 print('Multiprocessing scrypt took %.2fs' % t2)
 
+pypyscrypt_inline.parallelize_p = False
 t2 = time.time()
 for i in xrange(Nmin, Nmax+1):
-    pyscrypt(N=2**i, **kwargs)
+    b = pyscrypt(N=2**i, **kwargs)
 t2 = time.time() - t2
 print('Single-threaded scrypt took %.2fs' % t2)
 
+assert a == b
 
