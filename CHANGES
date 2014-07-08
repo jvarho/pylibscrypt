@@ -6,6 +6,7 @@ Release History
 ?
 
 Feature release:
+- Support for libsodium 0.6+ changes.
 - Use the low-level scrypt interface with libsodium so all calls are fast.
 - Support python3 when running tests.
 - Switch to the less verbose ISC license where possible

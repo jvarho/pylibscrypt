@@ -22,7 +22,7 @@ Requirements
 * If you want speed, you should use one of:
   - libscrypt 1.8+ (older may work)
   - py-scrypt 0.6+ (pip install scrypt)
-  - libsodium 0.5.1+
+  - libsodium 0.6+
 
 
 Usage
