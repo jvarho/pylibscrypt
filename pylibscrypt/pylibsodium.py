@@ -37,18 +37,35 @@ else:
 _lib_soname = ctypes.util.find_library('sodium')
 if _lib_soname is None:
     raise ImportError('Unable to find libsodium')
-
 try:
     _lib = ctypes.CDLL(_lib_soname)
+except OSError:
+    raise ImportError('Unable to load libsodium: ' + _lib_soname)
+
+try:
+    _scrypt_ll = _lib.crypto_pwhash_scryptsalsa208sha256_ll
+    _scrypt_ll.argtypes = [
+        c_void_p,  # passwd
+        c_size_t,  # passwdlen
+        c_void_p,  # salt
+        c_size_t,  # saltlen
+        c_uint64,  # N
+        c_uint32,  # r
+        c_uint32,  # p
+        c_void_p,  # buf
+        c_size_t,  # buflen
+    ]
+except AttributeError:
+    _scrypt_ll = None
+
+try:
     _scrypt = _lib.crypto_pwhash_scryptsalsa208sha256
     _scrypt_str = _lib.crypto_pwhash_scryptsalsa208sha256_str
     _scrypt_str_chk = _lib.crypto_pwhash_scryptsalsa208sha256_str_verify
     _scrypt_str_bytes = _lib.crypto_pwhash_scryptsalsa208sha256_strbytes()
     _scrypt_salt = _lib.crypto_pwhash_scryptsalsa208sha256_saltbytes()
-    if _scrypt_str_bytes != 102:
+    if _scrypt_str_bytes != 102 and not _scrypt_ll:
         raise ImportError('Incompatible libsodium: ' + _lib_soname)
-except OSError:
-    raise ImportError('Unable to load libsodium: ' + _lib_soname)
 except AttributeError:
     try:
         _scrypt = _lib.crypto_pwhash_scryptxsalsa208sha256
@@ -57,10 +74,11 @@ except AttributeError:
         _scrypt_str_bytes = _lib.crypto_pwhash_scryptxsalsa208sha256_strbytes()
         _scrypt_salt = _lib.crypto_pwhash_scryptxsalsa208sha256_saltbytes
         _scrypt_salt = _scrypt_salt()
-        if _scrypt_str_bytes != 102:
+        if _scrypt_str_bytes != 102 and not _scrypt_ll:
             raise ImportError('Incompatible libsodium: ' + _lib_soname)
     except AttributeError:
-        raise ImportError('Incompatible libsodium: ' + _lib_soname)
+        if not _scrypt_ll:
+            raise ImportError('Incompatible libsodium: ' + _lib_soname)
 
 _scrypt.argtypes = [
     c_void_p,  # out
@@ -85,22 +103,6 @@ _scrypt_str_chk.argtypes = [
     c_void_p,  # passwd
     c_uint64,  # passwdlen
 ]
-
-try:
-    _scrypt_ll = _lib.crypto_pwhash_scryptsalsa208sha256_ll
-    _scrypt_ll.argtypes = [
-        c_void_p,  # passwd
-        c_size_t,  # passwdlen
-        c_void_p,  # salt
-        c_size_t,  # saltlen
-        c_uint64,  # N
-        c_uint32,  # r
-        c_uint32,  # p
-        c_void_p,  # buf
-        c_size_t,  # buflen
-    ]
-except AttributeError:
-    _scrypt_ll = None
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
