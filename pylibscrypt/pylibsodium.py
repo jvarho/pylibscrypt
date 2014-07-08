@@ -25,14 +25,7 @@ from . import libsodium_load
 from .common import (
     SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_7, SCRYPT_MCF_PREFIX_s1,
     SCRYPT_MCF_PREFIX_DEFAULT, SCRYPT_MCF_PREFIX_ANY, check_args, unicode)
-
-if platform.python_implementation() == 'PyPy':
-    from . import pypyscrypt_inline as scr_mod
-else:
-    with catch_warnings():
-        filterwarnings('ignore', category=DeprecationWarning,
-                       module='pylibscrypt.pylibsodium_salsa')
-        from . import pylibsodium_salsa as scr_mod
+from . import pypyscrypt_inline as scr_mod
 
 
 _lib = libsodium_load.get_libsodium()
