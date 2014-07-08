@@ -34,24 +34,33 @@ else:
     from . import pylibsodium_salsa as scr_mod
 
 
-_libsodium_soname = ctypes.util.find_library('sodium')
-if _libsodium_soname is None:
+_lib_soname = ctypes.util.find_library('sodium')
+if _lib_soname is None:
     raise ImportError('Unable to find libsodium')
 
 try:
-    _libsodium = ctypes.CDLL(_libsodium_soname)
-    _scrypt = _libsodium.crypto_pwhash_scryptxsalsa208sha256
-    _scrypt_str = _libsodium.crypto_pwhash_scryptxsalsa208sha256_str
-    _scrypt_str_chk = _libsodium.crypto_pwhash_scryptxsalsa208sha256_str_verify
-    _scrypt_str_bytes = _libsodium.crypto_pwhash_scryptxsalsa208sha256_strbytes
-    _scrypt_salt = _libsodium.crypto_pwhash_scryptxsalsa208sha256_saltbytes
-    _scrypt_salt = _scrypt_salt()
-    if _scrypt_str_bytes() != 102:
-        raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
+    _lib = ctypes.CDLL(_lib_soname)
+    _scrypt = _lib.crypto_pwhash_scryptsalsa208sha256
+    _scrypt_str = _lib.crypto_pwhash_scryptsalsa208sha256_str
+    _scrypt_str_chk = _lib.crypto_pwhash_scryptsalsa208sha256_str_verify
+    _scrypt_str_bytes = _lib.crypto_pwhash_scryptsalsa208sha256_strbytes()
+    _scrypt_salt = _lib.crypto_pwhash_scryptsalsa208sha256_saltbytes()
+    if _scrypt_str_bytes != 102:
+        raise ImportError('Incompatible libsodium: ' + _lib_soname)
 except OSError:
-    raise ImportError('Unable to load libsodium: ' + _libsodium_soname)
+    raise ImportError('Unable to load libsodium: ' + _lib_soname)
 except AttributeError:
-    raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
+    try:
+        _scrypt = _lib.crypto_pwhash_scryptxsalsa208sha256
+        _scrypt_str = _lib.crypto_pwhash_scryptxsalsa208sha256_str
+        _scrypt_str_chk = _lib.crypto_pwhash_scryptxsalsa208sha256_str_verify
+        _scrypt_str_bytes = _lib.crypto_pwhash_scryptxsalsa208sha256_strbytes()
+        _scrypt_salt = _lib.crypto_pwhash_scryptxsalsa208sha256_saltbytes
+        _scrypt_salt = _scrypt_salt()
+        if _scrypt_str_bytes != 102:
+            raise ImportError('Incompatible libsodium: ' + _lib_soname)
+    except AttributeError:
+        raise ImportError('Incompatible libsodium: ' + _lib_soname)
 
 _scrypt.argtypes = [
     c_void_p,  # out
@@ -77,6 +86,22 @@ _scrypt_str_chk.argtypes = [
     c_uint64,  # passwdlen
 ]
 
+try:
+    _scrypt_ll = _lib.crypto_pwhash_scryptsalsa208sha256_ll
+    _scrypt_ll.argtypes = [
+        c_void_p,  # passwd
+        c_size_t,  # passwdlen
+        c_void_p,  # salt
+        c_size_t,  # saltlen
+        c_uint64,  # N
+        c_uint32,  # r
+        c_uint32,  # p
+        c_void_p,  # buf
+        c_size_t,  # buflen
+    ]
+except AttributeError:
+    _scrypt_ll = None
+
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     """Derives a 64-byte hash using the scrypt key-derivarion function
@@ -98,6 +123,13 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     yet increase N if memory is plentiful.
     """
     check_args(password, salt, N, r, p, olen)
+
+    if _scrypt_ll:
+        out = ctypes.create_string_buffer(olen)
+        if _scrypt_ll(password, len(password), salt, len(salt),
+                      N, r, p, out, olen):
+            raise ValueError
+        return out.raw
 
     if len(salt) != _scrypt_salt or r != 8 or (p & (p - 1)) or (N*p <= 512):
         return scr_mod.scrypt(password, salt, N, r, p, olen)
