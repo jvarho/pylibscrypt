@@ -14,7 +14,7 @@
 
 """Scrypt for Python"""
 
-__version__ = '1.3.0-git'
+__version__ = '1.3.0'
 
 # First, try loading libscrypt
 _done = False
