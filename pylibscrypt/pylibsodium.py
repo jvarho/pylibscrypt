@@ -166,7 +166,8 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
 
     if (salt is not None or r != 8 or (p & (p - 1)) or (N*p <= 512) or
         prefix not in (SCRYPT_MCF_PREFIX_7, SCRYPT_MCF_PREFIX_s1,
-                       SCRYPT_MCF_PREFIX_ANY)):
+                       SCRYPT_MCF_PREFIX_ANY) or
+        _scrypt_ll):
         return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
 
     s = next(i for i in range(1, 32) if 2**i == N)
@@ -187,7 +188,7 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
 
 def scrypt_mcf_check(mcf, password):
     """Returns True if the password matches the given MCF hash"""
-    if mcf_mod._scrypt_mcf_7_is_standard(mcf):
+    if mcf_mod._scrypt_mcf_7_is_standard(mcf) and not _scrypt_ll:
         return _scrypt_str_chk(mcf, password, len(password)) == 0
     return mcf_mod.scrypt_mcf_check(scrypt, mcf, password)
 
