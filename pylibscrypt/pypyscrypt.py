@@ -131,7 +131,7 @@ def smix(B, Bi, r, N, V, X):
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
-    """Derives a 64-byte hash using the scrypt key-derivarion function
+    """Returns a key derived using the scrypt key-derivarion function
 
     N must be a power of two larger than 1 but no larger than 2 ** 63 (insane)
     r and p must be positive numbers such that r * p < 2 ** 30
