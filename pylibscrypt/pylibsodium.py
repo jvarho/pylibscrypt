@@ -45,7 +45,7 @@ def _get_libsodium():
     sys_sodium = ctypes.util.find_library('sodium')
     if sys_sodium is None:
         sys_sodium = ctypes.util.find_library('libsodium')
-    
+
     if sys_sodium:
         return ctypes.CDLL(sys_sodium)
 

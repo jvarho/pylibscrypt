@@ -36,7 +36,6 @@ from . import mcf as mcf_mod
 from .common import *
 
 
-
 def _get_libsodium():
     '''
     Locate the nacl c libs to use
@@ -47,7 +46,7 @@ def _get_libsodium():
     sys_sodium = ctypes.util.find_library('sodium')
     if sys_sodium is None:
         sys_sodium = ctypes.util.find_library('libsodium')
-    
+
     if sys_sodium:
         return ctypes.CDLL(sys_sodium)
 
