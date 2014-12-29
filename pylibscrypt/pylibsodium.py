@@ -34,9 +34,52 @@ else:
     from . import pylibsodium_salsa as scr_mod
 
 
-_lib_soname = ctypes.util.find_library('sodium')
-if _lib_soname is None:
-    raise ImportError('Unable to find libsodium')
+def _get_libsodium():
+    '''
+    Locate the nacl c libs to use
+    '''
+
+    __SONAMES = (13, 10, 5, 4)
+    # Import libsodium from system
+    try:
+        return ctypes.util.find_library('sodium')
+    except OSError:
+        pass
+
+    # Import from local path
+    if sys.platform.startswith('win'):
+        try:
+            return ctypes.cdll.LoadLibrary('libsodium')
+        except OSError:
+            pass
+        for soname_ver in __SONAMES:
+            try:
+                return ctypes.cdll.LoadLibrary(
+                    'libsodium-{0}'.format(soname_ver)
+                )
+            except OSError:
+                pass
+    elif sys.platform.startswith('darwin'):
+        try:
+            return ctypes.cdll.LoadLibrary('libsodium.dylib')
+        except OSError:
+            pass
+    else:
+        try:
+            return ctypes.cdll.LoadLibrary('libsodium.so')
+        except OSError:
+            pass
+
+        for soname_ver in __SONAMES:
+            try:
+                return ctypes.cdll.LoadLibrary(
+                    'libsodium.so.{0}'.format(soname_ver)
+                )
+            except OSError:
+                pass
+
+
+_lib_soname = _get_libsodium()
 try:
     _lib = ctypes.CDLL(_lib_soname)
 except OSError:

@@ -389,7 +389,6 @@ if __name__ == "__main__":
         )
         suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(tmp))
     except ImportError:
-        raise
         suite.addTest(load_scrypt_suite('pylibsodiumTests', None, True))
 
     try:
