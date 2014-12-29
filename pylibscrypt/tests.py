@@ -352,22 +352,22 @@ def run_pbkdf2_suite(module, fast=False):
 if __name__ == "__main__":
     suite = unittest.TestSuite()
     try:
-        from pylibscrypt import pylibscrypt
+        from . import pylibscrypt
         suite.addTest(load_scrypt_suite('pylibscryptTests', pylibscrypt, True))
     except ImportError:
         suite.addTest(load_scrypt_suite('pylibscryptTests', None, True))
 
     try:
-        from pylibscrypt import pyscrypt
+        from . import pyscrypt
         suite.addTest(load_scrypt_suite('pyscryptTests', pyscrypt, True))
     except ImportError:
         suite.addTest(load_scrypt_suite('pyscryptTests', None, True))
 
     try:
-        from pylibscrypt import pylibsodium
+        from . import pylibsodium
         suite.addTest(load_scrypt_suite('pylibsodiumTests',
                                         pylibsodium, True))
-        from pylibscrypt import pylibscrypt
+        from . import pylibscrypt
         loader = unittest.defaultTestLoader
         def set_up_ll(self):
             if not self.module._scrypt_ll:
@@ -392,20 +392,20 @@ if __name__ == "__main__":
         suite.addTest(load_scrypt_suite('pylibsodiumTests', None, True))
 
     try:
-        from pylibscrypt import pylibsodium_salsa
+        from . import pylibsodium_salsa
         suite.addTest(load_scrypt_suite('pylibsodium_salsaTests',
                                         pylibsodium_salsa, True))
     except ImportError:
         suite.addTest(load_scrypt_suite('pylibsodium_salsaTests', None, True))
 
     try:
-        from pylibscrypt import pypyscrypt_inline as pypyscrypt
+        from . import pypyscrypt_inline as pypyscrypt
         suite.addTest(load_scrypt_suite('pypyscryptTests', pypyscrypt, True))
     except ImportError:
         suite.addTest(load_scrypt_suite('pypyscryptTests', None, True))
 
     try:
-        from pylibscrypt import pbkdf2
+        from . import pbkdf2
         suite.addTest(load_pbkdf2_suite('pbkdf2', pbkdf2))
     except ImportError:
         suite.addTest(load_pbkdf2_suite('pbkdf2', None))
