@@ -239,6 +239,6 @@ __all__ = ['scrypt', 'scrypt_mcf', 'scrypt_mcf_check']
 
 if __name__ == "__main__":
     import sys
-    import tests
+    from . import tests
     tests.run_scrypt_suite(sys.modules[__name__])
 

@@ -242,7 +242,7 @@ def scrypt_mcf_check(mcf, password):
 
 if __name__ == "__main__":
     import sys
-    import tests
+    from . import tests
     try:
         from . import pylibscrypt
         scr_mod = pylibscrypt
