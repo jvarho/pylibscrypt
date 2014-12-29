@@ -24,6 +24,7 @@ import hashlib, hmac
 import numbers
 import platform
 import struct
+import sys
 
 from . import mcf as mcf_mod
 from .common import *
@@ -41,13 +42,16 @@ def _get_libsodium():
 
     __SONAMES = (13, 10, 5, 4)
     # Import libsodium from system
-    try:
-        return ctypes.util.find_library('sodium')
-    except OSError:
-        pass
+    sys_sodium = ctypes.util.find_library('sodium')
+    if sys_sodium is None:
+        sys_sodium = ctypes.util.find_library('libsodium')
+    
+    if sys_sodium:
+        return ctypes.CDLL(sys_sodium)
 
     # Import from local path
     if sys.platform.startswith('win'):
+
         try:
             return ctypes.cdll.LoadLibrary('libsodium')
         except OSError:
@@ -79,11 +83,9 @@ def _get_libsodium():
                 pass
 
 
-_lib_soname = _get_libsodium()
-try:
-    _lib = ctypes.CDLL(_lib_soname)
-except OSError:
-    raise ImportError('Unable to load libsodium: ' + _lib_soname)
+_lib = _get_libsodium()
+if _lib is None:
+    raise ImportError('Unable to load libsodium')
 
 try:
     _scrypt_ll = _lib.crypto_pwhash_scryptsalsa208sha256_ll
@@ -240,7 +242,7 @@ def scrypt_mcf_check(mcf, password):
 
 if __name__ == "__main__":
     import sys
-    from . import tests
+    import tests
     try:
         from . import pylibscrypt
         scr_mod = pylibscrypt

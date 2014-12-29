@@ -57,6 +57,6 @@ def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
 
 if __name__ == "__main__":
     import sys
-    from . import tests
+    import tests
     tests.run_pbkdf2_suite(sys.modules[__name__])
 

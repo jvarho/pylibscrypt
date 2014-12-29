@@ -30,6 +30,7 @@ from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
 import hashlib, hmac
 import numbers
 import struct
+import sys
 
 from . import mcf as mcf_mod
 from .common import *
@@ -43,10 +44,12 @@ def _get_libsodium():
 
     __SONAMES = (13, 10, 5, 4)
     # Import libsodium from system
-    try:
-        return ctypes.util.find_library('sodium')
-    except OSError:
-        pass
+    sys_sodium = ctypes.util.find_library('sodium')
+    if sys_sodium is None:
+        sys_sodium = ctypes.util.find_library('libsodium')
+    
+    if sys_sodium:
+        return ctypes.CDLL(sys_sodium)
 
     # Import from local path
     if sys.platform.startswith('win'):
@@ -81,14 +84,14 @@ def _get_libsodium():
                 pass
 
 
-_libsodium_soname = _get_libsodium()
+_libsodium = _get_libsodium()
+if _libsodium is None:
+    raise ImportError('Unable to load libsodium')
+
 try:
-    _libsodium = ctypes.CDLL(_libsodium_soname)
     _libsodium_salsa20_8 = _libsodium.crypto_core_salsa208
-except OSError:
-    raise ImportError('Unable to load libsodium: ' + _libsodium_soname)
 except AttributeError:
-    raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
+    raise ImportError('Incompatible libsodium: ')
 
 _libsodium_salsa20_8.argtypes = [
     c_void_p,  # out (16*4 bytes)
@@ -237,6 +240,6 @@ def scrypt_mcf_check(mcf, password):
 
 if __name__ == "__main__":
     import sys
-    from . import tests
+    import tests
     tests.run_scrypt_suite(sys.modules[__name__])
 
