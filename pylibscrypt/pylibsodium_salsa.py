@@ -30,22 +30,67 @@ from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
 import hashlib, hmac
 import numbers
 import struct
+import sys
 
 from . import mcf as mcf_mod
 from .common import *
 
 
-_libsodium_soname = ctypes.util.find_library('sodium')
-if _libsodium_soname is None:
-    raise ImportError('Unable to find libsodium')
+def _get_libsodium():
+    '''
+    Locate the nacl c libs to use
+    '''
+
+    __SONAMES = (13, 10, 5, 4)
+    # Import libsodium from system
+    sys_sodium = ctypes.util.find_library('sodium')
+    if sys_sodium is None:
+        sys_sodium = ctypes.util.find_library('libsodium')
+
+    if sys_sodium:
+        return ctypes.CDLL(sys_sodium)
+
+    # Import from local path
+    if sys.platform.startswith('win'):
+        try:
+            return ctypes.cdll.LoadLibrary('libsodium')
+        except OSError:
+            pass
+        for soname_ver in __SONAMES:
+            try:
+                return ctypes.cdll.LoadLibrary(
+                    'libsodium-{0}'.format(soname_ver)
+                )
+            except OSError:
+                pass
+    elif sys.platform.startswith('darwin'):
+        try:
+            return ctypes.cdll.LoadLibrary('libsodium.dylib')
+        except OSError:
+            pass
+    else:
+        try:
+            return ctypes.cdll.LoadLibrary('libsodium.so')
+        except OSError:
+            pass
+
+        for soname_ver in __SONAMES:
+            try:
+                return ctypes.cdll.LoadLibrary(
+                    'libsodium.so.{0}'.format(soname_ver)
+                )
+            except OSError:
+                pass
+
+
+_libsodium = _get_libsodium()
+if _libsodium is None:
+    raise ImportError('Unable to load libsodium')
 
 try:
-    _libsodium = ctypes.CDLL(_libsodium_soname)
     _libsodium_salsa20_8 = _libsodium.crypto_core_salsa208
-except OSError:
-    raise ImportError('Unable to load libsodium: ' + _libsodium_soname)
 except AttributeError:
-    raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
+    raise ImportError('Incompatible libsodium: ')
 
 _libsodium_salsa20_8.argtypes = [
     c_void_p,  # out (16*4 bytes)
