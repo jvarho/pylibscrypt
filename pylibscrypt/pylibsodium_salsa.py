@@ -21,7 +21,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Scrypt implementation that calls into system libsodium"""
+"""Scrypt implementation that calls into system libsodium
+
+Obsolete, will be removed in 2.0.
+"""
 
 
 import base64
