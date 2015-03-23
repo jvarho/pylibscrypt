@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2014, Jan Varho
+# Copyright (c) 2014-2015, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
 
 
 import base64
-import ctypes, ctypes.util
+import ctypes
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
 import hashlib, hmac
 import numbers
@@ -27,6 +27,7 @@ import struct
 import sys
 
 from . import mcf as mcf_mod
+from . import libsodium_load
 from .common import *
 
 if platform.python_implementation() == 'PyPy':
@@ -35,55 +36,7 @@ else:
     from . import pylibsodium_salsa as scr_mod
 
 
-def _get_libsodium():
-    '''
-    Locate the nacl c libs to use
-    '''
-
-    __SONAMES = (13, 10, 5, 4)
-    # Import libsodium from system
-    sys_sodium = ctypes.util.find_library('sodium')
-    if sys_sodium is None:
-        sys_sodium = ctypes.util.find_library('libsodium')
-
-    if sys_sodium:
-        return ctypes.CDLL(sys_sodium)
-
-    # Import from local path
-    if sys.platform.startswith('win'):
-
-        try:
-            return ctypes.cdll.LoadLibrary('libsodium')
-        except OSError:
-            pass
-        for soname_ver in __SONAMES:
-            try:
-                return ctypes.cdll.LoadLibrary(
-                    'libsodium-{0}'.format(soname_ver)
-                )
-            except OSError:
-                pass
-    elif sys.platform.startswith('darwin'):
-        try:
-            return ctypes.cdll.LoadLibrary('libsodium.dylib')
-        except OSError:
-            pass
-    else:
-        try:
-            return ctypes.cdll.LoadLibrary('libsodium.so')
-        except OSError:
-            pass
-
-        for soname_ver in __SONAMES:
-            try:
-                return ctypes.cdll.LoadLibrary(
-                    'libsodium.so.{0}'.format(soname_ver)
-                )
-            except OSError:
-                pass
-
-
-_lib = _get_libsodium()
+_lib = libsodium_load.get_libsodium()
 if _lib is None:
     raise ImportError('Unable to load libsodium')
 
