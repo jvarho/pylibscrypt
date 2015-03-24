@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2014, Jan Varho
+# Copyright (c) 2014-2015, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -14,7 +14,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-"""Simple benchmark of python vs c scrypt"""
+"""Simple benchmark of single-threaded vs. multiprocessing scrypt"""
 
 import time
 import platform
@@ -36,7 +36,7 @@ Nmax = 20
 kwargs = dict(password=b'password', salt=b'NaCl', p=4)
 print('Using %s' % kwargs)
 
-
+# Single threaded
 pp = pypyscrypt_inline.parallelize_p
 pypyscrypt_inline.parallelize_p = False
 t1 = time.time()
@@ -53,6 +53,7 @@ t1 = time.time() - t1
 print('Using N = 2**%d,..., 2**%d' % (Nmin, Nmax))
 print('Single-threaded scrypt took %.2fs' % t1, times)
 
+# Multiprocessing
 pypyscrypt_inline.parallelize_p = pp
 t2 = time.time()
 tt = time.time()
