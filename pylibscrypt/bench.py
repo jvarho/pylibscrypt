@@ -40,28 +40,29 @@ print('Using %s' % kwargs)
 pp = pypyscrypt_inline.parallelize_p
 pypyscrypt_inline.parallelize_p = False
 t1 = time.time()
+tt = time.time()
+times = []
 for i in xrange(Nmin, Nmax+1):
-    pyscrypt(N=2**i, **kwargs)
+    b = pyscrypt(N=2**i, **kwargs)
     if time.time() - t1 > tmin:
         Nmax = i
         break
+    times.append(time.time()-tt)
+    tt = time.time()
 t1 = time.time() - t1
 print('Using N = 2**%d,..., 2**%d' % (Nmin, Nmax))
-print('Single-threaded scrypt took %.2fs' % t1)
+print('Single-threaded scrypt took %.2fs' % t1, times)
 
 pypyscrypt_inline.parallelize_p = pp
 t2 = time.time()
+tt = time.time()
+times = []
 for i in xrange(Nmin, Nmax+1):
     a = pyscrypt(N=2**i, **kwargs)
+    times.append(time.time()-tt)
+    tt = time.time()
 t2 = time.time() - t2
-print('Multiprocessing scrypt took %.2fs' % t2)
-
-pypyscrypt_inline.parallelize_p = False
-t2 = time.time()
-for i in xrange(Nmin, Nmax+1):
-    b = pyscrypt(N=2**i, **kwargs)
-t2 = time.time() - t2
-print('Single-threaded scrypt took %.2fs' % t2)
+print('Multiprocessing scrypt took %.2fs' % t2, times)
 
 assert a == b
 
