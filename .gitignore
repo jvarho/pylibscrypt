@@ -3,6 +3,7 @@
 i-*/
 .coverage
 *,cover
+htmlcov/
 build/
 dist/
 MANIFEST
