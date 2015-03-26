@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2014, Jan Varho
+# Copyright (c) 2014-2015, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -17,7 +17,8 @@
 import platform
 import sys
 
-platform.python_implementation = lambda:'PyPy'
+if '-p' in sys.argv:
+    platform.python_implementation = lambda:'PyPy'
 
 def unimport():
     del sys.modules['pylibscrypt']
@@ -33,10 +34,6 @@ import pylibscrypt
 
 unimport()
 sys.modules['pylibscrypt.pylibsodium'] = None
-import pylibscrypt
-
-unimport()
-platform.python_implementation = lambda:'CPython'
 import pylibscrypt
 
 unimport()
