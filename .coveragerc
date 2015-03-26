@@ -13,3 +13,5 @@ exclude_lines =
     maxmemfrac=MAXMEMFRAC_DEFAULT\):
     encoding='utf-8'\):
 
+omit = /usr/*,pylibscrypt/libsodium_load.py
+

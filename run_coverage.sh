@@ -13,7 +13,7 @@ $PYTHON -m coverage run --branch -a -m pylibscrypt.pylibsodium
 $PYTHON -m coverage run --branch -a -m pylibscrypt.pbkdf2
 $PYTHON -m coverage run --branch -a test_fallback.py
 $PYTHON -m coverage run --branch -a test_fallback.py -p
-$PYTHON -m coverage html --omit='/usr/*,pylibscrypt/libsodium_load.py'
-$PYTHON -m coverage report --omit='/usr/*,pylibscrypt/libsodium_load.py'
+$PYTHON -m coverage html
+$PYTHON -m coverage report
 #$PYTHON -m coverage annotate
 
