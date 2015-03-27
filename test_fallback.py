@@ -14,6 +14,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import ctypes.util
 import platform
 import sys
 
@@ -24,7 +25,17 @@ def unimport():
     del sys.modules['pylibscrypt']
     sys.modules.pop('pylibscrypt.common', None)
     sys.modules.pop('pylibscrypt.mcf', None)
+    sys.modules.pop('pylibscrypt.libsodium_load', None)
 
+tmp1 = ctypes.util.find_library
+tmp2 = ctypes.cdll.LoadLibrary
+ctypes.util.find_library = lambda *args, **kw: None
+ctypes.cdll.LoadLibrary = lambda *args, **kw: None
+import pylibscrypt
+ctypes.util.find_library = tmp1
+ctypes.cdll.LoadLibrary = tmp2
+
+unimport()
 sys.modules['pylibscrypt.pylibscrypt'] = None
 import pylibscrypt
 

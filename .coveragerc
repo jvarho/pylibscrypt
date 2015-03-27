@@ -7,11 +7,6 @@ exclude_lines =
     except AttributeError:
     except OSError:
     except TypeError
-    raise ImportError.*
-
-    # py-scrypt API not used (encrypt and decrypt)
-    maxmemfrac=MAXMEMFRAC_DEFAULT\):
-    encoding='utf-8'\):
 
 omit = /usr/*,pylibscrypt/libsodium_load.py
 
