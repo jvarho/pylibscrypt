@@ -19,7 +19,12 @@
 
 import numbers
 
-from scrypt import hash as _scrypt
+try:
+    from scrypt import hash as _scrypt
+except ImportError:
+    raise
+except:
+    raise ImportError('scrypt module failed to import')
 
 from . import mcf as mcf_mod
 from .common import *
