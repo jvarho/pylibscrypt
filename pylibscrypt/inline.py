@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-# Copyright (c) 2014, Jan Varho
+# Copyright (c) 2014-2015, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -33,6 +31,8 @@ with open('pylibscrypt/pypyscrypt.py', 'r') as f:
     skipping = False
     for line in f:
         lc += 1
+        if lc == 1:
+            of.write('# Automatically generated file, see inline.py\n\n')
         i = indent(line)
         if line[i:].startswith('def R('):
             skipping = True
@@ -84,6 +84,4 @@ with open('pylibscrypt/pypyscrypt.py', 'r') as f:
 
         else:
             of.write(line)
-        if lc == 1:
-            of.write('\n# Automatically generated file, see inline.py\n')
 

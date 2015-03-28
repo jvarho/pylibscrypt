@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2015, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
