@@ -25,7 +25,8 @@ except:
     raise ImportError('scrypt module failed to import')
 
 from . import mcf as mcf_mod
-from .common import *
+from .common import (
+    SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_DEFAULT, check_args)
 
 
 # scrypt < 0.6 doesn't support hash length

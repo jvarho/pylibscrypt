@@ -35,7 +35,9 @@ import sys
 
 from . import mcf as mcf_mod
 from . import libsodium_load
-from .common import *
+from .common import (
+    SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_DEFAULT, xrange,
+    check_args)
 
 
 _libsodium = libsodium_load.get_libsodium()
@@ -174,7 +176,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
 def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
-               prefix=b'$s1$'):
+               prefix=SCRYPT_MCF_PREFIX_DEFAULT):
     """Derives a Modular Crypt Format hash using the scrypt KDF
 
     Parameter space is smaller than for scrypt():

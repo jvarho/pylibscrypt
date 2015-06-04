@@ -38,7 +38,9 @@ import hashlib, hmac
 import struct
 
 from . import mcf as mcf_mod
-from .common import *
+from .common import (
+    SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_DEFAULT, xrange,
+    check_args)
 
 
 # Python 3.4+ have PBKDF2 in hashlib, so use it...

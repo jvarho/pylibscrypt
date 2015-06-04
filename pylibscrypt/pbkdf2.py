@@ -19,7 +19,7 @@ import hashlib
 import hmac
 import struct
 
-from .common import *
+from .common import xrange
 
 
 def pbkdf2_hmac(name, password, salt, rounds, dklen=None):

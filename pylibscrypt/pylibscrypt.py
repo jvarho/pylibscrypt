@@ -20,7 +20,9 @@ import ctypes, ctypes.util
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32
 import os
 
-from .common import *
+from .common import (
+    SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_s1,
+    SCRYPT_MCF_PREFIX_DEFAULT, SCRYPT_MCF_PREFIX_ANY, check_args)
 from . import mcf as mcf_mod
 
 
