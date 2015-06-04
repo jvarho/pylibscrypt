@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2014, Jan Varho
+# Copyright (c) 2014-2015, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -16,7 +16,7 @@
 
 from base64 import b16encode
 
-from pylibscrypt import *
+from pylibscrypt import scrypt, scrypt_mcf, scrypt_mcf_check
 
 # Print a raw scrypt hash in hex
 print(b16encode(scrypt(b'Hello World', b'salt')))

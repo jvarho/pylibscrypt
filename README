@@ -36,7 +36,7 @@ You most likely want to create MCF hashes and store them somewhere, then check
 user-entered passwords against those hashes. For that you only need to use two
 functions from the API:
 
-    from pylibscrypt import *
+    from pylibscrypt import scrypt_mcf, scrypt_mcf_check
     # Generate an MCF hash with random salt
     mcf = scrypt_mcf('Hello World')
     # Test it
