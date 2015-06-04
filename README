@@ -69,10 +69,11 @@ Development happens on GitHub[2]. If you find a bug, please open an issue there.
 Running pylibscrypt.tests will test all implementations with some quick tests.
 Running any implementation directly (e.g. pylibscrypt.pylibsodium) will also
 compare to scrypt test vectors from the paper but this is slow for the pure
-Python version unless you have pypy.
+Python version (pypyscrypt) unless running with pypy.
 
-Running pylibscrypt.fuzz will do some basic fuzz tests with semi-randomly chosen
-inputs.
+Running 'make coverage' will run coverage tests. This requires coverage.py
+installed for both Python 2 and Python 3. That should be done on anything pushed
+for a pull request.
 
 [1]:https://xkcd.com/927/
 [2]:https://github.com/technion/libscrypt
