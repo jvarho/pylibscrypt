@@ -64,7 +64,7 @@ master.
 
 Development
 --
-Development happens on GitHub[2]. If you find a bug, please open an issue there.
+Development happens on GitHub[7]. If you find a bug, please open an issue there.
 
 Running pylibscrypt.tests will test all implementations with some quick tests.
 Running any implementation directly (e.g. pylibscrypt.pylibsodium) will also
@@ -81,4 +81,5 @@ for a pull request.
 [4]:https://github.com/jedisct1/libsodium
 [5]:http://pypy.org/
 [6]:http://semver.org/spec/v2.0.0.html
+[7]:https://github.com/jvarho/pylibscrypt
 
