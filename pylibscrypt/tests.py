@@ -318,7 +318,6 @@ class ScryptTests(unittest.TestCase):
 
 
 def load_scrypt_suite(name, module, fast=True):
-    loader = unittest.defaultTestLoader
     tests = type(name, (ScryptTests,), {'module': module, 'fast': fast})
     return unittest.defaultTestLoader.loadTestsFromTestCase(tests)
 
