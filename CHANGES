@@ -3,7 +3,7 @@ Release History
 
 1.4.1
 --
-2014-3-27
+2015-3-27
 
 Bugfix release:
 - Fix missing import so Windows/Darwin may actually work
@@ -11,7 +11,7 @@ Bugfix release:
 
 1.4.0
 --
-2014-3-23
+2015-3-23
 
 Feature release:
 - Improve library loading on Windows and Darwin.
