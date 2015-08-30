@@ -298,6 +298,13 @@ class ScryptTests(unittest.TestCase):
         self.assertFalse(self.module.scrypt_mcf_check(m, p1))
         self.assertFalse(self.module.scrypt_mcf_check(m, p3))
 
+    def test_mcf_salt_dollar(self):
+        p, s = b'pass', b'sa$lt'
+        m1 = self.module.scrypt_mcf(p, salt=s, N=4, prefix=b'$s1$')
+        m2 = self.module.scrypt_mcf(p, salt=s, N=4, prefix=b'$7$')
+        self.assertTrue(self.module.scrypt_mcf_check(m1, p))
+        self.assertTrue(self.module.scrypt_mcf_check(m2, p))
+
     def test_old_libscrypt_support(self):
         try:
             self.replace_scrypt_mcf = self.module._libscrypt_mcf
