@@ -17,7 +17,7 @@ import sys
 
 
 def get_libsodium():
-    '''Locate the nacl c libs to use'''
+    '''Locate the libsodium C library'''
 
     __SONAMES = (13, 10, 5, 4)
     # Import libsodium from system
@@ -26,7 +26,10 @@ def get_libsodium():
         sys_sodium = ctypes.util.find_library('libsodium')
 
     if sys_sodium:
-        return ctypes.CDLL(sys_sodium)
+        try:
+            return ctypes.CDLL(sys_sodium)
+        except OSError:
+            pass
 
     # Import from local path
     if sys.platform.startswith('win'):
