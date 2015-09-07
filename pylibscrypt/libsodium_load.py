@@ -27,9 +27,8 @@ def get_libsodium():
 
     if sys_sodium:
         try:
-            # TODO: verify which exceptions can be returned here
             return ctypes.CDLL(sys_sodium)
-        except:
+        except OSError:
             pass
 
     # Import from local path
