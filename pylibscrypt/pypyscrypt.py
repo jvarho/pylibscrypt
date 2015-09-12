@@ -153,9 +153,9 @@ def scrypt_mp(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
         Bp = []
         pool = scrypt_mp_pool
         work = []
-        for i in xrange(p):
+        for i in xrange(1, p):
             work.append(pool.apply_async(smix_mp, args=(B[i*32*r:(i+1)*32*r], r, N)))
-        B = []
+        B = smix_mp(B[:32*r], r, N)
         for i in work:
             B += i.get()
         B = struct.pack('<%dI' % len(B), *B)
