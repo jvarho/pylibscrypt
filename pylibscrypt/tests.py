@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-# Copyright (c) 2014, Jan Varho
+# Copyright (c) 2014-2015, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -24,9 +22,22 @@ import unittest
 
 class ScryptTests(unittest.TestCase):
     """Tests an scrypt implementation from module"""
+    set_up_lambda = None
+    tear_down_lambda = None
+    replace_scrypt_mcf = None
+
     def setUp(self):
         if not self.module:
             self.skipTest('module not tested')
+        if self.set_up_lambda:
+            self.set_up_lambda()
+
+    def tearDown(self):
+        if self.tear_down_lambda:
+            self.tear_down_lambda()
+        if self.replace_scrypt_mcf:
+            self.module._libscrypt_mcf = self.replace_scrypt_mcf
+            self.replace_scrypt_mcf = None
 
     def _test_vector(self, vector):
         pw, s, N, r, p, h, m = vector
@@ -287,9 +298,33 @@ class ScryptTests(unittest.TestCase):
         self.assertFalse(self.module.scrypt_mcf_check(m, p1))
         self.assertFalse(self.module.scrypt_mcf_check(m, p3))
 
+    def test_mcf_salt_dollar(self):
+        p, s = b'pass', b'sa$lt'
+        m1 = self.module.scrypt_mcf(p, salt=s, N=4, prefix=b'$s1$')
+        m2 = self.module.scrypt_mcf(p, salt=s, N=4, prefix=b'$7$')
+        self.assertTrue(self.module.scrypt_mcf_check(m1, p))
+        self.assertTrue(self.module.scrypt_mcf_check(m2, p))
+
+    def test_old_libscrypt_support(self):
+        try:
+            self.replace_scrypt_mcf = self.module._libscrypt_mcf
+        except AttributeError:
+            self.skipTest('not testing pylibscrypt')
+        def scrypt_mcf(*a):
+            r = self.replace_scrypt_mcf(*a)
+            a[5][-2] = b'\0'
+            self.assertTrue(len(a[5].raw.strip(b'\0')) == 123)
+            return r
+        self.module._libscrypt_mcf = scrypt_mcf
+        pw, N = b'pass', 2
+        m1 = self.module.scrypt_mcf(pw, N=N)
+        m2 = self.module.scrypt_mcf(pw, N=N)
+        self.assertNotEqual(m1, m2)
+        self.assertTrue(self.module.scrypt_mcf_check(m1, pw))
+        self.assertTrue(self.module.scrypt_mcf_check(m2, pw))
+
 
 def load_scrypt_suite(name, module, fast=True):
-    loader = unittest.defaultTestLoader
     tests = type(name, (ScryptTests,), {'module': module, 'fast': fast})
     return unittest.defaultTestLoader.loadTestsFromTestCase(tests)
 
@@ -358,8 +393,28 @@ if __name__ == "__main__":
         from . import pylibsodium
         suite.addTest(load_scrypt_suite('pylibsodiumTests',
                                         pylibsodium, True))
+        from . import pylibscrypt
+        loader = unittest.defaultTestLoader
+        def set_up_ll(self):
+            if not self.module._scrypt_ll:
+                self.skipTest('no ll')
+            self.tmp_ll = self.module._scrypt_ll
+            self.tmp_scr = self.module.scr_mod
+            self.module._scrypt_ll = None
+            self.module.scr_mod = pylibscrypt
+        def tear_down_ll(self):
+            self.module._scrypt_ll = self.tmp_ll
+            self.module.scr_mod = self.tmp_scr
+        tmp = type(
+            'pylibsodiumFallbackTests', (ScryptTests,),
+            {
+                'module': pylibsodium, 'fast': False,
+                'set_up_lambda': set_up_ll,
+                'tear_down_lambda': tear_down_ll,
+            }
+        )
+        suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(tmp))
     except ImportError:
-        raise
         suite.addTest(load_scrypt_suite('pylibsodiumTests', None, True))
 
     try:

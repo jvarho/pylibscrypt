@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2014 Richard Moore
-# Copyright (c) 2014 Jan Varho
+# Copyright (c) 2014-2015 Jan Varho
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,31 +19,35 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""Scrypt implementation that calls into system libsodium"""
+"""Scrypt implementation that calls into system libsodium
+
+Obsolete, will be removed in 2.0.
+"""
 
 
 import base64
-import ctypes, ctypes.util
+import ctypes
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
 import hashlib, hmac
 import numbers
 import struct
+import sys
 
 from . import mcf as mcf_mod
-from .common import *
+from . import libsodium_load
+from .common import (
+    SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_DEFAULT, xrange,
+    check_args)
 
 
-_libsodium_soname = ctypes.util.find_library('sodium')
-if _libsodium_soname is None:
-    raise ImportError('Unable to find libsodium')
+_libsodium = libsodium_load.get_libsodium()
+if _libsodium is None:
+    raise ImportError('Unable to load libsodium')
 
 try:
-    _libsodium = ctypes.CDLL(_libsodium_soname)
     _libsodium_salsa20_8 = _libsodium.crypto_core_salsa208
-except OSError:
-    raise ImportError('Unable to load libsodium: ' + _libsodium_soname)
 except AttributeError:
-    raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
+    raise ImportError('Incompatible libsodium: ')
 
 _libsodium_salsa20_8.argtypes = [
     c_void_p,  # out (16*4 bytes)
@@ -64,7 +66,7 @@ else:
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
-    """Derives a 64-byte hash using the scrypt key-derivarion function
+    """Returns a key derived using the scrypt key-derivarion function
 
     N must be a power of two larger than 1 but no larger than 2 ** 63 (insane)
     r and p must be positive numbers such that r * p < 2 ** 30
@@ -174,7 +176,7 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
 
 
 def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
-               prefix=b'$s1$'):
+               prefix=SCRYPT_MCF_PREFIX_DEFAULT):
     """Derives a Modular Crypt Format hash using the scrypt KDF
 
     Parameter space is smaller than for scrypt():

@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-# Copyright (c) 2014, Jan Varho
+# Copyright (c) 2014-2015, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -18,15 +16,19 @@
 
 
 import base64
-import ctypes, ctypes.util
+import ctypes
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
 import hashlib, hmac
 import numbers
 import platform
 import struct
+import sys
 
 from . import mcf as mcf_mod
-from .common import *
+from . import libsodium_load
+from .common import (
+    SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_7, SCRYPT_MCF_PREFIX_s1,
+    SCRYPT_MCF_PREFIX_DEFAULT, SCRYPT_MCF_PREFIX_ANY, check_args)
 
 if platform.python_implementation() == 'PyPy':
     from . import pypyscrypt_inline as scr_mod
@@ -34,24 +36,47 @@ else:
     from . import pylibsodium_salsa as scr_mod
 
 
-_libsodium_soname = ctypes.util.find_library('sodium')
-if _libsodium_soname is None:
-    raise ImportError('Unable to find libsodium')
+_lib = libsodium_load.get_libsodium()
+if _lib is None:
+    raise ImportError('Unable to load libsodium')
 
 try:
-    _libsodium = ctypes.CDLL(_libsodium_soname)
-    _scrypt = _libsodium.crypto_pwhash_scryptxsalsa208sha256
-    _scrypt_str = _libsodium.crypto_pwhash_scryptxsalsa208sha256_str
-    _scrypt_str_chk = _libsodium.crypto_pwhash_scryptxsalsa208sha256_str_verify
-    _scrypt_str_bytes = _libsodium.crypto_pwhash_scryptxsalsa208sha256_strbytes
-    _scrypt_salt = _libsodium.crypto_pwhash_scryptxsalsa208sha256_saltbytes
-    _scrypt_salt = _scrypt_salt()
-    if _scrypt_str_bytes() != 102:
-        raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
-except OSError:
-    raise ImportError('Unable to load libsodium: ' + _libsodium_soname)
+    _scrypt_ll = _lib.crypto_pwhash_scryptsalsa208sha256_ll
+    _scrypt_ll.argtypes = [
+        c_void_p,  # passwd
+        c_size_t,  # passwdlen
+        c_void_p,  # salt
+        c_size_t,  # saltlen
+        c_uint64,  # N
+        c_uint32,  # r
+        c_uint32,  # p
+        c_void_p,  # buf
+        c_size_t,  # buflen
+    ]
 except AttributeError:
-    raise ImportError('Incompatible libsodium: ' + _libsodium_soname)
+    _scrypt_ll = None
+
+try:
+    _scrypt = _lib.crypto_pwhash_scryptsalsa208sha256
+    _scrypt_str = _lib.crypto_pwhash_scryptsalsa208sha256_str
+    _scrypt_str_chk = _lib.crypto_pwhash_scryptsalsa208sha256_str_verify
+    _scrypt_str_bytes = _lib.crypto_pwhash_scryptsalsa208sha256_strbytes()
+    _scrypt_salt = _lib.crypto_pwhash_scryptsalsa208sha256_saltbytes()
+    if _scrypt_str_bytes != 102 and not _scrypt_ll:
+        raise ImportError('Incompatible libsodium: ' + _lib_soname)
+except AttributeError:
+    try:
+        _scrypt = _lib.crypto_pwhash_scryptxsalsa208sha256
+        _scrypt_str = _lib.crypto_pwhash_scryptxsalsa208sha256_str
+        _scrypt_str_chk = _lib.crypto_pwhash_scryptxsalsa208sha256_str_verify
+        _scrypt_str_bytes = _lib.crypto_pwhash_scryptxsalsa208sha256_strbytes()
+        _scrypt_salt = _lib.crypto_pwhash_scryptxsalsa208sha256_saltbytes
+        _scrypt_salt = _scrypt_salt()
+        if _scrypt_str_bytes != 102 and not _scrypt_ll:
+            raise ImportError('Incompatible libsodium: ' + _lib_soname)
+    except AttributeError:
+        if not _scrypt_ll:
+            raise ImportError('Incompatible libsodium: ' + _lib_soname)
 
 _scrypt.argtypes = [
     c_void_p,  # out
@@ -79,7 +104,7 @@ _scrypt_str_chk.argtypes = [
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
-    """Derives a 64-byte hash using the scrypt key-derivarion function
+    """Returns a key derived using the scrypt key-derivarion function
 
     N must be a power of two larger than 1 but no larger than 2 ** 63 (insane)
     r and p must be positive numbers such that r * p < 2 ** 30
@@ -98,6 +123,13 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     yet increase N if memory is plentiful.
     """
     check_args(password, salt, N, r, p, olen)
+
+    if _scrypt_ll:
+        out = ctypes.create_string_buffer(olen)
+        if _scrypt_ll(password, len(password), salt, len(salt),
+                      N, r, p, out, olen):
+            raise ValueError
+        return out.raw
 
     if len(salt) != _scrypt_salt or r != 8 or (p & (p - 1)) or (N*p <= 512):
         return scr_mod.scrypt(password, salt, N, r, p, olen)
@@ -134,7 +166,8 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
 
     if (salt is not None or r != 8 or (p & (p - 1)) or (N*p <= 512) or
         prefix not in (SCRYPT_MCF_PREFIX_7, SCRYPT_MCF_PREFIX_s1,
-                       SCRYPT_MCF_PREFIX_ANY)):
+                       SCRYPT_MCF_PREFIX_ANY) or
+        _scrypt_ll):
         return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
 
     s = next(i for i in range(1, 32) if 2**i == N)
@@ -155,7 +188,7 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
 
 def scrypt_mcf_check(mcf, password):
     """Returns True if the password matches the given MCF hash"""
-    if mcf_mod._scrypt_mcf_7_is_standard(mcf):
+    if mcf_mod._scrypt_mcf_7_is_standard(mcf) and not _scrypt_ll:
         return _scrypt_str_chk(mcf, password, len(password)) == 0
     return mcf_mod.scrypt_mcf_check(scrypt, mcf, password)
 

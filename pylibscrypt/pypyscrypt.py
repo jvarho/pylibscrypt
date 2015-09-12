@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2014 Richard Moore
-# Copyright (c) 2014 Jan Varho
+# Copyright (c) 2014-2015 Jan Varho
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +37,9 @@ import multiprocessing as mp
 import struct
 
 from . import mcf as mcf_mod
-from .common import *
+from .common import (
+    SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_DEFAULT, xrange,
+    check_args)
 
 
 # Python 3.4+ have PBKDF2 in hashlib, so use it...
@@ -170,7 +170,7 @@ parallelize_Nr = 2**10
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
-    """Derives a 64-byte hash using the scrypt key-derivarion function
+    """Returns a key derived using the scrypt key-derivarion function
 
     N must be a power of two larger than 1 but no larger than 2 ** 63 (insane)
     r and p must be positive numbers such that r * p < 2 ** 30

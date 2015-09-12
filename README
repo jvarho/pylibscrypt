@@ -13,8 +13,7 @@ Features
 * Not unusably slow, even in pure Python... at least with pypy[5].
 
 With PyPy as the interpreter the Python implementation is around one fifth the
-speed of C scrypt. With CPython it is one fiftieth if libsodium is available
-to accelerate Salsa20/8, one two-hundredth if not.
+speed of C scrypt. With CPython it is between about 50x and 250x slower.
 
 
 Requirements
@@ -23,8 +22,7 @@ Requirements
 * If you want speed, you should use one of:
   - libscrypt 1.8+ (older may work)
   - py-scrypt 0.6+ (pip install scrypt)
-  - libsodium 0.5+ and the $7$ prefix (see below)
-  - pypy
+  - libsodium 0.6+
 
 
 Usage
@@ -38,7 +36,7 @@ You most likely want to create MCF hashes and store them somewhere, then check
 user-entered passwords against those hashes. For that you only need to use two
 functions from the API:
 
-    from pylibscrypt import *
+    from pylibscrypt import scrypt_mcf, scrypt_mcf_check
     # Generate an MCF hash with random salt
     mcf = scrypt_mcf('Hello World')
     # Test it
@@ -50,8 +48,7 @@ For full API, you can try help(pylibscrypt) from python after importing.
 It is highly recommended that you use a random salt, i.e. don't pass one.
 
 Additionally, using the $7$ MCF format by calling with prefix=$7$ is recommended
-both because it will be made the default in a future release and because it
-allows using libsodium as a backend.
+because it may be made the default in a future release.
 
 
 Versioning
@@ -67,14 +64,16 @@ master.
 
 Development
 --
-Development happens on GitHub[2]. If you find a bug, please open an issue there.
+Development happens on GitHub[7]. If you find a bug, please open an issue there.
 
-tests.py tests both implementations with some quick tests. Running either
-implementation directly will also compare to scrypt test vectors from the paper
-but this is slow for the Python version unless you have pypy.
+Running pylibscrypt.tests will test all implementations with some quick tests.
+Running any implementation directly (e.g. pylibscrypt.pylibsodium) will also
+compare to scrypt test vectors from the paper but this is slow for the pure
+Python version (pypyscrypt) unless running with pypy.
 
-fuzz.py runs some basic fuzz tests with semi-randomly chosen inputs.
-
+Running 'make coverage' will run coverage tests. This requires coverage.py
+installed for both Python 2 and Python 3. That should be done on anything pushed
+for a pull request.
 
 [1]:https://xkcd.com/927/
 [2]:https://github.com/technion/libscrypt
@@ -82,5 +81,5 @@ fuzz.py runs some basic fuzz tests with semi-randomly chosen inputs.
 [4]:https://github.com/jedisct1/libsodium
 [5]:http://pypy.org/
 [6]:http://semver.org/spec/v2.0.0.html
-[7]:http://nedbatchelder.com/code/coverage/
+[7]:https://github.com/jvarho/pylibscrypt
 

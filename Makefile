@@ -5,8 +5,7 @@ all: inline
 inline: pylibscrypt/pypyscrypt_inline.py
 
 pylibscrypt/pypyscrypt_inline.py: pylibscrypt/inline.py pylibscrypt/pypyscrypt.py
-	pylibscrypt/inline.py
-	chmod +x pylibscrypt/pypyscrypt_inline.py
+	env python -m pylibscrypt.inline
 
 
 clean:

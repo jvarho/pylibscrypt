@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2014-2015, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
@@ -19,7 +17,6 @@
 import time
 import platform
 
-from .common import *
 from .pylibscrypt import scrypt
 from .pypyscrypt_inline import scrypt as pyscrypt
 from . import pypyscrypt_inline

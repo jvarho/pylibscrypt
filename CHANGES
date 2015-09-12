@@ -1,6 +1,44 @@
 Release History
 ==
 
+1.5.0
+--
+2015-9-7
+
+Feature release:
+- Handle dependency failures better
+- Improve test coverage
+- Misc. cleanups
+
+
+1.4.1
+--
+2015-3-27
+
+Bugfix release:
+- Fix missing import so Windows/Darwin may actually work
+
+
+1.4.0
+--
+2015-3-23
+
+Feature release:
+- Improve library loading on Windows and Darwin.
+- Obsolete libsodium_salsa implementation.
+
+
+1.3.0
+--
+2014-7-8
+
+Feature release:
+- Support for libsodium 0.6+ changes.
+- Use the low-level scrypt interface with libsodium so all calls are fast.
+- Support python3 when running tests.
+- Switch to the less verbose ISC license where possible
+
+
 1.2.1
 --
 2014-5-17

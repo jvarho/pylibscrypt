@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-# Copyright (c) 2014, Jan Varho
+# Copyright (c) 2014-2015, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -19,10 +17,16 @@
 
 import numbers
 
-from scrypt import hash as _scrypt
+try:
+    from scrypt import hash as _scrypt
+except ImportError:
+    raise
+except:
+    raise ImportError('scrypt module failed to import')
 
 from . import mcf as mcf_mod
-from .common import *
+from .common import (
+    SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_DEFAULT, check_args)
 
 
 # scrypt < 0.6 doesn't support hash length
@@ -33,7 +37,7 @@ except TypeError:
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
-    """Derives a 64-byte hash using the scrypt key-derivarion function
+    """Returns a key derived using the scrypt key-derivarion function
 
     N must be a power of two larger than 1 but no larger than 2 ** 63 (insane)
     r and p must be positive numbers such that r * p < 2 ** 30

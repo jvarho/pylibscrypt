@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-# Copyright (c) 2014, Jan Varho
+# Copyright (c) 2014-2015, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -21,7 +19,7 @@ import hashlib
 import hmac
 import struct
 
-from .common import *
+from .common import xrange
 
 
 def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
