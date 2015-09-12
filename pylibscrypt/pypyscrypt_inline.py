@@ -186,7 +186,7 @@ def smix_mp(Bl, r, N):
     return Bl
 
 
-scrypt_mp_pool = mp.Pool()
+scrypt_mp_pool = None
 
 
 def scrypt_mp(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
