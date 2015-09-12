@@ -423,7 +423,8 @@ if __name__ == "__main__":
         tmp = type(
             'pylibsodiumFallbackTests', (ScryptTests,),
             {
-                'module': pylibsodium, 'fast': False,
+                'module': pylibsodium,
+                'fast': False, # supports only large parameters
                 'set_up_lambda': set_up_ll,
                 'tear_down_lambda': tear_down_ll,
             }
