@@ -41,11 +41,11 @@ tt = time.time()
 times = []
 for i in xrange(Nmin, Nmax+1):
     b = pyscrypt(N=2**i, **kwargs)
-    if time.time() - t1 > tmin:
-        Nmax = i
-        break
     times.append(time.time()-tt)
     tt = time.time()
+    if tt - t1 > tmin:
+        Nmax = i
+        break
 t1 = time.time() - t1
 print('Using N = 2**%d,..., 2**%d' % (Nmin, Nmax))
 print('Single-threaded scrypt took %.2fs' % t1, times)
@@ -61,6 +61,17 @@ for i in xrange(Nmin, Nmax+1):
     tt = time.time()
 t2 = time.time() - t2
 print('Multiprocessing scrypt took %.2fs' % t2, times)
+
+# libsodium
+t3 = time.time()
+tt = time.time()
+times = []
+for i in xrange(Nmin, Nmax+1):
+    a = scrypt(N=2**i, **kwargs)
+    times.append(time.time()-tt)
+    tt = time.time()
+t3 = time.time() - t3
+print('libsodium-based scrypt took %.2fs' % t3, times)
 
 assert a == b
 
