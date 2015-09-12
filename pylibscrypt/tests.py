@@ -427,6 +427,20 @@ if __name__ == "__main__":
     try:
         from . import pypyscrypt_inline as pypyscrypt
         suite.addTest(load_scrypt_suite('pypyscryptTests', pypyscrypt, True))
+        def set_up_mp(self):
+            self._mpt = (self.module.parallelize_p, self.module.parallelize_Nr)
+            self.module.parallelize_p, self.module.parallelize_Nr = 1, 1
+        def tear_down_mp(self):
+            self.module.parallelize_p, self.module.parallelize_Nr = self._mpt
+        tmp = type(
+            'pypyscryptMPTests', (ScryptTests,),
+            {
+                'module': pypyscrypt, 'fast': True,
+                'set_up_lambda': set_up_mp,
+                'tear_down_lambda': tear_down_mp,
+            }
+        )
+        suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(tmp))
     except ImportError:
         suite.addTest(load_scrypt_suite('pypyscryptTests', None, True))
 
