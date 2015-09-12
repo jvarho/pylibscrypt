@@ -147,21 +147,18 @@ def scrypt_mp(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     global scrypt_mp_pool
     if not scrypt_mp_pool:
         scrypt_mp_pool = mp.Pool()
-    try:
-        B  = _pbkdf2('sha256', password, salt, 1, p * 128 * r)
-        B  = struct.unpack('<%dI' % (len(B) // 4), B)
-        Bp = []
-        pool = scrypt_mp_pool
-        work = []
-        for i in xrange(1, p):
-            work.append(pool.apply_async(smix_mp, args=(B[i*32*r:(i+1)*32*r], r, N)))
-        B = smix_mp(B[:32*r], r, N)
-        for i in work:
-            B += i.get()
-        B = struct.pack('<%dI' % len(B), *B)
-        return _pbkdf2('sha256', password, B, 1, olen)
-    except (MemoryError, OverflowError):
-        raise ValueError("scrypt parameters don't fit in memory")
+    B  = _pbkdf2('sha256', password, salt, 1, p * 128 * r)
+    B  = struct.unpack('<%dI' % (len(B) // 4), B)
+    Bp = []
+    pool = scrypt_mp_pool
+    work = []
+    for i in xrange(1, p):
+        work.append(pool.apply_async(smix_mp, args=(B[i*32*r:(i+1)*32*r], r, N)))
+    B = smix_mp(B[:32*r], r, N)
+    for i in work:
+        B += i.get()
+    B = struct.pack('<%dI' % len(B), *B)
+    return _pbkdf2('sha256', password, B, 1, olen)
 
 
 # Minimum p and N*r to parallelize (False will disable)
@@ -194,8 +191,8 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     if parallelize_p and p >= parallelize_p and N*r >= parallelize_Nr:
         try:
             return scrypt_mp(password, salt, N=N, r=r, p=p, olen=olen)
-        except MemoryError:
-            pass
+        except (MemoryError, OverflowError):
+            pass # try again single threaded, which requires less memory
 
     # Everything is lists of 32-bit uints for all but pbkdf2
     try:
