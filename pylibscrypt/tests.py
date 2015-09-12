@@ -54,6 +54,7 @@ class ScryptTests(unittest.TestCase):
             self.assertFalse(self.module.scrypt_mcf_check(m, b'x' + pw))
 
     def test_vector0(self):
+        # From http://www.tarsnap.com/scrypt/scrypt.pdf Appendix B
         self._test_vector((
             b'', b'', 16, 1, 1,
             b'77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442'
@@ -62,6 +63,8 @@ class ScryptTests(unittest.TestCase):
         ))
 
     def test_vector1(self):
+        # From http://www.tarsnap.com/scrypt/scrypt.pdf Appendix B
+        # with MCF added
         if self.fast:
             self.skipTest('slow testcase')
         self._test_vector((
@@ -73,6 +76,8 @@ class ScryptTests(unittest.TestCase):
         ))
 
     def test_vector2(self):
+        # From http://www.tarsnap.com/scrypt/scrypt.pdf Appendix B
+        # with MCF added
         if self.fast:
             self.skipTest('slow testcase')
         self._test_vector((
@@ -84,6 +89,16 @@ class ScryptTests(unittest.TestCase):
         ))
 
     def test_vector3(self):
+        # From http://www.tarsnap.com/scrypt/scrypt.pdf Appendix B
+        self.skipTest('very slow testcase')
+        self._test_vector((
+            b'pleaseletmein', b'SodiumChloride', 1048576, 8, 1,
+            b'2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa47'
+            b'8e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4',
+            None
+        ))
+
+    def test_vector4(self):
         self._test_vector((
             b'password', b'NaCl', 2, 8, 1,
             b'e5ed8edc019edfef2d3ced0896faf9eec6921dcc68125ce81c10d53474ce'
@@ -93,7 +108,7 @@ class ScryptTests(unittest.TestCase):
             b'G+VFl5FZcA0yTnfGjTTFU2NqhCnE88mblWZGaHf53KK5Kw=='
         ))
 
-    def test_vector4(self):
+    def test_vector5(self):
         self._test_vector((
             b'pleaseletmein', b'SodiumChloride', 4, 1, 1,
             b'BB1D77016C543A99FE632C9C43C60180FD05E0CAC8B29374DBD1854569CB'
@@ -103,7 +118,7 @@ class ScryptTests(unittest.TestCase):
             b'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9w=='
         ))
 
-    def test_vector5(self):
+    def test_vector6(self):
         if self.fast:
             self.skipTest('slow testcase')
         self._test_vector((
@@ -114,7 +129,7 @@ class ScryptTests(unittest.TestCase):
             None
         ))
 
-    def test_vector6(self):
+    def test_vector7(self):
         self._test_vector((
             b'pa\0ss', b'salt'*4, 32, 2, 2,
             b'76c5260f1dc6339512ae87143d799089f5b508c823c870a3d55f641efa84'
@@ -123,7 +138,7 @@ class ScryptTests(unittest.TestCase):
             None
         ))
 
-    def test_vector7(self):
+    def test_vector8(self):
         if self.fast:
             self.skipTest('slow testcase')
         self._test_vector((
