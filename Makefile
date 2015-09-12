@@ -17,19 +17,19 @@ distclean: clean
 	rm -rf MANIFEST build/ dist/
 
 
-test:
+test: inline
 	env python -m pylibscrypt.tests
 
 
-fuzz:
+fuzz: inline
 	env python -m pylibscrypt.fuzz
 
 
-coverage:
+coverage: inline
 	./run_coverage.sh
 
 
-bench:
+bench: inline
 	env python -m pylibscrypt.bench
 
 
