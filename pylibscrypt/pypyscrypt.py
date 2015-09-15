@@ -32,7 +32,6 @@
 # https://github.com/wg/scrypt
 
 
-import hashlib, hmac
 import struct
 
 from . import mcf as mcf_mod
@@ -42,9 +41,9 @@ from .common import (
 
 
 # Python 3.4+ have PBKDF2 in hashlib, so use it...
-if 'pbkdf2_hmac' in dir(hashlib):
-    _pbkdf2 = hashlib.pbkdf2_hmac
-else:
+try:
+    from hashlib import pbkdf2_hmac as _pbkdf2
+except ImportError:
     # but fall back to Python implementation in < 3.4
     from pbkdf2 import pbkdf2_hmac as _pbkdf2
 

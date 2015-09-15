@@ -28,7 +28,6 @@ Obsolete, will be removed in 2.0.
 import base64
 import ctypes
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
-import hashlib, hmac
 import numbers
 import struct
 import sys
@@ -58,9 +57,9 @@ _libsodium_salsa20_8.argtypes = [
 
 
 # Python 3.4+ have PBKDF2 in hashlib, so use it...
-if 'pbkdf2_hmac' in dir(hashlib):
-    _pbkdf2 = hashlib.pbkdf2_hmac
-else:
+try:
+    from hashlib import pbkdf2_hmac as _pbkdf2
+except ImportError:
     # but fall back to Python implementation in < 3.4
     from pbkdf2 import pbkdf2_hmac as _pbkdf2
 
