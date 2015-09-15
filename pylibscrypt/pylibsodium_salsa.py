@@ -25,12 +25,9 @@ Obsolete, will be removed in 2.0.
 """
 
 
-import base64
 import ctypes
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
-import numbers
 import struct
-import sys
 
 from . import mcf as mcf_mod
 from . import libsodium_load
