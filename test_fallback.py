@@ -21,19 +21,38 @@ import sys
 if '-p' in sys.argv:
     platform.python_implementation = lambda:'PyPy'
 
-def unimport():
+def raises(e):
+    def raising(*arg, **kwarg):
+        raise e
+    return raising
+
+def unimport(mod=None):
     del sys.modules['pylibscrypt']
     sys.modules.pop('pylibscrypt.common', None)
     sys.modules.pop('pylibscrypt.mcf', None)
     sys.modules.pop('pylibscrypt.libsodium_load', None)
+    if mod is not None:
+        sys.modules.pop(mod, None)
 
 tmp1 = ctypes.util.find_library
 tmp2 = ctypes.cdll.LoadLibrary
+tmp3 = ctypes.CDLL
 ctypes.util.find_library = lambda *args, **kw: None
 ctypes.cdll.LoadLibrary = lambda *args, **kw: None
 import pylibscrypt
 ctypes.util.find_library = tmp1
 ctypes.cdll.LoadLibrary = tmp2
+unimport('pylibscrypt.pylibscrypt')
+ctypes.CDLL = lambda *args, **kw: None
+import pylibscrypt
+unimport('pylibscrypt.pylibscrypt')
+ctypes.CDLL = raises(OSError)
+import pylibscrypt
+ctypes.CDLL = tmp3
+
+unimport('pylibscrypt.pylibscrypt')
+ctypes.CDLL = lambda *args, **kw: None
+import pylibscrypt
 
 unimport()
 sys.modules['pylibscrypt.pylibscrypt'] = None
