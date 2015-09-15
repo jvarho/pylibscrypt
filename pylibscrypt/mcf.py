@@ -242,5 +242,8 @@ def scrypt_mcf_check(scrypt, mcf, password):
 
     N, r, p, salt, hash, hlen = _scrypt_mcf_decode(mcf)
     h = scrypt(password, salt, N=N, r=r, p=p, olen=hlen)
-    return hash == h
+    cmp = 0
+    for i, j in zip(bytearray(h), bytearray(hash)):
+        cmp |= i ^ j
+    return cmp == 0
 
