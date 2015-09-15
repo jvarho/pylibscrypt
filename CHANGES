@@ -1,6 +1,14 @@
 Release History
 ==
 
+1.5.1
+--
+2015-9-15
+
+Bugfix release:
+- Compare MCF hashes in constant time
+
+
 1.5.0
 --
 2015-9-7
