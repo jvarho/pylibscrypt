@@ -4,9 +4,9 @@ exclude_lines =
     if __name__ == .__main__.:
 
     # Untestable from a working environment
-    except AttributeError:
-    except OSError:
-    except TypeError
+    #except AttributeError:
+    #except OSError:
+    #except TypeError
 
-omit = /usr/*,pylibscrypt/libsodium_load.py
+omit = /build/*,/usr/*,pylibscrypt/libsodium_load.py
 
