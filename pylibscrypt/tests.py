@@ -362,10 +362,12 @@ class PBKDF2Tests(unittest.TestCase):
         self.assertEquals(self.module.pbkdf2_hmac(n, p, s, c, l), h)
 
     def test_vector1(self):
+        # From RFC 6070
         self._test_vector(('sha1', b'password', b'salt', 1, 20,
                            b'0c60c80f961f0e71f3a9b524af6012062fe037a6'))
 
     def test_vector2(self):
+        # From RFC 6070
         self._test_vector(('sha1', b'pass\0word', b'sa\0lt', 4096, 16,
                            b'56fa6aa75548099dcc37d7f03425e0c3'))
 
