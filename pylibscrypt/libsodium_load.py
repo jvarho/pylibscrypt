@@ -49,7 +49,13 @@ def get_libsodium():
         try:
             return ctypes.cdll.LoadLibrary('libsodium.dylib')
         except OSError:
-            pass
+            try:
+                libidx = __file__.find('lib')
+                if libidx > 0:
+                    libpath = __file__[0:libidx+3] + '/libsodium.dylib'
+                    return ctypes.cdll.LoadLibrary(libpath)
+            except OSError:
+                pass
     else:
         try:
             return ctypes.cdll.LoadLibrary('libsodium.so')
