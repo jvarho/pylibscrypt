@@ -1,6 +1,14 @@
 Release History
 ==
 
+1.5.2
+--
+2015-12-22
+
+Bugfix release:
+- Fix library loading on OS/X with packaged apps
+
+
 1.5.1
 --
 2015-9-15
