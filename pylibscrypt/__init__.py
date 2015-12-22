@@ -14,7 +14,7 @@
 
 """Scrypt for Python"""
 
-__version__ = '1.5.1'
+__version__ = '1.5.2'
 
 # First, try loading libscrypt
 _done = False
