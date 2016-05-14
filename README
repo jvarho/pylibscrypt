@@ -47,9 +47,6 @@ For full API, you can try help(pylibscrypt) from python after importing.
 
 It is highly recommended that you use a random salt, i.e. don't pass one.
 
-Additionally, using the $7$ MCF format by calling with prefix=$7$ is recommended
-because it may be made the default in a future release.
-
 
 Versioning
 --
