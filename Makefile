@@ -9,12 +9,13 @@ pylibscrypt/pypyscrypt_inline.py: pylibscrypt/inline.py pylibscrypt/pypyscrypt.p
 
 
 clean:
-	rm -f *~ *.pyc *,cover pylibscrypt/*~ pylibscrypt/*.pyc pylibscrypt/*,cover
-	rm -rf __pycache__/ pylibscrypt/__pycache__/
+	rm -f *~ .*~ *.pyc *,cover .coverage pylibscrypt/*~ pylibscrypt/*.pyc pylibscrypt/*,cover
+	rm -rf __pycache__/ pylibscrypt/__pycache__/ htmlcov/
 
 
 distclean: clean
-	rm -rf MANIFEST build/ dist/
+	rm -f MANIFEST
+	rm -rf build/ dist/
 
 
 test: inline
