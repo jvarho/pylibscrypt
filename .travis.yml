@@ -1,0 +1,23 @@
+language: python
+
+sudo: required
+
+dist: trusty
+
+python:
+    - "2.7"
+    - "3.4"
+    - "pypy"
+
+addons:
+    apt:
+        packages:
+            libscrypt-dev
+
+install:
+    - make
+    - pip install scrypt
+
+script:
+    - make test
+
