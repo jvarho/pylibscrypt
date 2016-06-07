@@ -1,6 +1,8 @@
 Scrypt for Python
 ==
 
+[![Build Status](https://travis-ci.org/jvarho/pylibscrypt.svg)](https://travis-ci.org/jvarho/pylibscrypt)
+
 There are a lot of different scrypt modules for Python, but none of them have
 everything that I'd like, so here's One More[1].
 
