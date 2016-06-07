@@ -6,9 +6,10 @@ Release History
 ???
 
 Feature release:
+- Travis CI integration
 - Improved test coverage
 - Code and build cleanups
-- Bug fixes
+- Bug fixes from 1.5.x
 
 
 1.5.2
