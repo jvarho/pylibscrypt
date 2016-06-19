@@ -12,6 +12,14 @@ Feature release:
 - Bug fixes from 1.5.x
 
 
+1.5.3
+--
+2015-06-19
+
+Bugfix release:
+- Fix libsodium incompatibility fallback
+
+
 1.5.2
 --
 2015-12-22

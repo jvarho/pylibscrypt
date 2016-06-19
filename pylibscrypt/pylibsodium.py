@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015, Jan Varho
+# Copyright (c) 2014-2016, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -63,7 +63,7 @@ try:
     _scrypt_str_bytes = _lib.crypto_pwhash_scryptsalsa208sha256_strbytes()
     _scrypt_salt = _lib.crypto_pwhash_scryptsalsa208sha256_saltbytes()
     if _scrypt_str_bytes != 102 and not _scrypt_ll:
-        raise ImportError('Incompatible libsodium: ' + _lib_soname)
+        raise ImportError('Incompatible libsodium')
 except AttributeError:
     try:
         _scrypt = _lib.crypto_pwhash_scryptxsalsa208sha256
@@ -73,10 +73,10 @@ except AttributeError:
         _scrypt_salt = _lib.crypto_pwhash_scryptxsalsa208sha256_saltbytes
         _scrypt_salt = _scrypt_salt()
         if _scrypt_str_bytes != 102 and not _scrypt_ll:
-            raise ImportError('Incompatible libsodium: ' + _lib_soname)
+            raise ImportError('Incompatible libsodium')
     except AttributeError:
         if not _scrypt_ll:
-            raise ImportError('Incompatible libsodium: ' + _lib_soname)
+            raise ImportError('Incompatible libsodium')
 
 _scrypt.argtypes = [
     c_void_p,  # out
