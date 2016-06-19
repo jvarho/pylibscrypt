@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015, Jan Varho
+# Copyright (c) 2014-2016, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -14,8 +14,6 @@
 
 """Scrypt implementation that calls into the 'scrypt' python module"""
 
-
-import numbers
 
 try:
     from scrypt import hash as _scrypt

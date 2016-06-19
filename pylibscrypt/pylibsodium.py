@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015, Jan Varho
+# Copyright (c) 2014-2016, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -15,14 +15,9 @@
 """Scrypt implementation that calls into system libsodium"""
 
 
-import base64
 import ctypes
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
-import hashlib, hmac
-import numbers
 import platform
-import struct
-import sys
 
 from . import mcf as mcf_mod
 from . import libsodium_load
