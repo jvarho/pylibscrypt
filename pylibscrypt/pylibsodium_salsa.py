@@ -26,7 +26,7 @@ Obsolete, will be removed in 2.0.
 
 
 import ctypes
-from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
+from ctypes import c_void_p
 import struct
 
 from . import mcf as mcf_mod
@@ -58,7 +58,7 @@ try:
     from hashlib import pbkdf2_hmac as _pbkdf2
 except ImportError:
     # but fall back to Python implementation in < 3.4
-    from pbkdf2 import pbkdf2_hmac as _pbkdf2
+    from .pbkdf2 import pbkdf2_hmac as _pbkdf2
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):

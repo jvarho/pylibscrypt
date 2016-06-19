@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015, Jan Varho
+# Copyright (c) 2014-2016, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -16,8 +16,9 @@
 
 
 import base64
-import ctypes, ctypes.util
+import ctypes
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32
+from ctypes.util import find_library
 import os
 
 from .common import (
@@ -26,7 +27,7 @@ from .common import (
 from . import mcf as mcf_mod
 
 
-_libscrypt_soname = ctypes.util.find_library('scrypt')
+_libscrypt_soname = find_library('scrypt')
 if _libscrypt_soname is None:
     raise ImportError('Unable to find libscrypt')
 
