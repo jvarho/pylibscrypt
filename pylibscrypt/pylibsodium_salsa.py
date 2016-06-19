@@ -1,5 +1,5 @@
 # Copyright (c) 2014 Richard Moore
-# Copyright (c) 2014-2015 Jan Varho
+# Copyright (c) 2014-2016 Jan Varho
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +47,7 @@ if _libsodium is None:
 try:
     _libsodium_salsa20_8 = _libsodium.crypto_core_salsa208
 except AttributeError:
-    raise ImportError('Incompatible libsodium: ')
+    raise ImportError('Incompatible libsodium')
 
 _libsodium_salsa20_8.argtypes = [
     c_void_p,  # out (16*4 bytes)
