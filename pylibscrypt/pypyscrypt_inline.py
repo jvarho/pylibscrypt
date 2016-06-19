@@ -1,7 +1,7 @@
 # Automatically generated file, see inline.py
 
 # Copyright (c) 2014 Richard Moore
-# Copyright (c) 2014-2015 Jan Varho
+# Copyright (c) 2014-2016 Jan Varho
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +47,7 @@ try:
     from hashlib import pbkdf2_hmac as _pbkdf2
 except ImportError:
     # but fall back to Python implementation in < 3.4
-    from pbkdf2 import pbkdf2_hmac as _pbkdf2
+    from .pbkdf2 import pbkdf2_hmac as _pbkdf2
 
 
 def blockxor(source, s_start, dest, d_start, length):
