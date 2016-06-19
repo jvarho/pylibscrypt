@@ -22,8 +22,8 @@ import unittest
 
 class ScryptTests(unittest.TestCase):
     """Tests an scrypt implementation from module"""
-    set_up_lambda = None
-    tear_down_lambda = None
+    set_up_lambda = lambda self:None
+    tear_down_lambda = lambda self:None
     replace_scrypt_mcf = None
     module = None
     fast = False
@@ -31,12 +31,10 @@ class ScryptTests(unittest.TestCase):
     def setUp(self):
         if not self.module:
             self.skipTest('module not tested')
-        if self.set_up_lambda:
-            self.set_up_lambda()
+        self.set_up_lambda()
 
     def tearDown(self):
-        if self.tear_down_lambda:
-            self.tear_down_lambda()
+        self.tear_down_lambda()
         if self.replace_scrypt_mcf:
             self.module._libscrypt_mcf = self.replace_scrypt_mcf
             self.replace_scrypt_mcf = None
