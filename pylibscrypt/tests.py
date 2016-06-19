@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015, Jan Varho
+# Copyright (c) 2014-2016, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -25,6 +25,8 @@ class ScryptTests(unittest.TestCase):
     set_up_lambda = None
     tear_down_lambda = None
     replace_scrypt_mcf = None
+    module = None
+    fast = False
 
     def setUp(self):
         if not self.module:
@@ -352,6 +354,8 @@ def run_scrypt_suite(module, fast=False):
 
 class PBKDF2Tests(unittest.TestCase):
     """Tests a PBKDF2 implementation from module"""
+    module = None
+
     def setUp(self):
         if not self.module:
             self.skipTest('module not tested')
