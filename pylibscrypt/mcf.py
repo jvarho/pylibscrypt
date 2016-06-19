@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015, Jan Varho
+# Copyright (c) 2014-2016, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -40,7 +40,8 @@ not verify.
 """
 
 
-import base64, binascii
+import base64
+import binascii
 import os
 import struct
 
@@ -166,9 +167,9 @@ def _scrypt_mcf_decode_7(mcf):
     h64 = bytearray(s[3])
     try:
         N = 2 ** _icb64[s64[0]]
-        r = (_icb64[s64[1]] + (_icb64[s64[2]] << 6) + (_icb64[s64[3]] << 12) + 
+        r = (_icb64[s64[1]] + (_icb64[s64[2]] << 6) + (_icb64[s64[3]] << 12) +
              (_icb64[s64[4]] << 18) + (_icb64[s64[5]] << 24))
-        p = (_icb64[s64[6]] + (_icb64[s64[7]] << 6) + (_icb64[s64[8]] << 12) + 
+        p = (_icb64[s64[6]] + (_icb64[s64[7]] << 6) + (_icb64[s64[8]] << 12) +
              (_icb64[s64[9]] << 18) + (_icb64[s64[10]] << 24))
         salt = bytes(s64[11:])
         hash = bytes(_cb64dec(h64))
