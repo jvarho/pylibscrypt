@@ -16,16 +16,25 @@
 
 __version__ = '1.6.0-git'
 
-# First, try loading libscrypt
+# First, try hashlib
 _done = False
 try:
-    from .pylibscrypt import *
+    from .hashlibscrypt import *
 except ImportError:
     pass
 else:
     _done = True
 
-# If that didn't work, try the scrypt module
+# If that didn't work, try loading libscrypt
+if not _done:
+    try:
+        from .pylibscrypt import *
+    except ImportError:
+        pass
+    else:
+        _done = True
+
+# Next: try the scrypt module
 if not _done:
     try:
         from .pyscrypt import *

@@ -397,6 +397,12 @@ def run_pbkdf2_suite(module, fast=False):
 if __name__ == "__main__":
     suite = unittest.TestSuite()
     try:
+        from . import hashlibscrypt
+        suite.addTest(load_scrypt_suite('hashlibscryptTests', hashlibscrypt, True))
+    except ImportError:
+        suite.addTest(load_scrypt_suite('hashlibscryptTests', None, True))
+
+    try:
         from . import pylibscrypt
         suite.addTest(load_scrypt_suite('pylibscryptTests', pylibscrypt, True))
     except ImportError:
