@@ -3,13 +3,13 @@ Release History
 
 1.6.0
 --
-???
+2017-01-04
 
 Feature release:
+- Use hashlib.scrypt on Python 3.6 + OpenSSL 1.1
 - Travis CI integration
 - Improved test coverage
 - Code and build cleanups
-- Bug fixes from 1.5.x
 
 
 1.5.3

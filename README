@@ -10,9 +10,10 @@ everything that I'd like, so here's One More[1].
 
 Features
 --
-* Uses system libscrypt[2] as the first choice.
-* If that isn't available, tries the scrypt Python module[3] or libsodium[4].
-* Offers a pure Python scrypt implementation for when there's no C scrypt.
+* Uses hashlib.scrypt on Python 3.6 and OpenSSL 1.1.
+* Uses system libscrypt[2] as the next choice.
+* If neither is available, tries the scrypt Python module[3] or libsodium[4].
+* Offers a pure Python scrypt implementation for when there is no C scrypt.
 * Not unusably slow, even in pure Python... at least with pypy[5].
 
 With PyPy as the interpreter the Python implementation is around one fifth the
@@ -26,6 +27,7 @@ Requirements
   - libscrypt 1.8+ (older may work)
   - py-scrypt 0.6+ (pip install scrypt)
   - libsodium 0.6+
+  - Python 3.6+ with OpenSSL 1.1+
 
 
 Usage
