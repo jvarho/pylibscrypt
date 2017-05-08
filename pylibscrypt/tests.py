@@ -149,6 +149,18 @@ class ScryptTests(unittest.TestCase):
             None
         ))
 
+    def test_maxmem(self):
+        """Tests hashlib maxmem, quite slow"""
+        if self.fast:
+            self.skipTest('slow testcase')
+        self._test_vector((
+            b'pleaseletmein', b'X'*32, 2**15, 8, 2,
+            b'12e88b08ea7a534fb4bc97be54ebdcb93516efe73b3cff901a7ad565b1ae'
+            b'511cd881b569bd9b65ed006f8ace0fbd75534035395e5967a340f0a4586e'
+            b'f79e8ab1',
+            None
+        ))
+
     def test_bytes_enforced(self):
         self.assertRaises(TypeError, self.module.scrypt, u'pass', b'salt')
         self.assertRaises(TypeError, self.module.scrypt, 42, b'salt')
