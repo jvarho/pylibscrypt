@@ -48,9 +48,12 @@ def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
     """
     check_args(password, salt, N, r, p, olen)
 
+    # Set the memory required based on parameter values
+    m = 128 * r * (N + p + 2)
+
     try:
         return _scrypt(
-            password=password, salt=salt, n=N, r=r, p=p, maxmem=0, dklen=olen)
+            password=password, salt=salt, n=N, r=r, p=p, maxmem=m, dklen=olen)
     except:
         raise ValueError
 
