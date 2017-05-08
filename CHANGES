@@ -1,6 +1,13 @@
 Release History
 ==
 
+1.6.1
+--
+2017-05-08
+
+Bugfix release:
+- Fix hashlib.scrypt calls with large values
+
 1.6.0
 --
 2017-01-04
