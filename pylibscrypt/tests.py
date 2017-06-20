@@ -162,11 +162,33 @@ class ScryptTests(unittest.TestCase):
         ))
 
     def test_bytes_enforced(self):
-        self.assertRaises(TypeError, self.module.scrypt, u'pass', b'salt')
-        self.assertRaises(TypeError, self.module.scrypt, 42, b'salt')
-        self.assertRaises(TypeError, self.module.scrypt, b'pass', None)
-        self.assertRaises(TypeError, self.module.scrypt_mcf, u'mcf', b'pass')
-        self.assertRaises(TypeError, self.module.scrypt_mcf, object, b'pass')
+        assertError = self.assertRaisesRegexp
+        self.assertRaisesRegexp(TypeError, 'password',
+                                self.module.scrypt, u'pass', b'salt')
+        self.assertRaisesRegexp(TypeError, 'password',
+                                self.module.scrypt, 42, b'salt')
+        self.assertRaisesRegexp(TypeError, 'salt',
+                                self.module.scrypt, b'pass', None)
+
+    def test_mcf_bytes_enforced(self):
+        self.assertRaisesRegexp(TypeError, 'password',
+                                self.module.scrypt_mcf, u'pass', b'salt')
+        self.assertRaisesRegexp(TypeError, 'password',
+                                self.module.scrypt_mcf, object)
+        self.assertRaisesRegexp(TypeError, 'salt',
+                                self.module.scrypt_mcf, b'pass', u'salt')
+        mcf = (
+            b'$s1$020101$U29kaXVtQ2hsb3JpZGU=$ux13AWxUOpn+YyycQ8YBgP0F4MrI'
+            b'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9w=='
+        )
+        self.assertRaisesRegexp(TypeError, 'password',
+                                self.module.scrypt_mcf_check, mcf, u'blah')
+        umcf = (
+            u'$s1$020101$U29kaXVtQ2hsb3JpZGU=$ux13AWxUOpn+YyycQ8YBgP0F4MrI'
+            u'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9w=='
+        )
+        self.assertRaisesRegexp(TypeError, 'MCF',
+                                self.module.scrypt_mcf_check, umcf, b'blah')
 
     def test_salt_length_mcf(self):
         pw = b'pass'
