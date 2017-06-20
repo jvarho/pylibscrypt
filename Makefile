@@ -37,3 +37,6 @@ bench: inline
 pypi-upload:
 	env python setup.py sdist upload
 
+docker-run:
+	docker build -t pylibscrypt .
+	docker run -v ${PWD}/htmlcov:/app/htmlcov pylibscrypt
