@@ -2,26 +2,15 @@ language: python
 
 sudo: required
 
-dist: trusty
-
 branches:
     only:
         - master
 
-python:
-    - "2.7"
-    - "3.4"
-    - "pypy"
-
-addons:
-    apt:
-        packages:
-            libscrypt-dev
+services:
+    - docker
 
 install:
-    - make
-    - pip install scrypt
+    - docker build -t pylibscrypt .
 
 script:
-    - make test
-
+    - docker run pylibscrypt
