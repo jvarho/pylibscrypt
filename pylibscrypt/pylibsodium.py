@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016, Jan Varho
+# Copyright (c) 2014-2017, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -152,6 +152,8 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
 
     If no salt is given, a random salt of 128+ bits is used. (Recommended.)
     """
+    if not isinstance(password, bytes):
+        raise TypeError('password must be a byte string')
     if N < 2 or (N & (N - 1)):
         raise ValueError('scrypt N must be a power of 2 greater than 1')
     if p > 255 or p < 1:

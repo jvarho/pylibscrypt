@@ -162,11 +162,19 @@ class ScryptTests(unittest.TestCase):
         ))
 
     def test_bytes_enforced(self):
-        self.assertRaises(TypeError, self.module.scrypt, u'pass', b'salt')
-        self.assertRaises(TypeError, self.module.scrypt, 42, b'salt')
-        self.assertRaises(TypeError, self.module.scrypt, b'pass', None)
-        self.assertRaises(TypeError, self.module.scrypt_mcf, u'mcf', b'pass')
-        self.assertRaises(TypeError, self.module.scrypt_mcf, object, b'pass')
+        assertError = self.assertRaisesRegexp
+        self.assertRaisesRegexp(TypeError, 'password',
+                                self.module.scrypt, u'pass', b'salt')
+        self.assertRaisesRegexp(TypeError, 'password',
+                                self.module.scrypt, 42, b'salt')
+        self.assertRaisesRegexp(TypeError, 'salt',
+                                self.module.scrypt, b'pass', None)
+        self.assertRaisesRegexp(TypeError, 'password',
+                                self.module.scrypt_mcf, u'pass', b'salt')
+        self.assertRaisesRegexp(TypeError, 'password',
+                                self.module.scrypt_mcf, object)
+        self.assertRaisesRegexp(TypeError, 'salt',
+                                self.module.scrypt_mcf, b'pass', u'salt')
 
     def test_salt_length_mcf(self):
         pw = b'pass'

@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016, Jan Varho
+# Copyright (c) 2014-2017, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -111,6 +111,8 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
     """
     if (prefix != SCRYPT_MCF_PREFIX_s1 and prefix != SCRYPT_MCF_PREFIX_ANY):
         return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
+    if not isinstance(password, bytes):
+        raise TypeError('password must be a byte string')
     if salt is None:
         salt = os.urandom(16)
     elif not (1 <= len(salt) <= 16):
