@@ -14,7 +14,7 @@
 
 """Scrypt for Python"""
 
-__version__ = '1.6.0'
+__version__ = '1.7.0-git'
 
 # First, try hashlib
 _done = False
