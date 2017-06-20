@@ -241,9 +241,9 @@ def scrypt_mcf_check(scrypt, mcf, password):
     Supports both the libscrypt $s1$ format and the $7$ format.
     """
     if not isinstance(mcf, bytes):
-        raise TypeError
+        raise TypeError('MCF must be a byte string')
     if not isinstance(password, bytes):
-        raise TypeError
+        raise TypeError('password must be a byte string')
 
     N, r, p, salt, hash, hlen = _scrypt_mcf_decode(mcf)
     h = scrypt(password, salt, N=N, r=r, p=p, olen=hlen)

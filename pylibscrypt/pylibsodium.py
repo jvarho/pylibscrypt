@@ -185,6 +185,8 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
 
 def scrypt_mcf_check(mcf, password):
     """Returns True if the password matches the given MCF hash"""
+    if not isinstance(mcf, bytes):
+        raise TypeError('MCF must be a byte string')
     if mcf_mod._scrypt_mcf_7_is_standard(mcf) and not _scrypt_ll:
         return _scrypt_str_chk(mcf, password, len(password)) == 0
     return mcf_mod.scrypt_mcf_check(scrypt, mcf, password)
