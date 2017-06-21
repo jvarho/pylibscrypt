@@ -10,7 +10,7 @@ services:
     - docker
 
 install:
-    - docker build -t pylibscrypt .
+    - docker pull jvarho/pylibscrypt
 
 script:
-    - docker run pylibscrypt
+    - docker run -v ${PWD}:/app jvarho/pylibscrypt
