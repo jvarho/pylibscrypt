@@ -37,3 +37,15 @@ bench: inline
 pypi-upload:
 	env python setup.py sdist upload
 
+
+docker-build:
+	docker build -t pylibscrypt .
+
+
+docker-run: docker-build
+	docker run -v ${PWD}:/app pylibscrypt
+
+
+docker-push: docker-build
+	docker tag pylibscrypt jvarho/pylibscrypt
+	docker push jvarho/pylibscrypt

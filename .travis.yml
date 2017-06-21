@@ -2,26 +2,20 @@ language: python
 
 sudo: required
 
-dist: trusty
-
 branches:
     only:
         - master
 
-python:
-    - "2.7"
-    - "3.4"
-    - "pypy"
-
-addons:
-    apt:
-        packages:
-            libscrypt-dev
+services:
+    - docker
 
 install:
-    - make
-    - pip install scrypt
+    - docker pull jvarho/pylibscrypt
+    - pip install coveralls
 
 script:
-    - make test
+    - docker run -v ${PWD}:/app jvarho/pylibscrypt
 
+after_success:
+    - sed -i "s@/app@$TRAVIS_BUILD_DIR@g" .coverage
+    - coveralls

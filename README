@@ -2,6 +2,7 @@ Scrypt for Python
 ==
 
 [![Build Status](https://travis-ci.org/jvarho/pylibscrypt.svg)](https://travis-ci.org/jvarho/pylibscrypt)
+[![Coverage Status](https://coveralls.io/repos/github/jvarho/pylibscrypt/badge.svg?branch=master)](https://coveralls.io/github/jvarho/pylibscrypt?branch=master)
 [![PyPI version](https://img.shields.io/pypi/v/pylibscrypt.svg)](https://pypi.python.org/pypi/pylibscrypt)
 
 There are a lot of different scrypt modules for Python, but none of them have
