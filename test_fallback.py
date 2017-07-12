@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2014-2015, Jan Varho
+# Copyright (c) 2014-2017, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -15,6 +15,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import ctypes.util
+import hashlib
 import platform
 import sys
 
@@ -34,28 +35,37 @@ def unimport(mod=None):
     if mod is not None:
         sys.modules.pop(mod, None)
 
-tmp1 = ctypes.util.find_library
-tmp2 = ctypes.cdll.LoadLibrary
-tmp3 = ctypes.CDLL
-ctypes.util.find_library = lambda *args, **kw: None
-ctypes.cdll.LoadLibrary = lambda *args, **kw: None
 import pylibscrypt
-ctypes.util.find_library = tmp1
-ctypes.cdll.LoadLibrary = tmp2
-unimport('pylibscrypt.pylibscrypt')
-ctypes.CDLL = lambda *args, **kw: None
-import pylibscrypt
-unimport('pylibscrypt.pylibscrypt')
-ctypes.CDLL = raises(OSError)
-import pylibscrypt
-ctypes.CDLL = tmp3
+sys.modules['pylibscrypt.hashlibscrypt'] = None
 
-unimport('pylibscrypt.pylibscrypt')
-ctypes.CDLL = lambda *args, **kw: None
-import pylibscrypt
+if '-e' in sys.argv:
+    unimport()
+    tmp1 = ctypes.util.find_library
+    tmp2 = ctypes.cdll.LoadLibrary
+    tmp3 = ctypes.CDLL
+    ctypes.util.find_library = lambda *args, **kw: None
+    ctypes.cdll.LoadLibrary = lambda *args, **kw: None
+    import pylibscrypt
+    ctypes.util.find_library = tmp1
+    ctypes.cdll.LoadLibrary = tmp2
+    unimport('pylibscrypt.pylibscrypt')
+    ctypes.CDLL = lambda *args, **kw: None
+    import pylibscrypt
+    unimport('pylibscrypt.pylibscrypt')
+    ctypes.CDLL = raises(OSError)
+    import pylibscrypt
+    ctypes.CDLL = tmp3
+
+    unimport('pylibscrypt.pylibscrypt')
+    ctypes.CDLL = lambda *args, **kw: None
+    import pylibscrypt
 
 unimport()
 sys.modules['pylibscrypt.pylibscrypt'] = None
+import pylibscrypt
+
+unimport('pylibscrypt.pyscrypt')
+sys.modules['scrypt'] = None
 import pylibscrypt
 
 unimport()

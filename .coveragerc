@@ -7,5 +7,5 @@ exclude_lines =
     except AttributeError:
     except TypeError
 
-omit = /build/*,/usr/*,pylibscrypt/libsodium_load.py
+omit = /build/*,/usr/*,pylibscrypt/libsodium_load.py,pylibscrypt/tests.py,test_fallback.py
 
