@@ -9,6 +9,7 @@ Feature release:
 - Improved error messages
 - Added coveralls testing
 - Improved test coverage using docker
+- Deprecated pylibsodium_salsa
 
 
 1.6.1

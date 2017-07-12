@@ -1,5 +1,5 @@
 # Copyright (c) 2014 Richard Moore
-# Copyright (c) 2014-2016 Jan Varho
+# Copyright (c) 2014-2017 Jan Varho
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,13 +21,14 @@
 
 """Scrypt implementation that calls into system libsodium
 
-Obsolete, will be removed in 2.0.
+Deprecated, will be removed in a future release.
 """
 
 
 import ctypes
 from ctypes import c_void_p
 import struct
+from warnings import warn
 
 from . import mcf as mcf_mod
 from . import libsodium_load
@@ -51,6 +52,12 @@ _libsodium_salsa20_8.argtypes = [
     c_void_p,  # k   (8*4 bytes)
     c_void_p,  # c   (4*4 bytes)
 ]
+
+
+# If you see this, then you should upgrade your libsodium to 1.0+.
+# If you have and still see this, try importing pylibscrypt.pylibsodium.
+warn('pylibsodium_salsa is deprecated, please use newer libsodium instead',
+     DeprecationWarning)
 
 
 # Python 3.4+ have PBKDF2 in hashlib, so use it...

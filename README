@@ -27,7 +27,7 @@ Requirements
 * If you want speed, you should use one of:
   - libscrypt 1.8+ (older may work)
   - py-scrypt 0.6+ (pip install scrypt)
-  - libsodium 0.6+
+  - libsodium 1.0+
   - Python 3.6+ with OpenSSL 1.1+
 
 
