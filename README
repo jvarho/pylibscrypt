@@ -74,9 +74,9 @@ Running any implementation directly (e.g. pylibscrypt.pylibsodium) will also
 compare to scrypt test vectors from the paper but this is slow for the pure
 Python version (pypyscrypt) unless running with pypy.
 
-Running 'make coverage' will run coverage tests. This requires coverage.py
-installed for both Python 2 and Python 3. That would be a good idea on anything
-pushed for a pull request.
+You can test more comprehensively using the docker test environment. Either
+build and run using `make docker-run` or pull the jvarho/pylibscrypt image and
+run using `docker run -v ${PWD}:/app jvarho/pylibscrypt`.
 
 Pull requests should be automatically tested and will not be merged if broken.
 
