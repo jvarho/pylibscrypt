@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015, Jan Varho
+# Copyright (c) 2014-2017, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -12,14 +12,21 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-"""PBKDF2 in pure Python, compatible with Python3.4 hashlib.pbkdf2_hmac"""
+"""PBKDF2 in pure Python, compatible with Python3.4+ hashlib.pbkdf2_hmac"""
 
 
 import hashlib
 import hmac
 import struct
+from warnings import warn
 
 from .common import xrange
+
+
+# If you see this, then you should upgrade your python version.
+# The standard libraries of 2.7.8+ and 3.4+ include PBKDF2.
+warn('python pbkdf2 is deprecated, please use a newer version of python',
+     DeprecationWarning)
 
 
 def pbkdf2_hmac(name, password, salt, rounds, dklen=None):
