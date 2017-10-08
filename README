@@ -44,10 +44,10 @@ functions from the API:
 
     from pylibscrypt import scrypt_mcf, scrypt_mcf_check
     # Generate an MCF hash with random salt
-    mcf = scrypt_mcf('Hello World')
+    mcf = scrypt_mcf(b'Hello World')
     # Test it
-    print(scrypt_mcf_check(mcf, 'Hello World'))   # prints True
-    print(scrypt_mcf_check(mcf, 'HelloPyWorld'))  # prints False
+    print(scrypt_mcf_check(mcf, b'Hello World'))   # prints True
+    print(scrypt_mcf_check(mcf, b'HelloPyWorld'))  # prints False
 
 For full API, you can try help(pylibscrypt) from python after importing.
 
