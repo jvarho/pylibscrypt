@@ -23,7 +23,7 @@ speed of C scrypt. With CPython it is between about 50x and 250x slower.
 
 Requirements
 --
-* Python 2.7 or 3.4 or so. Pypy 2.2 also works. Older versions may or may not.
+* Python 2.7.8+ or 3.4+. Equivalent versions of PyPy should also work.
 * If you want speed, you should use one of:
   - libscrypt 1.8+ (older may work)
   - py-scrypt 0.6+ (pip install scrypt)
