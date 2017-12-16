@@ -18,6 +18,7 @@
 import ctypes
 from ctypes import c_char_p, c_size_t, c_uint64, c_uint32, c_void_p
 import platform
+from warnings import catch_warnings, filterwarnings
 
 from . import mcf as mcf_mod
 from . import libsodium_load
@@ -28,7 +29,10 @@ from .common import (
 if platform.python_implementation() == 'PyPy':
     from . import pypyscrypt_inline as scr_mod
 else:
-    from . import pylibsodium_salsa as scr_mod
+    with catch_warnings():
+        filterwarnings('ignore', category=DeprecationWarning,
+                       module='pylibscrypt.pylibsodium_salsa')
+        from . import pylibsodium_salsa as scr_mod
 
 
 _lib = libsodium_load.get_libsodium()
