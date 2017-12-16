@@ -1,6 +1,14 @@
 Release History
 ==
 
+1.7.1
+--
+2017-12-16
+
+Bugfix release:
+- Prevent DepracationWarning from pylibsodium.py
+
+
 1.7.0
 --
 2017-11-16
