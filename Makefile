@@ -35,7 +35,7 @@ bench: inline
 
 
 pypi-upload:
-	env python setup.py sdist upload
+	env python setup.py sdist upload -r https://upload.pypi.org/legacy/
 
 
 docker-build:
