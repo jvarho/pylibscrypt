@@ -36,6 +36,12 @@ try:
 except:
     xrange = range
 
+try:
+    unicode = unicode
+except:
+    unicode = str
+
+
 def check_args(password, salt, N, r, p, olen=64):
     if not isinstance(password, bytes):
         raise TypeError('password must be a byte string')

@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2017, Jan Varho
+# Copyright (c) 2014-2018, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -24,7 +24,7 @@ from . import mcf as mcf_mod
 from . import libsodium_load
 from .common import (
     SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_7, SCRYPT_MCF_PREFIX_s1,
-    SCRYPT_MCF_PREFIX_DEFAULT, SCRYPT_MCF_PREFIX_ANY, check_args)
+    SCRYPT_MCF_PREFIX_DEFAULT, SCRYPT_MCF_PREFIX_ANY, check_args, unicode)
 
 if platform.python_implementation() == 'PyPy':
     from . import pypyscrypt_inline as scr_mod
@@ -156,8 +156,10 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
 
     If no salt is given, a random salt of 128+ bits is used. (Recommended.)
     """
-    if not isinstance(password, bytes):
-        raise TypeError('password must be a byte string')
+    if isinstance(password, unicode):
+        password = password.encode('utf8')
+    elif not isinstance(password, bytes):
+        raise TypeError('password must be a unicode or byte string')
     if N < 2 or (N & (N - 1)):
         raise ValueError('scrypt N must be a power of 2 greater than 1')
     if p > 255 or p < 1:
@@ -189,6 +191,10 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
 
 def scrypt_mcf_check(mcf, password):
     """Returns True if the password matches the given MCF hash"""
+    if isinstance(password, unicode):
+        password = password.encode('utf8')
+    elif not isinstance(password, bytes):
+        raise TypeError('password must be a unicode or byte string')
     if not isinstance(mcf, bytes):
         raise TypeError('MCF must be a byte string')
     if mcf_mod._scrypt_mcf_7_is_standard(mcf) and not _scrypt_ll:
