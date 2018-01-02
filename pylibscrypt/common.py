@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015, Jan Varho
+# Copyright (c) 2014-2018, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -31,7 +31,10 @@ SCRYPT_p = 1
 # key derivation is not a problem, you could use 16 as in libscrypt or better
 # yet increase N if memory is plentiful.
 
-xrange = xrange if 'xrange' in globals() else range
+try:
+    xrange = xrange
+except:
+    xrange = range
 
 def check_args(password, salt, N, r, p, olen=64):
     if not isinstance(password, bytes):
