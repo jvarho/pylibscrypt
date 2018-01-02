@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2017, Jan Varho
+# Copyright (c) 2014-2018, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -23,7 +23,7 @@ import os
 
 from .common import (
     SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_s1,
-    SCRYPT_MCF_PREFIX_DEFAULT, SCRYPT_MCF_PREFIX_ANY, check_args)
+    SCRYPT_MCF_PREFIX_DEFAULT, SCRYPT_MCF_PREFIX_ANY, check_args, unicode)
 from . import mcf as mcf_mod
 
 
@@ -111,8 +111,10 @@ def scrypt_mcf(password, salt=None, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p,
     """
     if (prefix != SCRYPT_MCF_PREFIX_s1 and prefix != SCRYPT_MCF_PREFIX_ANY):
         return mcf_mod.scrypt_mcf(scrypt, password, salt, N, r, p, prefix)
-    if not isinstance(password, bytes):
-        raise TypeError('password must be a byte string')
+    if isinstance(password, unicode):
+        password = password.encode('utf8')
+    elif not isinstance(password, bytes):
+        raise TypeError('password must be a unicode or byte string')
     if salt is None:
         salt = os.urandom(16)
     elif not (1 <= len(salt) <= 16):
@@ -144,8 +146,10 @@ def scrypt_mcf_check(mcf, password):
     """Returns True if the password matches the given MCF hash"""
     if not isinstance(mcf, bytes):
         raise TypeError('MCF must be a byte string')
-    if not isinstance(password, bytes):
-        raise TypeError('password must be a byte string')
+    if isinstance(password, unicode):
+        password = password.encode('utf8')
+    elif not isinstance(password, bytes):
+        raise TypeError('password must be a unicode or byte string')
     if len(mcf) != 124 or b'\0' in password:
         return mcf_mod.scrypt_mcf_check(scrypt, mcf, password)
 

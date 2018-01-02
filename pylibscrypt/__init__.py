@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2017, Jan Varho
+# Copyright (c) 2014-2018, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -14,7 +14,7 @@
 
 """Scrypt for Python"""
 
-__version__ = '1.7.1'
+__version__ = '1.8.0-git'
 
 # First, try hashlib
 _done = False

@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Jan Varho
+# Copyright (c) 2017-2018, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -20,7 +20,8 @@ import hashlib
 import unittest
 
 from hypothesis import given
-from hypothesis.strategies import binary, integers, none, one_of, sampled_from
+from hypothesis.strategies import (
+    binary, integers, none, one_of, sampled_from, text)
 
 from .common import (
     SCRYPT_MCF_PREFIX_7, SCRYPT_MCF_PREFIX_s1,
@@ -33,7 +34,8 @@ def valid_pass():
     return binary()
 
 def valid_mcf_pass():
-    return binary().filter(lambda b: b'\0' not in b)
+    return one_of(binary().filter(lambda b: b'\0' not in b),
+                  text().filter(lambda b: u'\0' not in b))
 
 def valid_salt():
     return binary()

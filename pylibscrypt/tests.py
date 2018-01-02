@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2017, Jan Varho
+# Copyright (c) 2014-2018, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -170,19 +170,11 @@ class ScryptTests(unittest.TestCase):
         self.assertRaisesRegexp(TypeError, 'salt',
                                 self.module.scrypt, b'pass', None)
 
-    def test_mcf_bytes_enforced(self):
-        self.assertRaisesRegexp(TypeError, 'password',
-                                self.module.scrypt_mcf, u'pass', b'salt')
+    def test_mcf_types_enforced(self):
         self.assertRaisesRegexp(TypeError, 'password',
                                 self.module.scrypt_mcf, object)
         self.assertRaisesRegexp(TypeError, 'salt',
                                 self.module.scrypt_mcf, b'pass', u'salt')
-        mcf = (
-            b'$s1$020101$U29kaXVtQ2hsb3JpZGU=$ux13AWxUOpn+YyycQ8YBgP0F4MrI'
-            b'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9w=='
-        )
-        self.assertRaisesRegexp(TypeError, 'password',
-                                self.module.scrypt_mcf_check, mcf, u'blah')
         umcf = (
             u'$s1$020101$U29kaXVtQ2hsb3JpZGU=$ux13AWxUOpn+YyycQ8YBgP0F4MrI'
             u'spN029GFRWnLU09IckDPwGnWpZo18vpcdCiyHZvp+EMVRG1TcRGeAW/t9w=='
@@ -353,6 +345,14 @@ class ScryptTests(unittest.TestCase):
         m2 = self.module.scrypt_mcf(p, salt=s, N=4, prefix=b'$7$')
         self.assertTrue(self.module.scrypt_mcf_check(m1, p))
         self.assertTrue(self.module.scrypt_mcf_check(m2, p))
+
+    def test_mcf_utf(self):
+        p, u = b'pass', u'pass'
+        u2 = u'\xe5\xe4\xf6'
+        m1 = self.module.scrypt_mcf(p, N=4)
+        m2 = self.module.scrypt_mcf(u2, N=4)
+        self.assertTrue(self.module.scrypt_mcf_check(m1, u))
+        self.assertTrue(self.module.scrypt_mcf_check(m2, u2))
 
     def test_old_libscrypt_support(self):
         try:
