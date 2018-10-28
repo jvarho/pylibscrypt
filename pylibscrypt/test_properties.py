@@ -17,6 +17,7 @@
 
 import base64
 import hashlib
+import sys
 import unittest
 
 from hypothesis import given
@@ -167,5 +168,5 @@ if __name__ == "__main__":
     except ImportError:
         suite.addTest(load_scrypt_suite('pypyscryptTests', None, ref))
 
-    unittest.TextTestRunner().run(suite)
-
+    result = unittest.TextTestRunner().run(suite)
+    sys.exit(not result.wasSuccessful())
