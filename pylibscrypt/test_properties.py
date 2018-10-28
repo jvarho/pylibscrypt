@@ -71,6 +71,12 @@ class ScryptTests(unittest.TestCase):
     def tearDown(self):
         self.tear_down_lambda()
 
+    def invalidPass(self, pw):
+        try:
+            return pw + b'_'
+        except TypeError:
+            return pw + u'_'
+
     @given(valid_pass(), valid_salt(), valid_olen())
     def test_scrypt(self, pw, salt, olen):
         h1 = self.module.scrypt(pw, salt, 2, 2, 2, olen)
@@ -79,7 +85,7 @@ class ScryptTests(unittest.TestCase):
             h2 = self.ref.scrypt(pw, salt, 2, 2, 2, olen)
             self.assertEqual(h1, h2)
         if olen >= 16: # short hashes can collide
-            h2 = self.module.scrypt(pw + b'_', salt, 2, 2, 2, olen)
+            h2 = self.module.scrypt(self.invalidPass(pw), salt, 2, 2, 2, olen)
             h3 = self.module.scrypt(pw, salt + b'_', 2, 2, 2, olen)
             self.assertNotEqual(h1, h2)
             self.assertNotEqual(h1, h3)
@@ -88,10 +94,10 @@ class ScryptTests(unittest.TestCase):
     def test_mcf_scrypt(self, pw, salt, prefix):
         m = self.module.scrypt_mcf(pw, salt, 2, 2, 2, prefix)
         self.assertTrue(self.module.scrypt_mcf_check(m, pw))
-        self.assertFalse(self.module.scrypt_mcf_check(m, pw + b'_'))
+        self.assertFalse(self.module.scrypt_mcf_check(m, self.invalidPass(pw)))
         if (self.ref):
             self.assertTrue(self.ref.scrypt_mcf_check(m, pw))
-            self.assertFalse(self.ref.scrypt_mcf_check(m, pw + b'_'))
+            self.assertFalse(self.ref.scrypt_mcf_check(m, self.invalidPass(pw)))
             if salt and prefix != SCRYPT_MCF_PREFIX_ANY:
                 m2 = self.ref.scrypt_mcf(pw, salt, 2, 2, 2, prefix)
                 self.assertEqual(m, m2)
