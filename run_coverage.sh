@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 PYTHON=python3
 $PYTHON -m coverage run --branch -m pylibscrypt.tests
 $PYTHON -m coverage run --branch -a -m pylibscrypt.pylibscrypt

@@ -17,6 +17,7 @@
 
 import base64
 import hashlib
+import sys
 import unittest
 
 
@@ -501,5 +502,6 @@ if __name__ == "__main__":
     else:
         suite.addTest(load_pbkdf2_suite('hashlib_pbkdf2', None))
 
-    unittest.TextTestRunner().run(suite)
+    result = unittest.TextTestRunner().run(suite)
+    sys.exit(not result.wasSuccessful())
 
