@@ -1,6 +1,14 @@
 Release History
 ==
 
+2.0.0
+--
+???
+
+Major release:
+- Drops support for python 3.3 and <2.7.8
+
+
 1.8.0
 --
 2019-03-09
