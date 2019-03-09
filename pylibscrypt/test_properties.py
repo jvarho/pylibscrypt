@@ -20,7 +20,7 @@ import hashlib
 import sys
 import unittest
 
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.strategies import (
     binary, integers, none, one_of, sampled_from, text)
 
@@ -78,6 +78,7 @@ class ScryptTests(unittest.TestCase):
             return pw + u'_'
 
     @given(valid_pass(), valid_salt(), valid_olen())
+    @settings(deadline=500)
     def test_scrypt(self, pw, salt, olen):
         h1 = self.module.scrypt(pw, salt, 2, 2, 2, olen)
         self.assertEqual(olen, len(h1))
@@ -91,6 +92,7 @@ class ScryptTests(unittest.TestCase):
             self.assertNotEqual(h1, h3)
 
     @given(valid_mcf_pass(), valid_mcf_salt(), mcf_prefix())
+    @settings(deadline=500)
     def test_mcf_scrypt(self, pw, salt, prefix):
         m = self.module.scrypt_mcf(pw, salt, 2, 2, 2, prefix)
         self.assertTrue(self.module.scrypt_mcf_check(m, pw))
