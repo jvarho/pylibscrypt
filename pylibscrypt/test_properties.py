@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2018, Jan Varho
+# Copyright (c) 2017-2019, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -45,7 +45,7 @@ def valid_mcf_salt():
     return one_of(binary(min_size=1, max_size=16), none())
 
 def valid_olen():
-    return integers(min_value=1)
+    return integers(min_value=1, max_value=2**20)
 
 def mcf_prefix():
     return sampled_from([
