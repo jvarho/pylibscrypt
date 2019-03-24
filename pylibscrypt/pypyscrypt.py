@@ -1,5 +1,5 @@
 # Copyright (c) 2014 Richard Moore
-# Copyright (c) 2014-2016 Jan Varho
+# Copyright (c) 2014-2019 Jan Varho
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,20 +32,13 @@
 # https://github.com/wg/scrypt
 
 
+from hashlib import pbkdf2_hmac as _pbkdf2
 import struct
 
 from . import mcf as mcf_mod
 from .common import (
     SCRYPT_N, SCRYPT_r, SCRYPT_p, SCRYPT_MCF_PREFIX_DEFAULT, xrange,
     check_args)
-
-
-# Python 3.4+ have PBKDF2 in hashlib, so use it...
-try:
-    from hashlib import pbkdf2_hmac as _pbkdf2
-except ImportError:
-    # but fall back to Python implementation in < 3.4
-    from .pbkdf2 import pbkdf2_hmac as _pbkdf2
 
 
 def array_overwrite(source, s_start, dest, d_start, length):

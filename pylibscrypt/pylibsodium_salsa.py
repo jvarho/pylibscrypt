@@ -1,5 +1,5 @@
 # Copyright (c) 2014 Richard Moore
-# Copyright (c) 2014-2017 Jan Varho
+# Copyright (c) 2014-2019 Jan Varho
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@ Deprecated, will be removed in a future release.
 
 import ctypes
 from ctypes import c_void_p
+from hashlib import pbkdf2_hmac as _pbkdf2
 import struct
 from warnings import warn
 
@@ -58,14 +59,6 @@ _libsodium_salsa20_8.argtypes = [
 # If you have and still see this, try importing pylibscrypt.pylibsodium.
 warn('pylibsodium_salsa is deprecated, please use newer libsodium instead',
      DeprecationWarning)
-
-
-# Python 3.4+ have PBKDF2 in hashlib, so use it...
-try:
-    from hashlib import pbkdf2_hmac as _pbkdf2
-except ImportError:
-    # but fall back to Python implementation in < 3.4
-    from .pbkdf2 import pbkdf2_hmac as _pbkdf2
 
 
 def scrypt(password, salt, N=SCRYPT_N, r=SCRYPT_r, p=SCRYPT_p, olen=64):
