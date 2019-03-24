@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2018, Jan Varho
+# Copyright (c) 2014-2019, Jan Varho
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -385,50 +385,6 @@ def run_scrypt_suite(module, fast=False):
     unittest.TextTestRunner().run(suite)
 
 
-class PBKDF2Tests(unittest.TestCase):
-    """Tests a PBKDF2 implementation from module"""
-    module = None
-
-    def setUp(self):
-        if not self.module:
-            self.skipTest('module not tested')
-
-    def _test_vector(self, vector):
-        n, p, s, c, l, h = vector
-        h = base64.b16decode(h, True)
-        self.assertEquals(self.module.pbkdf2_hmac(n, p, s, c, l), h)
-
-    def test_vector1(self):
-        # From RFC 6070
-        self._test_vector(('sha1', b'password', b'salt', 1, 20,
-                           b'0c60c80f961f0e71f3a9b524af6012062fe037a6'))
-
-    def test_vector2(self):
-        # From RFC 6070
-        self._test_vector(('sha1', b'pass\0word', b'sa\0lt', 4096, 16,
-                           b'56fa6aa75548099dcc37d7f03425e0c3'))
-
-    def test_vector3(self):
-        self._test_vector(('sha256', b'password', b'NaCl', 7, 42,
-                           b'8cb94b8721e20e643be099f3c31d332456b4c26f55'
-                           b'b6403950267dc2b3c0806bda709a3f2d7f6107db73'))
-
-    def test_long_key(self):
-        self.module.pbkdf2_hmac('sha256', b'pass'*100, b'NaCl', 2, 20)
-
-
-def load_pbkdf2_suite(name, module):
-    loader = unittest.defaultTestLoader
-    tests = type(name, (PBKDF2Tests,), {'module': module})
-    return unittest.defaultTestLoader.loadTestsFromTestCase(tests)
-
-
-def run_pbkdf2_suite(module, fast=False):
-    suite = unittest.TestSuite()
-    suite.addTest(load_pbkdf2_suite('scryptTests', module))
-    unittest.TextTestRunner().run(suite)
-
-
 if __name__ == "__main__":
     suite = unittest.TestSuite()
     try:
@@ -490,17 +446,6 @@ if __name__ == "__main__":
         suite.addTest(load_scrypt_suite('pypyscryptTests', pypyscrypt, True))
     except ImportError:
         suite.addTest(load_scrypt_suite('pypyscryptTests', None, True))
-
-    try:
-        from . import pbkdf2
-        suite.addTest(load_pbkdf2_suite('pbkdf2', pbkdf2))
-    except ImportError:
-        suite.addTest(load_pbkdf2_suite('pbkdf2', None))
-
-    if 'pbkdf2_hmac' in dir(hashlib):
-        suite.addTest(load_pbkdf2_suite('hashlib_pbkdf2', hashlib))
-    else:
-        suite.addTest(load_pbkdf2_suite('hashlib_pbkdf2', None))
 
     result = unittest.TextTestRunner().run(suite)
     sys.exit(not result.wasSuccessful())
