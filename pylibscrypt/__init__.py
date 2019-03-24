@@ -52,17 +52,6 @@ if not _done:
     else:
         _done = True
 
-# Unless we are on pypy, we want to try libsodium_salsa as well
-if not _done:
-    import platform
-    if platform.python_implementation() != 'PyPy':
-        try:
-            from .pylibsodium_salsa import *
-        except ImportError:
-            pass
-        else:
-            _done = True
-
 # If that didn't work either, the inlined Python version
 if not _done:
     from .pypyscrypt_inline import *

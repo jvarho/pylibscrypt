@@ -76,7 +76,3 @@ unimport()
 sys.modules['pylibscrypt.pylibsodium'] = None
 import pylibscrypt
 
-unimport()
-sys.modules['pylibscrypt.pylibsodium_salsa'] = None
-import pylibscrypt
-

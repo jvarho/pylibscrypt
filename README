@@ -18,7 +18,7 @@ Features
 * Not unusably slow, even in pure Python... at least with pypy[5].
 
 With PyPy as the interpreter the Python implementation is around one fifth the
-speed of C scrypt. With CPython it is between about 50x and 250x slower.
+speed of C scrypt. With CPython it is about 250x slower.
 
 
 Requirements

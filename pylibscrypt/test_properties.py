@@ -164,13 +164,6 @@ if __name__ == "__main__":
         suite.addTest(load_scrypt_suite('pylibsodiumTests', None, ref))
 
     try:
-        from . import pylibsodium_salsa
-        suite.addTest(load_scrypt_suite('pylibsodium_salsaTests',
-                                        pylibsodium_salsa, ref))
-    except ImportError:
-        suite.addTest(load_scrypt_suite('pylibsodium_salsaTests', None, ref))
-
-    try:
         from . import pypyscrypt_inline as pypyscrypt
         suite.addTest(load_scrypt_suite('pypyscryptTests', pypyscrypt, ref))
     except ImportError:
