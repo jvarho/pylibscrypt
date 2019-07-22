@@ -61,6 +61,7 @@ The package has a version number that can be read from python like so:
     print(pylibscrypt.__version__)
 
 The version number is of the form X.Y.Z, following Semantic Versioning[6].
+Unreleased versions include a -git version specifier, e.g. 2.0.0-git < 2.0.0.
 Releases are tagged vX.Y.Z and release branches bX.Y.x when they differ from
 master.
 
