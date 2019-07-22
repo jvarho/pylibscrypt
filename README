@@ -44,10 +44,10 @@ functions from the API:
 
     from pylibscrypt import scrypt_mcf, scrypt_mcf_check
     # Generate an MCF hash with random salt
-    mcf = scrypt_mcf(b'Hello World')
+    mcf = scrypt_mcf('Hello World')
     # Test it
-    print(scrypt_mcf_check(mcf, b'Hello World'))   # prints True
-    print(scrypt_mcf_check(mcf, b'HelloPyWorld'))  # prints False
+    print(scrypt_mcf_check(mcf, 'Hello World'))   # prints True
+    print(scrypt_mcf_check(mcf, 'HelloPyWorld'))  # prints False
 
 For full API, you can try help(pylibscrypt) from python after importing.
 
@@ -61,6 +61,7 @@ The package has a version number that can be read from python like so:
     print(pylibscrypt.__version__)
 
 The version number is of the form X.Y.Z, following Semantic Versioning[6].
+Unreleased versions include a -git version specifier, e.g. 2.0.0-git < 2.0.0.
 Releases are tagged vX.Y.Z and release branches bX.Y.x when they differ from
 master.
 
